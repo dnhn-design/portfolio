@@ -13,13 +13,13 @@ body {
 }
 
 header {
-    background-color: rgb(246, 195, 68); /* yellow header */
+    background-color: rgb(224, 224, 224); /* yellow header */
     padding: 20px;
     text-align: center;
 }
 
 section:nth-child(odd) {
-    background-color: bisque;
+    background-color: rgb(255, 185, 100);
 }
 
 #navbar {
@@ -31,7 +31,7 @@ section:nth-child(odd) {
     font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
     text-transform: uppercase;
     font-weight: 500;
-    background-color: rgb(246, 195, 68);
+    background-color: rgb(255, 255, 255);
     box-sizing: border-box;
     border-radius: 8px;
 

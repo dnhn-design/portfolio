@@ -19,7 +19,7 @@ header {
 }
 
 section:nth-child(odd) {
-    background-color: rgb(255, 185, 100);
+    background-color: rgb(240, 240, 240);
 }
 
 #navbar {

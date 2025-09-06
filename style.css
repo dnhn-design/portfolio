@@ -13,7 +13,7 @@ body {
 }
 
 header {
-    background-color: rgb(224, 224, 224); /* yellow header */
+    background-color: rgb(255,255,255); /* grey header */
     padding: 20px;
     text-align: center;
 }

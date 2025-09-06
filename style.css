@@ -12,14 +12,14 @@ body {
     color: #333; /* Dark gray text */
 }
 
+section:nth-child(odd) {
+    background-color: rgb(240, 240, 240);
+}
+
 header {
     background-color: rgb(255,255,255); /* grey header */
     padding: 20px;
     text-align: center;
-}
-
-section:nth-child(odd) {
-    background-color: rgb(240, 240, 240);
 }
 
 #navbar {

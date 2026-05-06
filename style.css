@@ -262,7 +262,7 @@ footer {
     flex-shrink: 0; /* Prevents the footer from shrinking if content overflows */
     
     /* Apply your full-width and centering styles here */
-    width: 100vw;
+    width: 100%;
     margin-left: calc(50% - 50vw);
     background-color: black;
     color: white; /* To make the text visible on the black bar */

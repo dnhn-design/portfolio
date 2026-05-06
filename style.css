@@ -546,7 +546,7 @@ footer {
     /* Apply these styles when the window is 100px wider */
 
     .main {
-        font-size: 24px; 
+        font-size: 30px; 
         margin-top: 10px;
         overflow-wrap: break-word;
         /* overflow-wrap: anywhere; */

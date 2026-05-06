@@ -200,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('project-role').textContent = p.role;
         document.getElementById('project-description').textContent = p.overview;
         document.getElementById('project-outcome').textContent = p.outcome;
-        document.getElementById('project-counter').textContent = `Project ${index + 1} of ${activeProjects.length}`;
+        document.getElementById('project-counter').textContent = `${index + 1} of ${activeProjects.length}`;
     
         // Main Image
         const mainImg = document.getElementById('modal-main-image');

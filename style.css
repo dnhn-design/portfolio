@@ -527,7 +527,7 @@ footer {
     }
 
     .main {
-        font-size: 48px; 
+        font-size: 36px; 
         margin-top: -5px;
         overflow-wrap: break-word; /* Standard modern fix */
         word-wrap: break-word;     /* Legacy support for older browsers */

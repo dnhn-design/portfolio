@@ -521,6 +521,11 @@ footer {
 @media (min-width: 480px) {
     /* Apply these styles when the window is 680px wide or wider */
     
+    body {
+        padding-left: 5px;
+        padding-right: 5px;
+    }
+
     .main {
         font-size: 48px; 
         margin-top: -5px;

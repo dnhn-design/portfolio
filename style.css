@@ -1,0 +1,645 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+
+
+/*——HOVER DIALOG——*/
+
+.hover-dialog {
+    position: absolute;
+    width: 250px;
+    display: inline-block;
+    display: flex;
+    flex-direction: column;
+    border: solid black;
+    
+    padding: 20px;
+    border-radius: 20px;
+    background-color: white;
+    margin-bottom: -20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    height: fit-content;
+    justify-content: flex-start;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.1s, visibility 0.1s;
+}
+
+div > img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    align-items: center;
+    vertical-align: top;
+    border-radius: 5px;
+}
+
+/* .hover-container {
+    position: relative;
+    display: inline-block;
+} */
+
+
+.hover-dialog.is-visible {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 0.3s;
+}
+
+
+.hover-thumb {
+    display: flex;
+    justify-content: space-between;
+}
+
+div > .img-frame {
+    width: 75px;
+    height: 75px;
+    background-color: rgb(186, 186, 186);
+    border-radius: 5px;
+    vertical-align: top;
+}
+
+h3.hover-dialog-h {
+    font-weight: 500;
+    margin: 0;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    font-size: 20px;
+}
+
+p.hover-dialog-p {
+    margin: 0;
+    padding: 0;
+
+    font-size: 12px;
+    white-space: normal;
+
+    width: 100%;
+    align-self: auto;
+    width: auto;
+
+}
+
+div.chips > span {
+    border-radius: 7px;
+    font-size: 12px;
+    background-color: black;
+    color: #ffffff;
+    padding: 5px 10px 5px 10px;
+    font-size: 12px;
+    font-weight: 300;
+}
+
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    line-height: 20px;
+    margin-top: 10px;
+    padding: 0;
+}
+
+/*————*/
+
+
+
+.material-symbols-outlined {
+  font-variation-settings:
+  'FILL' 0,
+  'wght' 500,
+  'GRAD' 0,
+  'opsz' 24
+}
+
+strong {
+    font-weight:800;
+    font-style: italic;
+}
+
+.no-break {
+    white-space: nowrap;
+}
+
+button:hover {
+    background-color: rgb(213, 213, 213);
+}
+
+.hamburger-menu {
+    display: none; 
+    align-items: center;      /* Vertical alignment */
+    justify-content: center;  /* Horizontal alignment */
+    
+    /* Define the Square Shape (e.g., 40x40 pixels) */
+    width: 50px; 
+    height: 50px; 
+    
+    /* Apply Border Radius (for rounded corners) */
+    border-radius: 12px; /* Example value for rounded square */
+    
+    border: 2px solid rgb(0, 0, 0); /* Your custom border */
+    margin: 10px; 
+    background-color: #ffffff; /* Your working background color */
+}
+
+/* 5. Control the Icon Size (Essential for preventing overflow) */
+.hamburger-menu .material-symbols-outlined {
+    /* Set the font size to be smaller than the button's dimensions (e.g., 24px is smaller than 40px) */
+    font-size: 32px; 
+    color: rgb(0, 0, 0); 
+    
+    /* Reset icon's internal spacing */
+    margin: 0;
+    padding: 0;
+    line-height: 1; 
+}
+
+.main {
+    font-size: 36px;
+}
+
+/* Container layout for desktop: Sidebar and Main Content side-by-side */
+.grid {
+    display: flex;
+    max-width: 1400px; /* Optional: Center the entire page content */
+    padding: 20px;
+}
+
+/* Sidebar is visible and takes a fixed width */
+.sidebar {
+    display: block; 
+    width: 300px;
+    padding-right: 40px;
+    position: sticky; /* Keeps it in place while scrolling main content */
+    top: 20px;
+    height: 100vh;
+    visibility: visible;
+}
+
+/* Main content takes the remaining space */
+.main-content {
+    flex-grow: 1;
+}
+
+
+/* Apply Inter to the entire body of the website */
+body, a {
+    font-family: 'Inter', sans-serif; 
+    color: black;
+    
+}
+
+body {
+    margin: 50px;
+    margin-bottom: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.about {
+    width: 250px;
+}
+
+.contact_container {
+    width: 300px;
+}
+
+h1 {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500; /* Bold weight */
+}
+
+#sidebar_label {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700; /* Bold weight */
+}
+
+/* Style for the text content */
+.works {
+    display: block;
+    margin-bottom: 10px;
+    /* Remove default margin to help with alignment */
+    margin: 0; 
+    /* Display inline with the icon */
+    display: inline-block;
+    font-size: 16px;
+  }
+  
+  /* 🔑 The magic for icon alignment */
+  .icon-style {
+    /* Sets the icon to align its middle with the middle of the text's line box */
+    vertical-align: middle; 
+    display: inline;
+    
+    /* Make the icon slightly larger than the text for visual balance */
+    font-size: 20px; 
+    
+    /* Add a little space between the icon and the text */
+    margin-right: 5px; 
+  }
+
+  .works_container {
+    display: flex;
+    flex-direction: column;
+  }
+
+.hover:hover {
+    text-decoration: underline;
+}
+
+
+
+
+#page-content-wrapper {
+    /* 🔑 KEY FIX: Allows the content wrapper to grow and push the footer down */
+    flex-grow: 1; 
+}
+
+/* --- Footer Styles --- */
+
+footer {
+    /* 3. The footer will be naturally pushed to the bottom */
+    flex-shrink: 0; /* Prevents the footer from shrinking if content overflows */
+    
+    /* Apply your full-width and centering styles here */
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    background-color: black;
+    color: white; /* To make the text visible on the black bar */
+    padding: 20px 0;
+    text-align: center;
+}
+
+
+/* --- Copyright Text Styling (Optional) --- */
+.copyright-text {
+    color: white;
+    /* Use a smaller font size appropriate for a footnote */
+    font-size: 14px; 
+    
+    /* Remove default paragraph margin */
+    margin: 0; 
+    
+    /* Optional: Use the lighter Inter font weight if available */
+    font-weight: 300; 
+    
+    /* Prevent the text from breaking across lines */
+    white-space: nowrap; 
+}
+
+
+
+
+/* ———— modal detail */
+
+
+/* --- BASE MODAL STYLES --- */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.8); /* Dark overlay */
+    display: none; /* Hidden by default, changed to 'flex' by JS */
+    z-index: 2000;
+    /* Center the modal content within the overlay */
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    /* Fixed width/height relative to the viewport */
+    width: 90%;
+    max-width: 900px;
+    height: 85%; /* Slightly smaller than 90% in the video */
+    max-height: 700px; /* Adjust max height as desired */
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    
+    /* Layout for Header, Scrollable Content, and Footer */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Important: keeps inner scrollbar contained */
+}
+
+/* --- HEADER AND CLOSE BUTTON --- */
+
+.modal-header {
+    padding: 30px 40px 20px; /* Padding top/sides, smaller padding at bottom */
+    border-bottom: 1px solid #ddd;
+    position: relative; /* Context for close button */
+    flex-shrink: 0; /* Ensures header doesn't shrink when content overflows */
+}
+
+.close-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 24px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #333;
+}
+
+/* Category Text Styles */
+.category-title {
+    font-size: 24px;
+    font-weight: 500;
+    margin: 0;
+}
+.category-description {
+    font-size: 14px;
+    color: #666;
+    margin-top: 5px;
+}
+
+/* --- SCROLLABLE CONTENT AREA --- */
+
+.project-scroll-content {
+    flex-grow: 1; /* Takes up all available space between header and footer */
+    overflow-y: auto; /* THIS enables the inner scrolling */
+    padding: 0 40px 0; /* Padding for the sides of the content area */
+}
+
+/* --- MEDIA FRAMES --- */
+
+.media-container {
+    padding-top: 20px; /* Space below header */
+    padding-bottom: 20px;
+}
+
+.large-img-frame {
+    width: 100%;
+    padding-top: 50%; /* Aspect ratio (e.g., 2:1) for the main image */
+    background-color: #eee;
+    border-radius: 8px;
+}
+
+.img-frame {
+    background-color: #e0e0e0;
+    border-radius: 8px;
+    width: 100%;
+}
+
+
+
+#modal-images-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Forces 3 equal columns */
+    gap: 15px;
+    padding-top: 20px;
+    padding-bottom: 30px;
+    width: 100%; 
+}
+
+/* .modal-images-grid .modal-img-frame {
+    width: 100%;
+    padding-top: 100%; 
+    background-color: #eee;
+    border-radius: 8px;
+} */
+
+#modal-images-grid .modal-img-frame {
+    /* width: 100%;
+    aspect-ratio: 1 / 1; 
+    background-color: #eee;
+    border-radius: 8px;
+    display: block; */
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px; /* Reduced gap as requested */
+    padding-top: 20px;
+    padding-bottom: 30px;
+    width: 100%;
+}
+
+
+/* --- PROJECT DETAILS (Sub-sections) --- */
+
+.project-detail-area {
+    padding-bottom: 20px;
+}
+
+.metadata-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end; /* Align the project title and metadata at the bottom */
+    margin-bottom: 20px;
+}
+
+.project-subtitle {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.metadata-group {
+    display: flex;
+    gap: 15px;
+    font-size: 14px;
+    color: #333;
+}
+
+.metadata-group span {
+    font-weight: 600; /* Bold the dynamic data (Year, Role) */
+}
+
+.description-section {
+    margin-top: 20px;
+}
+
+.description-section h4 {
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+/* --- MODAL FOOTER (Fixed Bottom) --- */
+
+.modal-footer {
+    padding: 15px 40px;
+    border-top: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0; /* Ensures footer doesn't shrink */
+}
+
+.nav-arrow {
+    background: none;
+    border: 1px solid #000;
+    padding: 8px 15px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.nav-arrow:hover {
+    background-color: #f0f0f0;
+}
+
+.nav-arrow:disabled {
+    opacity: 0.3 !important; 
+    cursor: not-allowed !important;
+    border-color: #ccc !important;
+}
+
+.nav-arrow:disabled .material-symbols-outlined {
+    color: #999 !important;
+}
+
+#next-project-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding-right: 6px;
+}
+#prev-project-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding-left: 6px;
+}
+
+
+
+
+
+/* --- Desktop/Wide Screen Positioning --- */
+/* If you want the footer to always stick to the bottom of the viewport 
+   (even if the content is short), you need to adjust your body/main layout. 
+   Otherwise, it will simply sit at the bottom of your content flow. */
+
+@media (min-width: 640px) {
+    /* Apply these styles when the window is 600px wide or wider */
+    
+    .main {
+        font-size: 48px; 
+        margin-top: -5px;
+    }
+
+}
+
+@media (min-width: 767px) {
+    .main {
+        font-size: 60px; 
+    }
+    .sidebar {
+        /* VISIBLE and part of the two-column grid */
+        display: block; 
+        position: sticky; /* Or whatever fixed position you use for desktop */
+        /* No transform property here! */
+    }
+}
+
+@media (min-width: 1025px) {
+    .main {
+        font-size: 72px; 
+    }
+
+}
+
+@media (min-width: 1280px) {
+    .main {
+        font-size: 86px; 
+    }
+
+}
+
+@media (max-width: 920px) {
+    .hamburger-menu {
+        display: flex; /* Or block; depends on your styling, but flex is best for centering */
+        /* Ensure the button is styled for visibility */
+        position: absolute; /* Place it in a visible corner of your header */
+        top: -30px;
+        left: 15px;
+        z-index: 10001;
+    }
+
+    .mobile-header {
+        /* Use display block if it contains nothing else, or flex if it holds a logo/title */
+        display: block; 
+        
+        /* Padding controls the horizontal alignment with the text. */
+        /* Use the same horizontal padding that you use on your main content/sidebar content. */
+        padding: 15px 20px; 
+        
+        /* Ensure it spans the full width of the viewport */
+        width: 100%;
+        
+        /* Optional: Ensure it sticks to the top */
+        position: sticky;
+        top: 0;
+        z-index: 10001;
+    }
+
+    /* Hide the sidebar (the default state on mobile) */
+    .sidebar {
+        display: block; 
+
+        /* Hide it off-screen to create the drawer effect */
+        position: fixed;
+        top: 0;
+        left: 0;
+
+        /* Ensure it's full height and above other content */
+        height: 100vh;
+        width: 300px;
+        padding-top: 100px;
+        padding-left: 80px;
+        padding-right: 40px;
+        z-index: 10000;
+        background-color: white; /* Use a color to test visibility */
+
+        transform: translateX(-100%); /* Hides it off the left edge */
+        visibility: hidden;
+        
+        /* Add transition for smooth sliding */
+        transition: transform 0.3s ease-out, visibility 0.3s linear 0.3s;
+    }
+
+    .grid .sidebar.active {
+        visibility: visible; /* Makes it clickable/visible */
+        transform: translateX(0); /* Slides it into view */
+        background-color: white;
+        transition: transform 0.3s ease-out, visibility 0.3s linear 0s;
+    }
+
+
+
+
+
+    #sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        
+        /* 🔑 Start Hidden: Transparent and underneath the sidebar (z-index) */
+        background-color: rgba(0, 0, 0, 0); /* Fully transparent black */
+        visibility: hidden;
+        z-index: 9999; /* Below the sidebar (z-index: 10000) but above the main content */
+        
+        /* Smooth transition for the opacity and visibility */
+        transition: background-color 0.3s ease-out, visibility 0s linear 0.3s;
+    }
+
+    /* --- Overlay Active Style (Visible and Dimmed) --- */
+    #sidebar-overlay.active {
+        /* 🔑 End Visible: Dim the background */
+        background-color: rgba(0, 0, 0, 0.5); /* 50% opacity black */
+        visibility: visible;
+        
+        /* Make visibility change IMMEDIATELY when active */
+        transition: background-color 0.3s ease-out, visibility 0s linear 0s;
+    }
+}

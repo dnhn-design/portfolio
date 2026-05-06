@@ -1,5 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
 
+html {
+    background-color: black;
+}
+
+body {
+    background-color: white; /* or your main page color */
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
 
 /*——HOVER DIALOG——*/
 
@@ -189,9 +200,9 @@ body, a {
 }
 
 body {
-    margin: 25px;
+    /* margin: 25px; */
     margin-bottom: 0;
-    padding-top: 5px;
+    /* padding-top: 5px; */
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -522,11 +533,11 @@ footer {
 @media (min-width: 480px) {
     /* Apply these styles when the window is 680px wide or wider */
     
-    body {
+    /* body {
         padding-left: 5px;
         padding-right: 5px;
         padding-top: 5px;
-    }
+    } */
 
     .main {
         font-size: 36px; 
@@ -605,8 +616,8 @@ footer {
         height: 100vh;
         width: 300px;
         padding-top: 100px;
-        padding-left: 5vh;
-        padding-right: 5vh;
+        padding-left: 3vh;
+        padding-right: 3vh;
         z-index: 10000;
         background-color: white; /* Use a color to test visibility */
 
@@ -655,4 +666,7 @@ footer {
     }
 }
 
-html, body { overflow-x: hidden; width: 100%; }
+html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }

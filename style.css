@@ -518,12 +518,15 @@ footer {
    (even if the content is short), you need to adjust your body/main layout. 
    Otherwise, it will simply sit at the bottom of your content flow. */
 
-@media (min-width: 640px) {
-    /* Apply these styles when the window is 600px wide or wider */
+@media (min-width: 480px) {
+    /* Apply these styles when the window is 680px wide or wider */
     
     .main {
         font-size: 48px; 
         margin-top: -5px;
+        overflow-wrap: break-word; /* Standard modern fix */
+        word-wrap: break-word;     /* Legacy support for older browsers */
+        word-break: break-word;    /* Extra safety for some browsers */
     }
 
 }

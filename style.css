@@ -551,7 +551,8 @@ footer {
     .main {
         font-size: 36px; 
         margin-top: 5px;
-        overflow-wrap: break-word; /* Standard modern fix */
+        /* overflow-wrap: break-word;  */
+        overflow-wrap: anywhere;
         word-wrap: break-word;     /* Legacy support for older browsers */
         word-break: break-word;    /* Extra safety for some browsers */
     }

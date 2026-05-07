@@ -38,8 +38,8 @@ document.addEventListener('DOMContentLoaded', () => {
           title: 'Campaign Poster Series using Tactile Typography', overview: 'Goal was to explore type beyond the screen in the physical world. I have always been passionate about being anti-speciesist, so I wanted to explore the idea with type. Speciesism is the prejudice based on species, typically involving the assumption of human superiority to justify exploiting animals.', outcome: 'By molding actual meat and using my hand, I created an emotionally provocative poster triptych for campaign about Ending Speciesism.', images: 3 },
         { id: 'p4b', client: 'School Assignment', year: '2026', role: 'IxD Student', categoryId: 'proj-4', thumbnail: '004/routetime4.png', projectImages: ['004/routetime2.png', '004/routetime3.png', '004/routetime5.png'],
         title: 'RouteTime', overview: 'To design an experiential, multi-touchpoint product ecosystem that improves human agency.', outcome: 'Experience-based low-coast solution to unifying the fragmented commuter railroad system in the NYC area.', images: 3 },
-        { id: 'p4c', client: 'Global Bank', year: '2023', role: 'UX Designer', categoryId: 'proj-4', thumbnail: 'desmos_thumbnail.png', projectImages: ['desmos_1.png', 'desmos_2.png', 'desmos_3.png'],
-          title: 'Project 12', overview: 'Developed a secure, transparent internal dashboard for tracking inter-departmental blockchain transactions, focusing on data immutability visualization.', outcome: 'Improved audit efficiency by 40%.', images: 3 },
+        { id: 'p4c', client: 'TBD', year: '20XX', role: 'Student', categoryId: 'proj-4', thumbnail: 'desmos_thumbnail.png', projectImages: ['desmos_1.png', 'desmos_2.png', 'desmos_3.png'],
+          title: 'Project 3', overview: 'Overview.', outcome: 'Outcome.', images: 3 },
 
         // --- PROJ-5 PROJECTS (Human Centered Design) ---
         { id: 'p5a', client: 'School Assignment', year: '2026', role: 'IxD Student', categoryId: 'proj-5', thumbnail: '005/spotdrop-main.png', projectImages: ['005/spotdrop1.gif', '005/spotdrop2.png', '005/spotdrop3.png'],

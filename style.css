@@ -100,7 +100,7 @@ p.hover-dialog-p {
     margin: 0;
     padding: 0;
 
-    font-size: 11px;
+    font-size: 14px;
     white-space: normal;
 
     width: 100%;
@@ -546,7 +546,7 @@ footer {
 }
 
 
-@media (min-width: 100px) {
+@media (max-width: 479px) {
     /* Apply these styles when the window is 100px wider */
 
     .main {
@@ -556,6 +556,10 @@ footer {
         /* overflow-wrap: anywhere; */
         word-wrap: break-word;     /* Legacy support for older browsers */
         word-break: break-word;    /* Extra safety for some browsers */
+    }
+
+    #modal-overview {
+        display: none;
     }
 
 }

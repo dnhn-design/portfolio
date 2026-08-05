@@ -6,6 +6,7 @@ html {
 
 * {
     font-family: sans-serif;
+    line-height: 1em;
 }
 
 .sidebar {
@@ -288,7 +289,7 @@ h1 {
 
 
 #page-content-wrapper {
-    /* 🔑 KEY FIX: Allows the content wrapper to grow and push the footer down */
+    /* Allows the content wrapper to grow and push the footer down */
     flex-grow: 1; 
 }
 

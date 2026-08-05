@@ -592,7 +592,7 @@ footer {
 
 @media (min-width: 767px) {
     .main {
-        font-size: 60px; 
+        font-size: 50px; 
     }
     .sidebar {
         /* VISIBLE and part of the two-column grid */

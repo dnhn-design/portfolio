@@ -550,8 +550,8 @@ footer {
     /* Apply these styles when the window is 100px wider */
 
     .main {
-        font-size: 30px; 
-        margin-top: 10px;
+        font-size: 25px; 
+        margin-top: 8px;
         overflow-wrap: break-word;
         /* overflow-wrap: anywhere; */
         word-wrap: break-word;     /* Legacy support for older browsers */
@@ -580,8 +580,8 @@ footer {
     } */
 
     .main {
-        font-size: 36px; 
-        margin-top: 5px;
+        font-size: 30px; 
+        margin-top: 4px;
         overflow-wrap: break-word;
         /* overflow-wrap: anywhere; */
         word-wrap: break-word;     /* Legacy support for older browsers */

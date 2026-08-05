@@ -4,6 +4,14 @@ html {
     background-color: black;
 }
 
+* {
+    font-family: sans-serif;
+}
+
+.sidebar {
+    font-size: 15px;
+}
+
 body {
     background-color: white; /* or your main page color */
     margin: 0;
@@ -252,7 +260,6 @@ h1 {
     margin: 0; 
     /* Display inline with the icon */
     display: inline-block;
-    font-size: 16px;
   }
   
   /* 🔑 The magic for icon alignment */
@@ -580,7 +587,7 @@ footer {
     } */
 
     .main {
-        font-size: 30px; 
+        font-size: 35px; 
         margin-top: 4px;
         overflow-wrap: break-word;
         /* overflow-wrap: anywhere; */
@@ -592,7 +599,7 @@ footer {
 
 @media (min-width: 767px) {
     .main {
-        font-size: 50px; 
+        font-size: 55px; 
     }
     .sidebar {
         /* VISIBLE and part of the two-column grid */
@@ -687,7 +694,7 @@ footer {
         width: 100%;
         height: 100vh;
         
-        /* 🔑 Start Hidden: Transparent and underneath the sidebar (z-index) */
+        /* Start Hidden: Transparent and underneath the sidebar (z-index) */
         background-color: rgba(0, 0, 0, 0); /* Fully transparent black */
         visibility: hidden;
         z-index: 9999; /* Below the sidebar (z-index: 10000) but above the main content */
@@ -698,7 +705,7 @@ footer {
 
     /* --- Overlay Active Style (Visible and Dimmed) --- */
     #sidebar-overlay.active {
-        /* 🔑 End Visible: Dim the background */
+        /* End Visible: Dim the background */
         background-color: rgba(0, 0, 0, 0.5); /* 50% opacity black */
         visibility: visible;
         

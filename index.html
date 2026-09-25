@@ -19,15 +19,18 @@
             font-family: 'Inter', sans-serif;
             color: #111111;
             background-color: #ffffff;
-            cursor: url('custom-cursor/cursor.png') 32 32, auto;
+            cursor: url('custom-cursor/cursor.png') 0 31, auto;
 
         }
 
-        a, button, article, button *, article *, .cursor-pointer * {
-           cursor: url('custom-cursor/cursor-hover.png') 32 32, pointer !important;
+        a, button, article, button *, article *, .cursor-pointer *, #hero-greeting, #hero-bio {
+           cursor: url('custom-cursor/cursor-hover.png') 0 31, pointer !important;
         }
         a:active, button:active, article:active, button *:active, article *:active, .cursor-pointer *:active {
-            cursor: url('custom-cursor/cursor-pressed.png') 32 32, pointer !important;
+            cursor: url('custom-cursor/cursor-pressed.png') 0 31, pointer !important;
+        }
+        body:active, body *:active, #hero-greeting:active, #hero-bio:active {
+            cursor: url('custom-cursor/cursor-pressed.png') 0 31, pointer !important;
         }
         
         /* Smooth backdrop transitions */

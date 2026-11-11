@@ -126,28 +126,27 @@ const ROOT = '../';
 const PDF  = n => ROOT + '000/maps/' + encodeURIComponent(n);
 const THUMB = n => ROOT + '0_thumb/' + n;
 const LIVE = s => ROOT + 'live/' + s + '/index.html';
-const PT = {"nyc": [869.79, 214.85], "bos": [908.7, 167.1], "phl": [854.3, 237.2], "dc": [827.4, 267.5], "chi": [638.2, 226.1], "cle": [738.4, 222.8], "dfw": [479.1, 438.8], "la": [86.9, 363.2], "bay": [38.4, 263], "pdx": [79.4, 90.2], "sea": [97.6, 46.5], "nj": [865.92, 211.76], "nice": [876.14, 214.28], "ct": [884.27, 198.17]};
+const PT = {"nyc": [869.79, 214.85], "bos": [908.7, 167.1], "phl": [854.3, 237.2], "dc": [827.4, 267.5], "chi": [638.2, 226.1], "cle": [738.4, 222.8], "dfw": [479.1, 438.8], "la": [86.9, 363.2], "bay": [38.4, 263], "pdx": [79.4, 90.2], "sea": [97.6, 46.5], "nj": [865.92, 211.76], "nice": [876.14, 214.28], "ct": [884.27, 198.17], "lirr": [883.88, 210.05], "mnr": [871.95, 207.75]};
 
 const REGIONS = [
   { id:'nyc', name:'NYC Area', pt:PT.nyc, dx:-16, dy:-14, anchor:'end',
     pdfs:[
       {t:'NYC Subway', f:'nyc_subway-2026.pdf', img:'04_NYC.png'},
       {t:'NY Line Diagrams', f:'2026-NYC-Rail.pdf', img:'07_strip.png'},
-      {t:'LIRR', f:'LIRR_2026.pdf', img:'08_lirr.png'},
       {t:'NY Area Rail', f:'0719_NYC_rail.pdf', img:'09_ny_rail.png'},
       {t:'Subway Strip Map', f:'0719_nyc_strip.pdf', img:'10_strip_subway.png'},
       {t:'NYC Ferry', f:'NYC_Ferry.pdf', img:'11_ferry.png'},
-      {t:'LIRR Strip Map', f:'0719-LIRR-strip.pdf'}
     ],
     live:[
-      {t:'NYC Subway', s:'nyc-subway'},{t:'LIRR', s:'lirr'},{t:'Metro-North', s:'metro-north'},
-      {t:'Midtown SBS Buses', s:'midtown-bus'}
+      {t:'NYC Subway', s:'nyc-subway'},{t:'Midtown SBS Buses', s:'midtown-bus'}
     ],
     /* items tied to a specific place: they get their own dots when the map zooms in */
     sub:[
-      {t:'North Jersey Transit', f:'2026_NJ.pdf', img:'03_NJ.png', pt:PT.nj},
-      {t:'Nassau NICE Bus', s:'nice-bus', pt:PT.nice},
-      {t:'CT Rail & BRT', s:'ct-rail', pt:PT.ct}
+      {t:'North Jersey Transit', pt:PT.nj, items:[{t:'North Jersey Transit', f:'2026_NJ.pdf', img:'03_NJ.png'}]},
+      {t:'Metro-North', pt:PT.mnr, items:[{t:'Metro-North', s:'metro-north'}]},
+      {t:'Nassau NICE Bus', pt:PT.nice, items:[{t:'Nassau NICE Bus', s:'nice-bus'}]},
+      {t:'LIRR', pt:PT.lirr, items:[{t:'LIRR Diagram', f:'LIRR_2026.pdf', img:'08_lirr.png'},{t:'LIRR Strip Map', f:'0719-LIRR-strip.pdf'},{t:'LIRR', s:'lirr'}]},
+      {t:'CT Rail & BRT', pt:PT.ct, items:[{t:'CT Rail & BRT', s:'ct-rail'}]}
     ]},
   { id:'bos', name:'Boston', pt:PT.bos, dx:16, dy:-10, anchor:'start', pdfs:[], live:[{t:'MBTA', s:'mbta'}]},
   { id:'phl', name:'Philadelphia', pt:PT.phl, dx:16, dy:14, anchor:'start', pdfs:[], live:[{t:'SEPTA', s:'septa'}]},
@@ -229,7 +228,9 @@ function tile(it,live){
            : el('span',{class:'ic pdf',text:'PDF'});
   return el('li',{},[el('a',{class:'row',href:hrefOf(it),target:'_blank',rel:'noopener'},[ic,el('span',{text:it.t})])]);
 }
+let group=false;
 function renderMenu(r){
+  group=false;
   menu.replaceChildren(el('h2',{text:r.name}));
   if(r.id==='amtrak'){
     const a=el('a',{class:'row',href:'#amtrak'},[el('span',{class:'ic'},[el('i')]),el('span',{text:'Live map'})]);
@@ -242,18 +243,28 @@ function renderMenu(r){
   menu.hidden=false; menu.scrollTop=0;
 }
 
+function showGroup(sub){
+  group=true; menu.replaceChildren(el('h2',{text:sub.t}));
+  const p=sub.items.filter(i=>i.f||i.raw), l=sub.items.filter(i=>i.s);
+  if(p.length) menu.append(el('ul',{},p.map(i=>tile(i,false))));
+  if(l.length) menu.append(el('ul',{},l.map(i=>tile(i,true))));
+  menu.hidden=false; menu.scrollTop=0;
+}
 /* separate dots for place-specific items, splitting out of the main dot */
 function splitOut(r,v){
   kids.replaceChildren();
   const [hx,hy]=toScreen(r.pt,v);
   const hub=el('button',{type:'button',class:'hub','aria-label':'Close '+r.name});
-  hub.style.left=hx+'px'; hub.style.top=hy+'px'; hub.addEventListener('click',close); kids.append(hub);
+  hub.style.left=hx+'px'; hub.style.top=hy+'px'; hub.addEventListener('click',()=>{ if(group) renderMenu(r); else close(); }); kids.append(hub);
   r.sub.forEach((it,i)=>{
-    const [x,y]=toScreen(it.pt,v), live=!!it.s;
-    const a=el('a',{class:'kid'+(live?' lv':''),href:hrefOf(it),target:'_blank',rel:'noopener','aria-label':it.t});
+    const [x,y]=toScreen(it.pt,v), one=it.items.length===1, first=one?it.items[0]:null;
+    const live=it.items.every(k=>k.s);
+    const a=el('a',{class:'kid'+(live?' lv':''),href:one?hrefOf(first):'#','aria-label':it.t});
+    if(one){a.target='_blank';a.rel='noopener'} else a.addEventListener('click',e=>{e.preventDefault();showGroup(it)});
     a.style.left=x+'px'; a.style.top=y+'px';
     a.style.setProperty('--fx',(hx-x)+'px'); a.style.setProperty('--fy',(hy-y)+'px'); a.style.setProperty('--d',(i*80)+'ms');
-    a.addEventListener('mouseenter',()=>showTip(a,it)); a.addEventListener('focus',()=>showTip(a,it));
+    const tipItem={t:it.t,img:(it.items.find(k=>k.img)||{}).img};
+    a.addEventListener('mouseenter',()=>showTip(a,tipItem)); a.addEventListener('focus',()=>showTip(a,tipItem));
     a.addEventListener('mouseleave',hideTip); a.addEventListener('blur',hideTip);
     kids.append(a);
   });

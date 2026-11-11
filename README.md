@@ -8,3 +8,5 @@ Single-page site: an outlined US map with a dot per metro area. Click a city for
 * `live/<name>/` — interactive live maps, each its own page
 * `archive/` — the previous portfolio homepage, kept for reference
 * `artifacts/` — original live-map source files
+
+Live maps are plain static pages, so GitHub Pages publishes this repo as-is from `main`.

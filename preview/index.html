@@ -52,17 +52,18 @@ header{position:fixed;top:0;left:0;right:0;height:56px;z-index:5;display:flex;al
 .pin:focus-visible .dot{stroke:var(--ink)}
 
 /* menu: drops from the top bar */
-#menu{position:fixed;z-index:4;top:56px;left:50%;transform:translateX(-50%);width:min(380px,calc(100vw - 24px));max-height:calc(100vh - 80px);overflow:auto;background:var(--pop);border-radius:14px;padding:12px 8px 8px;box-shadow:0 10px 40px rgba(0,0,0,.18)}
+#menu{position:fixed;z-index:4;top:56px;left:50%;transform:translateX(-50%);width:min(580px,calc(100vw - 24px));max-height:calc(100vh - 80px);overflow:auto;background:var(--pop);border-radius:14px;padding:12px 8px 8px;box-shadow:0 10px 40px rgba(0,0,0,.18)}
 #menu[hidden]{display:none}
 #menu h2{margin:0 0 6px;padding:0 10px;font-size:18px;font-weight:600;letter-spacing:-.01em}
-#menu ul{list-style:none;margin:0;padding:0}
-#menu li+li.gap,#menu ul+ul{margin-top:8px}
-.row{display:flex;align-items:center;gap:12px;padding:6px 10px;border-radius:10px;font-weight:500}
+#menu ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+#menu ul+ul{margin-top:8px}
+@media (max-width:520px){#menu ul{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.row{display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:6px;border-radius:10px;font-weight:500;font-size:12px;line-height:1.25;text-align:center}
 .row:hover{background:var(--hover)}
-.row .ic{width:40px;height:40px;border-radius:8px;flex:none;overflow:hidden;background:var(--hover);display:grid;place-items:center}
+.row .ic{aspect-ratio:1/1;width:100%;border-radius:8px;flex:none;overflow:hidden;background:var(--hover);display:grid;place-items:center}
 .row .ic img{width:100%;height:100%;object-fit:cover;display:block}
-.row .ic i{width:10px;height:10px;border-radius:50%;background:var(--live)}
-.row .ic.pdf{color:var(--muted);font-size:10px;font-weight:600;letter-spacing:.04em}
+.row .ic i{width:14px;height:14px;border-radius:50%;background:var(--live)}
+.row .ic.pdf{color:var(--muted);font-size:11px;font-weight:600;letter-spacing:.04em}
 
 #amtrakFrame{position:fixed;z-index:3;top:56px;left:0;right:0;bottom:0;width:100%;height:calc(100% - 56px);border:0;background:#0c1016}
 #amtrakFrame[hidden]{display:none}
@@ -100,7 +101,7 @@ body.live #mapwrap{visibility:hidden}
 const ROOT = '../';
 const PDF  = n => ROOT + '000/maps/' + encodeURIComponent(n);
 const THUMB = n => ROOT + '0_thumb/' + n;
-const LIVE = s => ROOT + 'live/' + s + '/';
+const LIVE = s => ROOT + 'live/' + s + '/index.html';
 const PT = {"nyc": [869.7, 215.3], "bos": [908.7, 167.1], "phl": [854.3, 237.2], "dc": [827.4, 267.5], "chi": [638.2, 226.1], "cle": [738.4, 222.8], "dfw": [479.1, 438.8], "la": [86.9, 363.2], "bay": [38.4, 263], "pdx": [79.4, 90.2], "sea": [97.6, 46.5]};
 
 const REGIONS = [
@@ -177,18 +178,18 @@ function open(r){
   Object.entries(pins).forEach(([k,p])=>p.setAttribute('aria-pressed',String(k===r.id)));
   menu.replaceChildren(el('h2',{text:r.name}));
   if(r.id==='amtrak'){
-    const a=el('a',{class:'row',href:'#amtrak'},[el('span',{class:'ic'},[el('i')]),document.createTextNode('Live map')]);
+    const a=el('a',{class:'row',href:'#amtrak'},[el('span',{class:'ic'},[el('i')]),el('span',{text:'Live map'})]);
     a.addEventListener('click',e=>{e.preventDefault();setLive(true)});
     menu.append(el('ul',{},[el('li',{},[a])]));
   }
   if(r.pdfs.length){
     menu.append(el('ul',{},r.pdfs.map(p=>el('li',{},[el('a',{class:'row',href:p.raw||PDF(p.f),target:'_blank',rel:'noopener'},[
       p.img?el('span',{class:'ic'},[el('img',{src:THUMB(p.img),alt:'',loading:'lazy'})]):el('span',{class:'ic pdf',text:'PDF'}),
-      document.createTextNode(p.t)]) ]))));
+      el('span',{text:p.t})]) ]))));
   }
   if(r.live.length){
     menu.append(el('ul',{},r.live.map(l=>el('li',{},[el('a',{class:'row',href:LIVE(l.s),target:'_blank',rel:'noopener'},[
-      el('span',{class:'ic'},[el('i')]),document.createTextNode(l.t)]) ]))));
+      el('span',{class:'ic'},[el('i')]),el('span',{text:l.t})]) ]))));
   }
   menu.hidden=false; menu.scrollTop=0;
 }

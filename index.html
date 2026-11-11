@@ -66,6 +66,7 @@ header{position:fixed;top:0;left:0;right:0;height:56px;z-index:5;display:flex;al
 .row .ic i{width:14px;height:14px;border-radius:50%;background:var(--live)}
 .row .ic.lv{aspect-ratio:2.4/1}
 .row .ic.pdf{color:var(--muted);font-size:11px;font-weight:600;letter-spacing:.04em}
+#menu.side.right{left:auto;right:16px}
 @media (max-width:520px){#menu ul,#menu.side ul{grid-template-columns:repeat(3,minmax(0,1fr))}#menu.side{left:12px;right:12px;width:auto;max-height:42vh}}
 
 /* zoomed view: hub + separate dots for items tied to a specific place */
@@ -79,9 +80,21 @@ header{position:fixed;top:0;left:0;right:0;height:56px;z-index:5;display:flex;al
 #kids.settled .kid{transition-delay:0s}
 #kids.out .kid:hover,#kids.out .kid:focus-visible{transform:scale(1.3)}
 @media (max-width:520px){.hub,.kid{--s:26px}}
+/* outline card: slides out under the selected dot */
+.card{--cw:150px;position:absolute;width:var(--cw);padding:8px 8px 10px;background:var(--pop);color:var(--ink);border-radius:14px;box-shadow:0 10px 36px rgba(0,0,0,.2);pointer-events:auto;
+  font-weight:600;font-size:12px;text-align:center;line-height:1.2;
+  opacity:0;transform:translate(-50%,-16px) scale(.92);transform-origin:50% 0;transition:opacity .3s,transform .45s cubic-bezier(.2,.8,.2,1)}
+.card.in{opacity:1;transform:translate(-50%,0) scale(1)}
+.card.up{transform:translate(-50%,-100%) translateY(16px) scale(.92);transform-origin:50% 100%}
+.card.up.in{transform:translate(-50%,-100%)}
+.card img{display:block;width:100%;aspect-ratio:1/1;object-fit:contain;margin-bottom:6px}
+a.card:hover{box-shadow:0 12px 40px rgba(0,0,0,.3)}
+[data-theme=dark] img.ol{filter:invert(1)}
+@media (max-width:520px){.card{--cw:118px}}
 #tip{position:fixed;z-index:6;pointer-events:none;background:var(--pop);color:var(--ink);border-radius:10px;padding:6px;box-shadow:0 8px 28px rgba(0,0,0,.25);font-weight:500;font-size:12px;text-align:center;max-width:170px}
 #tip[hidden]{display:none}
 #tip img{display:block;width:150px;height:150px;object-fit:cover;border-radius:6px;margin-bottom:6px}
+#tip img.ol{object-fit:contain;padding:4px}
 #tip span{display:block;padding:0 4px 2px}
 body.fan .pin{opacity:0;pointer-events:none;transition:opacity .15s}
 .pin{transition:opacity .2s}
@@ -125,6 +138,7 @@ body.live #mapwrap{visibility:hidden}
 const ROOT = '';
 const PDF  = n => ROOT + '000/maps/' + encodeURIComponent(n);
 const THUMB = n => ROOT + '0_thumb/' + n;
+const OUTLINE = n => ROOT + 'outlines/' + n + '.webp';
 const LIVE = s => ROOT + 'live/' + s + '/index.html';
 const PT = {"nyc": [869.79, 214.85], "bos": [908.7, 167.1], "phl": [854.3, 237.2], "dc": [827.4, 267.5], "chi": [638.2, 226.1], "cle": [738.4, 222.8], "dfw": [479.1, 438.8], "la": [86.9, 363.2], "bay": [38.4, 263], "pdx": [79.4, 90.2], "sea": [97.6, 46.5], "nj": [865.92, 211.76], "nice": [876.14, 214.28], "ct": [884.27, 198.17], "lirr": [883.88, 210.05], "mnr": [871.95, 207.75]};
 
@@ -143,24 +157,24 @@ const REGIONS = [
     /* items tied to a specific place: they get their own dots when the map zooms in */
     sub:[
       {t:'North Jersey Transit', pt:PT.nj, items:[{t:'North Jersey Transit', f:'2026_NJ.pdf', img:'03_NJ.png'}]},
-      {t:'Metro-North', pt:PT.mnr, items:[{t:'Metro-North', s:'metro-north'}]},
-      {t:'Nassau NICE Bus', pt:PT.nice, items:[{t:'Nassau NICE Bus', s:'nice-bus'}]},
-      {t:'LIRR', pt:PT.lirr, items:[{t:'LIRR Diagram', f:'LIRR_2026.pdf', img:'08_lirr.png'},{t:'LIRR Strip Map', f:'0719-LIRR-strip.pdf'},{t:'LIRR', s:'lirr'}]},
-      {t:'CT Rail & BRT', pt:PT.ct, items:[{t:'CT Rail & BRT', s:'ct-rail'}]}
+      {t:'Metro-North', outline:'metro-north', pt:PT.mnr, items:[{t:'Metro-North', s:'metro-north'}]},
+      {t:'Nassau NICE Bus', outline:'nice-bus', pt:PT.nice, items:[{t:'Nassau NICE Bus', s:'nice-bus'}]},
+      {t:'LIRR', outline:'lirr', pt:PT.lirr, items:[{t:'LIRR Diagram', f:'LIRR_2026.pdf', img:'08_lirr.png'},{t:'LIRR Strip Map', f:'0719-LIRR-strip.pdf'},{t:'LIRR', s:'lirr'}]},
+      {t:'CT Rail & BRT', outline:'ct-rail', pt:PT.ct, items:[{t:'CT Rail & BRT', s:'ct-rail'}]}
     ]},
-  { id:'bos', name:'Boston', pt:PT.bos, dx:16, dy:-10, anchor:'start', pdfs:[], live:[{t:'MBTA', s:'mbta'}]},
-  { id:'phl', name:'Philadelphia', pt:PT.phl, dx:16, dy:14, anchor:'start', pdfs:[], live:[{t:'SEPTA', s:'septa'}]},
-  { id:'dc', name:'Washington, DC', pt:PT.dc, dx:-16, dy:16, anchor:'end',
+  { id:'bos', card:'mbta', name:'Boston', pt:PT.bos, dx:16, dy:-10, anchor:'start', pdfs:[], live:[{t:'MBTA', s:'mbta'}]},
+  { id:'phl', card:'septa', name:'Philadelphia', pt:PT.phl, dx:16, dy:14, anchor:'start', pdfs:[], live:[{t:'SEPTA', s:'septa'}]},
+  { id:'dc', card:'md-va-rail', name:'Washington, DC', pt:PT.dc, dx:-16, dy:16, anchor:'end',
     pdfs:[{t:'DC Metrorail', f:'2026-DCmetro.pdf', img:'02_DC.png'}], live:[{t:'MD-VA Rail', s:'md-va-rail'}]},
-  { id:'chi', name:'Chicago', pt:PT.chi, dx:-16, dy:-12, anchor:'end',
+  { id:'chi', card:'chicago', name:'Chicago', pt:PT.chi, dx:-16, dy:-12, anchor:'end',
     pdfs:[{t:'Chicago L', f:'2026_Chicago.pdf', img:'05_CHI.png'}], live:[{t:'Chicago', s:'chicago'}]},
-  { id:'cle', name:'Cleveland', pt:PT.cle, dx:0, dy:30, anchor:'middle', pdfs:[], live:[{t:'GCRTA', s:'gcrta'}]},
-  { id:'dfw', name:'Dallas–Fort Worth', pt:PT.dfw, dx:18, dy:6, anchor:'start', pdfs:[], live:[{t:'DFW Rail', s:'dfw-rail'}]},
-  { id:'la', name:'Los Angeles', pt:PT.la, dx:18, dy:6, anchor:'start', pdfs:[], live:[{t:'LA Rail', s:'la-rail'}]},
-  { id:'bay', name:'Bay Area', pt:PT.bay, dx:18, dy:6, anchor:'start',
+  { id:'cle', card:'gcrta', name:'Cleveland', pt:PT.cle, dx:0, dy:30, anchor:'middle', pdfs:[], live:[{t:'GCRTA', s:'gcrta'}]},
+  { id:'dfw', card:'dfw-rail', name:'Dallas–Fort Worth', pt:PT.dfw, dx:18, dy:6, anchor:'start', pdfs:[], live:[{t:'DFW Rail', s:'dfw-rail'}]},
+  { id:'la', card:'la-rail', name:'Los Angeles', pt:PT.la, dx:18, dy:6, anchor:'start', pdfs:[], live:[{t:'LA Rail', s:'la-rail'}]},
+  { id:'bay', card:'bay-rail', name:'Bay Area', pt:PT.bay, dx:18, dy:6, anchor:'start',
     pdfs:[{t:'SF Bay Area Transit', f:'2026_BART.pdf', img:'01_SF.png'}], live:[{t:'Bay Rail', s:'bay-rail'}]},
-  { id:'pdx', name:'Portland', pt:PT.pdx, dx:18, dy:6, anchor:'start', pdfs:[], live:[{t:'Portland Rail', s:'portland-rail'}]},
-  { id:'sea', name:'Seattle', pt:PT.sea, dx:18, dy:6, anchor:'start', pdfs:[], live:[{t:'Sound Transit', s:'sound-transit'}]}
+  { id:'pdx', card:'portland-rail', name:'Portland', pt:PT.pdx, dx:18, dy:6, anchor:'start', pdfs:[], live:[{t:'Portland Rail', s:'portland-rail'}]},
+  { id:'sea', card:'sound-transit', name:'Seattle', pt:PT.sea, dx:18, dy:6, anchor:'start', pdfs:[], live:[{t:'Sound Transit', s:'sound-transit'}]}
 ];
 
 const AMTRAK = { id:'amtrak', name:'Amtrak', pdfs:[
@@ -211,9 +225,9 @@ const toScreen=(p,v)=>{const r=wrap.getBoundingClientRect();return [(p[0]-v[0])/
 function showTip(a,it){
   clearTimeout(tipT);
   tipT=setTimeout(()=>{
-    tip.replaceChildren(); if(it.img) tip.append(el('img',{src:THUMB(it.img),alt:''}));
+    tip.replaceChildren(); if(it.outline) tip.append(el('img',{class:'ol',src:OUTLINE(it.outline),alt:''})); else if(it.img) tip.append(el('img',{src:THUMB(it.img),alt:''}));
     tip.append(el('span',{text:it.t})); tip.hidden=false;
-    const r=a.getBoundingClientRect(), below=r.top<230;
+    const r=a.getBoundingClientRect(), below=r.top<230||!!it.outline;
     tip.style.left=Math.min(Math.max(r.left+r.width/2,90),innerWidth-90)+'px';
     tip.style.top=(below?r.bottom+10:r.top-10)+'px';
     tip.style.transform=below?'translate(-50%,0)':'translate(-50%,-100%)';
@@ -228,7 +242,7 @@ function tile(it,live){
            : el('span',{class:'ic pdf',text:'PDF'});
   return el('li',{},[el('a',{class:'row',href:hrefOf(it),target:'_blank',rel:'noopener'},[ic,el('span',{text:it.t})])]);
 }
-let group=false;
+let group=false, dock='';
 function renderMenu(r){
   group=false;
   menu.replaceChildren(el('h2',{text:r.name}));
@@ -239,10 +253,22 @@ function renderMenu(r){
   }
   if(r.pdfs.length) menu.append(el('ul',{},r.pdfs.map(p=>tile(p,false))));
   if(r.live.length) menu.append(el('ul',{},r.live.map(l=>tile(l,true))));
-  menu.classList.toggle('side',!!r.sub);
+  menu.classList.toggle('side',!!dock); menu.classList.toggle('right',dock==='right');
   menu.hidden=false; menu.scrollTop=0;
 }
 
+function showCard(r,v){
+  if(!r.card) return;
+  const [x,y]=toScreen(r.pt,v), rect=wrap.getBoundingClientRect(), mob=rect.width<=520, cw=mob?118:150;
+  const only=r.live.length===1?LIVE(r.live[0].s):null;
+  const c=el(only?'a':'div',{class:'card'},[el('img',{class:'ol',src:OUTLINE(r.card),alt:''}),el('span',{text:r.name})]);
+  if(only){c.href=only;c.target='_blank';c.rel='noopener'}
+  c.style.left=Math.min(Math.max(x,cw/2+8),rect.width-cw/2-8)+'px';
+  const h=cw+36, up=y+26+h>rect.height;
+  c.style.top=(up?y-26:y+26)+'px'; if(up) c.classList.add('up');
+  kids.append(c);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>c.classList.add('in')));
+}
 function showGroup(sub){
   group=true; menu.replaceChildren(el('h2',{text:sub.t}));
   const p=sub.items.filter(i=>i.f||i.raw), l=sub.items.filter(i=>i.s);
@@ -263,7 +289,7 @@ function splitOut(r,v){
     if(one){a.target='_blank';a.rel='noopener'} else a.addEventListener('click',e=>{e.preventDefault();showGroup(it)});
     a.style.left=x+'px'; a.style.top=y+'px';
     a.style.setProperty('--fx',(hx-x)+'px'); a.style.setProperty('--fy',(hy-y)+'px'); a.style.setProperty('--d',(i*80)+'ms');
-    const tipItem={t:it.t,img:(it.items.find(k=>k.img)||{}).img};
+    const tipItem={t:it.t,outline:it.outline,img:(it.items.find(k=>k.img)||{}).img};
     a.addEventListener('mouseenter',()=>showTip(a,tipItem)); a.addEventListener('focus',()=>showTip(a,tipItem));
     a.addEventListener('mouseleave',hideTip); a.addEventListener('blur',hideTip);
     kids.append(a);
@@ -290,16 +316,22 @@ function close(){
 }
 function open(r){
   if(isLive()) setLive(false);
-  const wasZoomed=vb.some((n,i)=>Math.abs(n-BASE[i])>.01);
+  const same=(a,b)=>a.every((n,i)=>Math.abs(n-b[i])<.01), wasZoomed=!same(vb,BASE);
+  const rect=wrap.getBoundingClientRect(), mob=rect.width<=520;
   reset(); current=r.id;
   if(pins[r.id]) pins[r.id].setAttribute('aria-pressed','true');
   if(r.id==='amtrak') amtrakBtn.setAttribute('aria-pressed','true');
+  dock = r.sub ? 'left' : (r.pt && !mob) ? (toScreen(r.pt,BASE)[0]>rect.width/2?'left':'right') : '';
   renderMenu(r);
   if(r.sub){
     document.body.classList.add('fan');
     const v=zoomTarget(r.pt);
     flyTo(v,()=>{ if(current===r.id) splitOut(r,v); });
-  } else if(wasZoomed) flyTo(BASE);
+    return;
+  }
+  const v = BASE;
+  if(same(vb,v)) showCard(r,v);
+  else flyTo(v,()=>{ if(current===r.id) showCard(r,v); });
 }
 const toggle = r => current===r.id ? close() : open(r);
 

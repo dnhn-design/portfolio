@@ -67,7 +67,12 @@ header{position:fixed;top:0;left:0;right:0;height:56px;z-index:5;display:flex;al
 .row .ic.lv{aspect-ratio:2.4/1}
 .row .ic.pdf{color:var(--muted);font-size:11px;font-weight:600;letter-spacing:.04em}
 #menu.side.right{left:auto;right:16px}
+#menu.stack{width:min(360px,calc(100vw - 24px))}
 @media (max-width:520px){#menu ul,#menu.side ul{grid-template-columns:repeat(3,minmax(0,1fr))}#menu.side{left:12px;right:12px;width:auto;max-height:42vh}}
+#menu ul.stack{grid-template-columns:1fr;gap:2px}
+#menu ul.stack+ul.stack{margin-top:18px}
+.stack .row{flex-direction:row;align-items:center;gap:12px;text-align:left;font-size:14px;padding:6px 10px}
+.stack .row .ic,.stack .row .ic.lv{width:48px;aspect-ratio:1/1}
 
 /* zoomed view: hub + separate dots for items tied to a specific place */
 #kids,#cards{position:fixed;left:0;right:0;top:56px;bottom:0;z-index:2;pointer-events:none}
@@ -119,7 +124,7 @@ body.live #mapwrap{visibility:hidden}
 <header>
   <a class="brand" href="./">Donghoon Yi</a>
   <div class="tools">
-    <button type="button" class="dotbtn" id="amtrakBtn" aria-pressed="false" aria-label="Amtrak"><i></i><span class="tip">Amtrak</span></button>
+    <button type="button" class="dotbtn" id="amtrakBtn" aria-pressed="false" aria-label="dnhn.design"><i></i><span class="tip">dnhn.design</span></button>
     <button type="button" class="icon" id="themeBtn" aria-label="Toggle light / dark">
       <svg class="moon" viewBox="0 0 24 24"><path d="M21 13.2A8.5 8.5 0 1 1 10.8 3a7 7 0 0 0 10.2 10.2z"/></svg>
       <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.3M12 19.2v2.3M2.5 12h2.3M19.2 12h2.3M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>
@@ -185,12 +190,13 @@ const REGIONS = [
   { id:'sea', card:'sound-transit', name:'Seattle', pt:PT.sea, dx:18, dy:6, anchor:'start', pdfs:[], live:[{t:'Sound Transit', s:'sound-transit'}]}
 ];
 
-const AMTRAK = { id:'amtrak', name:'Amtrak', pdfs:[
-    {t:'Amtrak Network', f:'2026_Amtrak.pdf', img:'06_US.png'},
-    {t:'Amtrak Diagrams', f:'07 19 Amtrak Diagrams.pdf'},
+const AMTRAK = { id:'amtrak', name:'dnhn.design', stack:true, live:[],
+  pdfs:[
     {t:'Amtrak v3', f:'amtrak_v3.pdf'},
-    {t:'Mini Diagram Collection', raw:ROOT+'000/mini%20diagrams.pdf', img:'12_mini.png'}
-  ], live:[] };
+    {t:'Amtrak v2', f:'2026_Amtrak.pdf', img:'06_US.png'},
+    {t:'Amtrak v1', f:'07 19 Amtrak Diagrams.pdf'}
+  ],
+  extra:[{t:'Mini Diagram Collection', raw:ROOT+'000/mini%20diagrams.pdf', img:'12_mini.png'}] };
 
 const $ = (s,r=document)=>r.querySelector(s);
 const el = (tag,attrs={},kids=[])=>{const e=document.createElement(tag);
@@ -254,14 +260,14 @@ let group=false, dock='';
 function renderMenu(r){
   group=false;
   menu.replaceChildren(el('h2',{text:r.name}));
-  if(r.id==='amtrak'){
-    const a=el('a',{class:'row',href:'#amtrak'},[el('span',{class:'ic'},[el('i')]),el('span',{text:'Live map'})]);
+  if(r.stack){   // vertical list: live map, then v3 / v2 / v1, then a gap and the extras
+    const a=el('a',{class:'row',href:'#amtrak'},[el('span',{class:'ic lv'},[el('i')]),el('span',{text:'Amtrak Live Map'})]);
     a.addEventListener('click',e=>{e.preventDefault();setLive(true)});
-    menu.append(el('ul',{},[el('li',{},[a])]));
-  }
-  if(r.pdfs.length) menu.append(el('ul',{},r.pdfs.map(p=>tile(p,false))));
+    menu.append(el('ul',{class:'stack'},[el('li',{},[a]),...r.pdfs.map(p=>tile(p,false))]));
+    if(r.extra) menu.append(el('ul',{class:'stack'},r.extra.map(p=>tile(p,false))));
+  } else if(r.pdfs.length) menu.append(el('ul',{},r.pdfs.map(p=>tile(p,false))));
   if(r.live.length) menu.append(el('ul',{},r.live.map(l=>tile(l,true))));
-  menu.classList.toggle('side',!!dock); menu.classList.toggle('right',dock==='right');
+  menu.classList.toggle('stack',!!r.stack); menu.classList.toggle('side',!!dock); menu.classList.toggle('right',dock==='right');
   menu.hidden=false; menu.scrollTop=0;
 }
 

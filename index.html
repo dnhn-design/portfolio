@@ -112,10 +112,12 @@ a.card:hover{box-shadow:0 12px 40px rgba(0,0,0,.3)}
 body.fan .pin{opacity:0;pointer-events:none;transition:opacity .15s}
 .pin{transition:opacity .3s var(--pd,0s)}
 /* startup: every Amtrak station twinkles while loading, then fades; the city dots pop in after */
-#stn{transition:opacity .5s}
-#stn.out{opacity:0}
+#stn{pointer-events:none;transition:opacity .4s}
+body.fan #stn{opacity:0}
 #stn circle{fill:var(--accent);opacity:0;transform-box:fill-box;transform-origin:center;animation:twinkle var(--p,1s) ease-in-out var(--d,0s) infinite}
 @keyframes twinkle{0%,100%{opacity:0;scale:.3}40%{opacity:1;scale:1}}
+/* after the intro the stations stay as tiny, quiet dots so the city dots remain the focus */
+#stn.rest circle{animation:none;fill:var(--ink);opacity:.3;scale:.4;transition:opacity .8s,scale .8s}
 html.intro .pin{opacity:0;pointer-events:none}
 html.intro .pin .dot{scale:0}
 #mapwrap{transition:opacity .3s}
@@ -374,24 +376,23 @@ REGIONS.forEach(r=>{
   g.dataset.x=x; $('#pins').append(g); pins[r.id]=g;
 });
 
-/* startup: Amtrak stations twinkle until the page has loaded, then fade out and reveal the city dots */
+/* startup: Amtrak stations twinkle until the page has loaded, then settle into tiny quiet dots; the city dots pop in */
 (function intro(){
-  const root=document.documentElement, g=$('#stn');
-  if(!root.classList.contains('intro')){ g.remove(); return; }
+  const root=document.documentElement, g=$('#stn'), intro=root.classList.contains('intro');
   STN.forEach(([x,y])=>{
     const c=sv('circle',{cx:x,cy:y,r:2.6});
-    c.style.setProperty('--d',(Math.random()*1.4).toFixed(2)+'s');
-    c.style.setProperty('--p',(.7+Math.random()*.7).toFixed(2)+'s');
+    if(intro){ c.style.setProperty('--d',(Math.random()*1.4).toFixed(2)+'s'); c.style.setProperty('--p',(.7+Math.random()*.7).toFixed(2)+'s'); }
     g.append(c);
   });
+  if(!intro){ g.classList.add('rest'); return; }
   const order=[...Object.values(pins)].sort((a,b)=>+a.dataset.x-+b.dataset.x);
   order.forEach((p,i)=>p.style.setProperty('--pd',(i*.07).toFixed(2)+'s'));
   const loaded=new Promise(r=>document.readyState==='complete'?r():addEventListener('load',r));
   const fonts=document.fonts?document.fonts.ready:Promise.resolve();
   const minTime=new Promise(r=>setTimeout(r,1700));
   Promise.all([loaded,fonts,minTime]).then(()=>{
-    g.classList.add('out');
-    setTimeout(()=>{ root.classList.remove('intro'); setTimeout(()=>{ g.remove(); order.forEach(p=>p.style.removeProperty('--pd')); },1500); },450);
+    g.classList.add('rest');
+    setTimeout(()=>{ root.classList.remove('intro'); setTimeout(()=>order.forEach(p=>p.style.removeProperty('--pd')),1500); },450);
   });
 })();
 

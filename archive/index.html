@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <base href="../">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donghoon Yi</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Font: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="000/signature.jpg">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #111111;
+            background-color: #ffffff;
+            cursor: url('custom-cursor/cursor.png') 0 31, auto;
+
+        }
+
+        a, button, article, button *, article *, .cursor-pointer *, #hero-greeting, #hero-bio {
+           cursor: url('custom-cursor/cursor-hover.png') 0 31, pointer !important;
+        }
+        a:active, button:active, article:active, button *:active, article *:active, .cursor-pointer *:active {
+            cursor: url('custom-cursor/cursor-pressed.png') 0 31, pointer !important;
+        }
+        body:active, body *:active, #hero-greeting:active, #hero-bio:active {
+            cursor: url('custom-cursor/cursor-pressed.png') 0 31, pointer !important;
+        }
+        
+        /* Smooth backdrop transitions */
+        .modal-backdrop {
+            transition: opacity 0.25s ease-in-out;
+        }
+        
+        /* Drawer slide animation */
+        .sidebar-drawer {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Custom scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #aaa;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #666;
+        }
+    </style>
+</head>
+<body class="bg-white text-zinc-900 antialiased min-h-screen flex flex-col">
+
+    <!-- MOBILE TOP HEADER (Visible only on small screens) -->
+    <header class="lg:hidden sticky top-0 z-30 bg-white border-b border-zinc-200 px-4 py-3 flex items-center justify-between shadow-sm">
+        <button id="mobile-menu-btn" aria-label="Open Navigation Menu" class="p-2 rounded-lg border-2 border-black hover:bg-zinc-100 transition-colors flex items-center justify-center">
+            <i class="fa-solid fa-bars text-xl"></i>
+        </button>
+        <span class="font-bold text-lg tracking-tight">dnhn.design</span>
+        <div class="w-8"></div> <!-- Spacer for symmetry -->
+    </header>
+
+    <!-- MOBILE NAVIGATION DRAWER SIDEBAR -->
+    <div id="drawer-backdrop" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 hidden opacity-0 transition-opacity duration-300"></div>
+    <aside id="mobile-drawer" class="fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] bg-white z-50 p-6 overflow-y-auto transform -translate-x-full sidebar-drawer shadow-2xl flex flex-col justify-between border-r border-zinc-200">
+        <div>
+            <!-- Close Button Header -->
+            <div class="flex justify-end items-center mb-6 pb-4 border-b border-zinc-200">
+                <button id="close-drawer-btn" aria-label="Close Navigation Menu" class="p-2 border-2 border-black rounded-lg hover:bg-black hover:text-white transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- About Section in Mobile Drawer -->
+            <div class="mb-8">
+                <h3 class="font-bold text-base mb-2">About</h3>
+                <p id="drawer-about-text" class="text-xs text-zinc-700 leading-relaxed">
+                    <!-- Populated by JS -->
+                </p>
+            </div>
+
+            <!-- Contact Section in Mobile Drawer -->
+            <div class="space-y-3">
+                <h3 class="font-bold text-base mb-2">Contact</h3>
+                <div id="drawer-contact-links" class="flex flex-col space-y-2 text-xs">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <div class="pt-6 border-t border-zinc-200 text-[11px] text-zinc-500">
+            <p>© dnhn.design 2026</p>
+            <p class="mt-1">disclaimer: this website includes AI-assisted code</p>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT CONTAINER WITH DESKTOP TWO-COLUMN LAYOUT -->
+    <div class="w-full px-6 lg:px-8 pt-6 lg:pt-8 pb-12 flex-1 flex flex-col lg:flex-row gap-8 lg:gap-12">
+        
+        <!-- DESKTOP SIDEBAR (Visible on lg screens and up) -->
+        <aside class="hidden lg:block w-72 shrink-0">
+            <div class="sticky top-8 space-y-8">
+                <!-- About Section -->
+                <div>
+                    <h2 class="font-bold text-base mb-3 text-black">About</h2>
+                    <p id="desktop-about-text" class="text-xs text-zinc-700 leading-relaxed">
+                        <!-- Populated by JS -->
+                    </p>
+                </div>
+
+                <!-- Contact & Links Section -->
+                <div>
+                    <h2 class="font-bold text-base mb-3 text-black">Contact</h2>
+                    <div id="desktop-contact-links" class="flex flex-col space-y-2 text-xs">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-1 flex flex-col min-w-0">
+            
+            <!-- Hero Heading Section (Full viewport height above the fold) -->
+            <section class="min-h-[calc(100vh-4rem)] lg:min-h-[calc(100vh-5rem)] flex flex-col justify-between pb-6 mb-12 relative">
+                <div class="pt-2 sm:pt-4">
+                    <h1 id="hero-greeting" class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight mb-4 sm:mb-6 text-black leading-tight">
+                        Hello, I am Donghoon!
+                    </h1>
+                    <p id="hero-bio" class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-normal text-black leading-snug max-w-5xl">
+                        I design thoughtful content that bridges emerging technology and human needs through exploration and experimentation.
+                    </p>
+                </div>
+
+                <!-- Scroll Indicator Arrow (Centered to full screen width on desktop) -->
+                <div class="pt-8 pb-2 flex flex-col items-center justify-center text-zinc-400 animate-bounce lg:absolute lg:bottom-4 lg:left-1/2 lg:-translate-x-1/2 lg:-ml-[168px] lg:pt-0 lg:pb-0">
+                    <span class="text-xs font-semibold tracking-wider uppercase mb-1">Scroll</span>
+                    <i class="fa-solid fa-chevron-down text-lg"></i>
+                    <i class="fa-solid fa-chevron-down -mt-2 text-lg"></i>
+                </div>
+            </section>
+
+            <!-- Projects Grid Section -->
+            <section class="mb-12">
+                <h2 class="text-2xl font-bold tracking-tight mb-6 text-black">Custom Transit Diagrams (Unofficial/Unaffiliated)</h2>
+                
+                <!-- Dynamic Project Grid (1-col mobile, 3-col desktop) -->
+                <div id="projects-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                    <!-- Populated dynamically via JS -->
+                </div>
+
+                <!-- Show More / Pagination Area -->
+                <div class="mt-10 flex flex-col items-center justify-center">
+                    <button id="show-more-btn" class="w-full max-w-xl py-3 px-6 border-2 border-black rounded-lg font-bold text-black text-sm hover:bg-black hover:text-white transition-all shadow-sm active:scale-[0.99] flex items-center justify-center gap-2">
+                        <span>Show More</span>
+                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                    </button>
+
+                    <!-- Limit Reached Notice (Shown after all 12 projects are expanded) -->
+                    <div id="max-limit-notice" class="hidden w-full max-w-xl p-5 border-2 border-dashed border-zinc-300 rounded-lg bg-zinc-50 text-center">
+                        <i class="fa-solid fa-envelope-circle-check text-2xl text-zinc-600 mb-2"></i>
+                        <p class="text-xs sm:text-sm text-zinc-700 leading-relaxed font-medium">
+                            To see more projects beyond these featured works, please feel free to reach out via email (<a href="mailto:donghoon.yi.jobs@gmail.com" class="underline font-bold hover:text-black">donghoon.yi.jobs@gmail.com</a>), click on the <strong>Portfolio PDF</strong> links, or visit my Instagram in the sidebar!
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="mt-auto border-t border-zinc-200 bg-black text-white py-8 px-4 text-center">
+        <div class="max-w-7xl mx-auto space-y-1 text-xs">
+            <p id="footer-copyright" class="font-medium">© dnhn.design 2026</p>
+            <p class="text-zinc-400">disclaimer: this website includes AI-assisted code</p>
+        </div>
+    </footer>
+
+    <!-- PROJECT DETAIL MODAL -->
+    <div id="project-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <!-- Backdrop -->
+        <div id="modal-backdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm modal-backdrop"></div>
+
+        <!-- Modal Content Box -->
+        <div class="relative bg-white border-2 border-black rounded-xl max-w-2xl w-full p-6 sm:p-8 z-10 shadow-2xl transition-all my-8 max-h-[90vh] flex flex-col">
+            
+            <!-- Close Button Top Right -->
+            <button id="modal-close-x" aria-label="Close modal" class="absolute top-4 right-4 p-2 text-zinc-500 hover:text-black hover:bg-zinc-100 rounded-lg transition">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+
+            <!-- Scrollable Modal Body -->
+            <div class="overflow-y-auto pr-1 space-y-6">
+                <!-- Large Modal Preview Image -->
+                <div class="w-full aspect-video bg-zinc-200 rounded-lg overflow-hidden border border-zinc-200 shadow-inner flex items-center justify-center">
+                    <img id="modal-image" src="" alt="Project Preview" class="w-full h-full object-cover">
+                </div>
+
+                <!-- Details Header -->
+                <div>
+                    <h3 id="modal-title" class="text-2xl sm:text-3xl font-extrabold text-black mb-3">
+                        Title
+                    </h3>
+
+                    <!-- Project Metadata Table/Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs py-3 border-y border-zinc-200 my-4 text-zinc-700">
+                        <div>
+                            <span class="font-bold text-black block">Client:</span>
+                            <span id="modal-client">School Assignment</span>
+                        </div>
+                        <div>
+                            <span class="font-bold text-black block">Year:</span>
+                            <span id="modal-year">2025</span>
+                        </div>
+                        <div>
+                            <span class="font-bold text-black block">Role:</span>
+                            <span id="modal-role">Student</span>
+                        </div>
+                    </div>
+
+                    <!-- Project Detailed Description -->
+                    <p id="modal-description" class="text-xs sm:text-sm text-zinc-700 leading-relaxed my-4">
+                        Description text goes here...
+                    </p>
+                </div>
+            </div>
+
+            <!-- Modal Action Buttons Footer -->
+            <div class="mt-6 pt-4 border-t border-zinc-200 flex flex-col sm:flex-row gap-3">
+                <a id="modal-pdf-link" href="#" target="_blank" rel="noopener noreferrer" class="flex-1 py-3 px-4 border-2 border-black rounded-lg text-center font-bold text-xs sm:text-sm hover:bg-zinc-100 transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-file-pdf text-red-600"></i>
+                    <span>Link to PDF</span>
+                </a>
+                <button id="modal-close-btn" class="flex-1 py-3 px-4 bg-black text-white rounded-lg font-bold text-xs sm:text-sm hover:bg-zinc-800 transition flex items-center justify-center">
+                    Close
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT APP DATA & CONTROLLER -->
+    <script>
+        /* ==========================================================================
+           1. EASY CONFIGURATION DATA (EASILY EDITABLE IN VS CODE)
+           ========================================================================== */
+
+        // Profile & Contact Info
+        const PROFILE_DATA = {
+            name: "Donghoon Yi",
+            greeting: "Hello, I am Donghoon!",
+            heroBio: "I design thoughtful content that bridges emerging technology and human needs through exploration and experimentation.",
+            sidebarAbout: "Donghoon Yi is a designer, creative technologist, a rail-fan, a hobby photographer, and a hobby cartographer who loves to learn and explore new areas. Learning never stops!",
+            contacts: [
+                { type: "phone", icon: "fa-phone", label: "+1 (202) 830 7660", url: "tel:+12028307660" },
+                { type: "email", icon: "fa-envelope", label: "donghoon.yi.jobs@gmail.com", url: "mailto:donghoon.yi.jobs@gmail.com" },
+                { type: "linkedin", icon: "fa-brands fa-linkedin", label: "linkedin.com/in/donghoon-yi", url: "https://linkedin.com/in/donghoon-yi" },
+                { type: "instagram", icon: "fa-brands fa-instagram", label: "@dnhn.design", url: "https://instagram.com/dnhn.design" },
+                { type: "pdf", icon: "fa-file-pdf", label: "My Résumé", url: "000/my_resume_2026.pdf" },
+                { type: "pdf", icon: "fa-folder-open", label: "SVA Sophomore Portfolio", url: "000/Sop_Portfolio.pdf" },
+                { type: "pdf", icon: "fa-folder-open", label: "SVA Junior Portfolio", url: "https://www.figma.com/deck/tD7xoGoiEbr5ytAv2qSwH5/1600244_DonghoonYi_Junior_Portfolio_2026?node-id=1-42&t=cOOazbZM6UW2tm1a-1" },
+                { type: "game", icon: "fa-gamepad", label: "My itch.io page", url: "https://dnhn-design.itch.io/" },
+                { type: "wiki", icon: "fa-globe", label: "My Wikimedia Commons page", url: "https://commons.wikimedia.org/wiki/User:Dnhn" }
+            ],
+            copyright: "© dnhn.design 2026"
+        };
+
+        // Projects Data List (Up to 12 projects)
+        // Simply replace images, captions, titles, descriptions, clients, years, roles, and PDF links here.
+        const PROJECTS_DATA = [
+            {
+                id: 1,
+                title: "SF Bay Area Transit",
+                caption: "SF Bay Area Transit",
+                image: "0_thumb/01_SF.png",
+                client: "Personal Work",
+                year: "2026",
+                role: "Designer",
+                description: "This custom diagram is a personal design exercise. It is for an entirely non-commercial purpose, and is not affiliated with, endorsed by, or connected to any agencies depicted. This diagram is for illustrative and informational purposes only and should not be used for detailed navigation or planning. While efforts were made to ensure accuracy, the designer assumes no liability for errors, omissions, or subsequent service changes. All trademarks and agency names belong to their respective owners.",
+                pdfLink: "000/2026_BART.pdf"
+            },
+            {
+                id: 2,
+                title: "Custom DC Metrorail Diagram",
+                caption: "DC Transit",
+                image: "0_thumb/02_DC.png",
+                client: "Personal Work",
+                year: "2026",
+                role: "Designer",
+                description: "This custom diagram is a personal design exercise. It is for an entirely non-commercial purpose, and is not affiliated with, endorsed by, or connected to any agencies depicted. This diagram is for illustrative and informational purposes only and should not be used for detailed navigation or planning. While efforts were made to ensure accuracy, the designer assumes no liability for errors, omissions, or subsequent service changes. All trademarks and agency names belong to their respective owners.",
+                pdfLink: "000/2026-DCmetro.pdf"
+            },
+            {
+                id: 3,
+                title: "North Jersey Transit",
+                caption: "North Jersey Transit",
+                image: "0_thumb/03_NJ.png",
+                client: "Personal Work",
+                year: "2026",
+                role: "Designer",
+                description: "This custom diagram is a personal design exercise. It is for an entirely non-commercial purpose, and is not affiliated with, endorsed by, or connected to any agencies depicted. This diagram is for illustrative and informational purposes only and should not be used for detailed navigation or planning. While efforts were made to ensure accuracy, the designer assumes no liability for errors, omissions, or subsequent service changes. All trademarks and agency names belong to their respective owners.",
+                pdfLink: "000/2026_NJ.pdf"
+            },
+            {
+                id: 4,
+                title: "Custom NYC Subway Diagram",
+                caption: "NYC Subway",
+                image: "0_thumb/04_NYC.png",
+                client: "Personal Work",
+                year: "2026",
+                role: "Designer",
+                description: "This custom diagram is a personal design exercise. It is for an entirely non-commercial purpose, and is not affiliated with, endorsed by, or connected to any agencies depicted. This diagram is for illustrative and informational purposes only and should not be used for detailed navigation or planning. While efforts were made to ensure accuracy, the designer assumes no liability for errors, omissions, or subsequent service changes. All trademarks and agency names belong to their respective owners.",
+                pdfLink: "000/subway-2026.pdf"
+            },
+            {
+                id: 5,
+                title: "Custom Chicago L Diagram",
+                caption: "Chicago L",
+                image: "0_thumb/05_CHI.png",
+                client: "Personal Work",
+                year: "2026",
+                role: "Designer",
+                description: "This custom diagram is a personal design exercise. It is for an entirely non-commercial purpose, and is not affiliated with, endorsed by, or connected to any agencies depicted. This diagram is for illustrative and informational purposes only and should not be used for detailed navigation or planning. While efforts were made to ensure accuracy, the designer assumes no liability for errors, omissions, or subsequent service changes. All trademarks and agency names belong to their respective owners.",
+                pdfLink: "000/2026_Chicago.pdf"
+            },
+            {
+                id: 6,
+                title: "Custom Amtrak Network Diagram",
+                caption: "Custom Amtrak Network Diagram",
+                image: "0_thumb/06_US.png",
+                client: "Personal Work",
+                year: "2026",
+                role: "Designer",
+                description: "This custom diagram is a personal design exercise. It is for an entirely non-commercial purpose, and is not affiliated with, endorsed by, or connected to any agencies depicted. This diagram is for illustrative and informational purposes only and should not be used for detailed navigation or planning. While efforts were made to ensure accuracy, the designer assumes no liability for errors, omissions, or subsequent service changes. All trademarks and agency names belong to their respective owners.",
+                pdfLink: "000/2026_Amtrak.pdf"
+            },
+            {
+                id: 7,
+                title: "NY Line Diagrams",
+                caption: "NY Line Diagrams",
+                image: "0_thumb/07_strip.png",
+                client: "Personal Work",
+                year: "2026",
+                role: "Designer",
+                description: "This custom diagram is a personal design exercise. It is for an entirely non-commercial purpose, and is not affiliated with, endorsed by, or connected to any agencies depicted. This diagram is for illustrative and informational purposes only and should not be used for detailed navigation or planning. While efforts were made to ensure accuracy, the designer assumes no liability for errors, omissions, or subsequent service changes. All trademarks and agency names belong to their respective owners.",
+                pdfLink: "000/2026-NYC-Rail.pdf"
+            },
+            {
+                id: 8,
+                title: "LIRR Diagramn",
+                caption: "LIRR Diagramn",
+                image: "0_thumb/08_lirr.png",
+                client: "Personal Work",
+                year: "2026",
+                role: "Designer",
+                description: "This custom diagram is a personal design exercise. It is for an entirely non-commercial purpose, and is not affiliated with, endorsed by, or connected to any agencies depicted. This diagram is for illustrative and informational purposes only and should not be used for detailed navigation or planning. While efforts were made to ensure accuracy, the designer assumes no liability for errors, omissions, or subsequent service changes. All trademarks and agency names belong to their respective owners.",
+                pdfLink: "000/LIRR 2026.pdf"
+            },
+            {
+                id: 9,
+                title: "NY Area Rail",
+                caption: "NY Area Rail",
+                image: "0_thumb/09_ny_rail.png",
+                client: "Personal Work",
+                year: "2026",
+                role: "Designer",
+                description: "This custom diagram is a personal design exercise. It is for an entirely non-commercial purpose, and is not affiliated with, endorsed by, or connected to any agencies depicted. This diagram is for illustrative and informational purposes only and should not be used for detailed navigation or planning. While efforts were made to ensure accuracy, the designer assumes no liability for errors, omissions, or subsequent service changes. All trademarks and agency names belong to their respective owners.",
+                pdfLink: "000/0719_NYC_rail.pdf"
+            },
+            {
+                id: 10,
+                title: "Subway Strip Map",
+                caption: "NYC Subway Strip Map",
+                image: "0_thumb/10_strip_subway.png",
+                client: "Personal Work",
+                year: "2026",
+                role: "Designer",
+                description: "This custom diagram is a personal design exercise. It is for an entirely non-commercial purpose, and is not affiliated with, endorsed by, or connected to any agencies depicted. This diagram is for illustrative and informational purposes only and should not be used for detailed navigation or planning. While efforts were made to ensure accuracy, the designer assumes no liability for errors, omissions, or subsequent service changes. All trademarks and agency names belong to their respective owners.",
+                pdfLink: "000/0719_strip.pdf"
+            },
+            {
+                id: 11,
+                title: "NY Ferry Diagram",
+                caption: "NYC Ferry System",
+                image: "0_thumb/11_ferry.png",
+                client: "Personal Work",
+                year: "2026",
+                role: "Designer",
+                description: "This custom diagram is a personal design exercise. It is for an entirely non-commercial purpose, and is not affiliated with, endorsed by, or connected to any agencies depicted. This diagram is for illustrative and informational purposes only and should not be used for detailed navigation or planning. While efforts were made to ensure accuracy, the designer assumes no liability for errors, omissions, or subsequent service changes. All trademarks and agency names belong to their respective owners.",
+                pdfLink: "000/NYC Ferry Network.pdf"
+            },
+            {
+                id: 12,
+                title: "Mini Diagram ",
+                caption: "More Mini Diagram Collection",
+                image: "0_thumb/12_mini.png",
+                client: "Personal Work",
+                year: "2026",
+                role: "Designer",
+                description: "This custom diagram is a personal design exercise. It is for an entirely non-commercial purpose, and is not affiliated with, endorsed by, or connected to any agencies depicted. This diagram is for illustrative and informational purposes only and should not be used for detailed navigation or planning. While efforts were made to ensure accuracy, the designer assumes no liability for errors, omissions, or subsequent service changes. All trademarks and agency names belong to their respective owners.",
+                pdfLink: "000/mini diagrams.pdf"
+            }
+        ];
+
+        /* ==========================================================================
+           2. STATE & INITIALIZATION LOGIC
+           ========================================================================== */
+
+        // Step configuration: initial projects shown (6) and step size on Show More (+6)
+        let visibleCount = 6;
+        const INCREMENT_COUNT = 6;
+        const MAX_PROJECTS_LIMIT = 12;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            renderProfileData();
+            renderProjectsGrid();
+            setupEventListeners();
+        });
+
+        // Populate Bio, Greetings, and Contact Links into Desktop & Mobile Drawers
+        function renderProfileData() {
+            // Text values
+            document.getElementById("hero-greeting").textContent = PROFILE_DATA.greeting;
+            document.getElementById("hero-bio").textContent = PROFILE_DATA.heroBio;
+            document.getElementById("desktop-about-text").textContent = PROFILE_DATA.sidebarAbout;
+            document.getElementById("drawer-about-text").textContent = PROFILE_DATA.sidebarAbout;
+            document.getElementById("footer-copyright").textContent = PROFILE_DATA.copyright;
+
+            // Generate HTML for contact links
+            const contactsHTML = PROFILE_DATA.contacts.map(item => `
+                <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-2 text-zinc-700 hover:text-black hover:underline transition-colors py-1">
+                    <span class="w-4 text-center text-zinc-900"><i class="fa-solid ${item.icon}"></i></span>
+                    <span class="truncate">${escapeHTML(item.label)}</span>
+                </a>
+            `).join("");
+
+            document.getElementById("desktop-contact-links").innerHTML = contactsHTML;
+            document.getElementById("drawer-contact-links").innerHTML = contactsHTML;
+        }
+
+        // Render project cards according to `visibleCount`
+        function renderProjectsGrid() {
+            const gridContainer = document.getElementById("projects-grid");
+            gridContainer.innerHTML = "";
+
+            const projectsToDisplay = PROJECTS_DATA.slice(0, visibleCount);
+
+            projectsToDisplay.forEach((project) => {
+                const card = document.createElement("article");
+                card.className = "group cursor-pointer flex flex-col focus:outline-none focus:ring-2 focus:ring-black rounded-lg p-1 transition";
+                card.tabIndex = 0;
+                card.setAttribute("aria-label", `View details for ${project.title}`);
+
+                card.innerHTML = `
+                    <!-- Aspect ratio placeholder image box matching wireframe -->
+                    <div class="w-full aspect-[4/3] bg-zinc-200 rounded-md overflow-hidden border border-zinc-200 mb-3 relative group-hover:shadow-md transition">
+                        <img 
+                            src="${project.image}" 
+                            alt="${escapeHTML(project.title)}" 
+                            class="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                            loading="lazy"
+                            onerror="this.src='https://placehold.co/800x600/e2e8f0/1e293b?text=Image+Placeholder'"
+                        >
+                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition duration-300"></div>
+                    </div>
+                    
+                    <!-- Short Caption -->
+                    <p class="font-bold text-xs sm:text-sm text-black group-hover:underline">
+                        ${escapeHTML(project.caption || "Short Caption")}
+                    </p>
+                `;
+
+                // Handle click or Enter key to open detail modal
+                card.addEventListener("click", () => openProjectModal(project));
+                card.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        openProjectModal(project);
+                    }
+                });
+
+                gridContainer.appendChild(card);
+            });
+
+            // Handle Show More Button Visibility vs Max Limit Notice
+            const showMoreBtn = document.getElementById("show-more-btn");
+            const maxLimitNotice = document.getElementById("max-limit-notice");
+
+            if (visibleCount >= PROJECTS_DATA.length || visibleCount >= MAX_PROJECTS_LIMIT) {
+                showMoreBtn.classList.add("hidden");
+                maxLimitNotice.classList.remove("hidden");
+            } else {
+                showMoreBtn.classList.remove("hidden");
+                maxLimitNotice.classList.add("hidden");
+            }
+        }
+
+        /* ==========================================================================
+           3. MODAL POPUP & MOBILE DRAWER EVENT CONTROLLERS
+           ========================================================================== */
+
+        function openProjectModal(project) {
+            document.getElementById("modal-title").textContent = project.title;
+            document.getElementById("modal-caption") ? document.getElementById("modal-caption").textContent = project.caption : null;
+            document.getElementById("modal-client").textContent = project.client || "N/A";
+            document.getElementById("modal-year").textContent = project.year || "N/A";
+            document.getElementById("modal-role").textContent = project.role || "N/A";
+            document.getElementById("modal-description").textContent = project.description || "";
+            
+            const modalImg = document.getElementById("modal-image");
+            modalImg.src = project.image;
+            modalImg.onerror = () => { modalImg.src = 'https://placehold.co/800x600/e2e8f0/1e293b?text=Image+Placeholder'; };
+
+            const pdfBtn = document.getElementById("modal-pdf-link");
+            pdfBtn.href = project.pdfLink || "#";
+
+            const modal = document.getElementById("project-modal");
+            modal.classList.remove("hidden");
+            document.body.style.overflow = "hidden"; // Prevent scrolling body behind modal
+        }
+
+        function closeModal() {
+            const modal = document.getElementById("project-modal");
+            modal.classList.add("hidden");
+            document.body.style.overflow = "";
+        }
+
+        function openMobileDrawer() {
+            const drawer = document.getElementById("mobile-drawer");
+            const backdrop = document.getElementById("drawer-backdrop");
+
+            backdrop.classList.remove("hidden");
+            setTimeout(() => {
+                backdrop.classList.remove("opacity-0");
+                drawer.classList.remove("-translate-x-full");
+            }, 10);
+            document.body.style.overflow = "hidden";
+        }
+
+        function closeMobileDrawer() {
+            const drawer = document.getElementById("mobile-drawer");
+            const backdrop = document.getElementById("drawer-backdrop");
+
+            drawer.classList.add("-translate-x-full");
+            backdrop.classList.add("opacity-0");
+            
+            setTimeout(() => {
+                backdrop.classList.add("hidden");
+                document.body.style.overflow = "";
+            }, 300);
+        }
+
+        function setupEventListeners() {
+            // Show More Button Click
+            document.getElementById("show-more-btn").addEventListener("click", () => {
+                visibleCount = Math.min(visibleCount + INCREMENT_COUNT, MAX_PROJECTS_LIMIT, PROJECTS_DATA.length);
+                renderProjectsGrid();
+            });
+
+            // Modal Close Triggers
+            document.getElementById("modal-close-x").addEventListener("click", closeModal);
+            document.getElementById("modal-close-btn").addEventListener("click", closeModal);
+            document.getElementById("modal-backdrop").addEventListener("click", closeModal);
+
+            // Mobile Navigation Drawer Triggers
+            document.getElementById("mobile-menu-btn").addEventListener("click", openMobileDrawer);
+            document.getElementById("close-drawer-btn").addEventListener("click", closeMobileDrawer);
+            document.getElementById("drawer-backdrop").addEventListener("click", closeMobileDrawer);
+
+            // Close modal/drawer on Escape key
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape") {
+                    closeModal();
+                    closeMobileDrawer();
+                }
+            });
+        }
+
+        // Helper function to escape HTML string attributes safely
+        function escapeHTML(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+    </script>
+</body>
+</html>

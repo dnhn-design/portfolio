@@ -70,7 +70,7 @@ header{position:fixed;top:0;left:0;right:0;height:56px;z-index:5;display:flex;al
 @media (max-width:520px){#menu ul,#menu.side ul{grid-template-columns:repeat(3,minmax(0,1fr))}#menu.side{left:12px;right:12px;width:auto;max-height:42vh}}
 
 /* zoomed view: hub + separate dots for items tied to a specific place */
-#kids{position:fixed;left:0;right:0;top:56px;bottom:0;z-index:2;pointer-events:none}
+#kids,#cards{position:fixed;left:0;right:0;top:56px;bottom:0;z-index:2;pointer-events:none}
 .hub,.kid{--s:30px;position:absolute;width:var(--s);height:var(--s);margin:calc(var(--s)/-2);border-radius:50%;pointer-events:auto;display:block;background:var(--accent)}
 .hub{box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--accent);opacity:0;transition:opacity .3s}
 #kids.out .hub{opacity:1}
@@ -80,19 +80,26 @@ header{position:fixed;top:0;left:0;right:0;height:56px;z-index:5;display:flex;al
 #kids.settled .kid{transition-delay:0s}
 #kids.out .kid:hover,#kids.out .kid:focus-visible{transform:scale(1.3)}
 @media (max-width:520px){.hub,.kid{--s:26px}}
-/* outline card: slides out under the selected dot */
-.card{--cw:150px;position:absolute;width:var(--cw);padding:8px 8px 10px;background:var(--pop);color:var(--ink);border-radius:14px;box-shadow:0 10px 36px rgba(0,0,0,.2);pointer-events:auto;
-  font-weight:600;font-size:12px;text-align:center;line-height:1.2;
-  opacity:0;transform:translate(-50%,-16px) scale(.92);transform-origin:50% 0;transition:opacity .3s,transform .45s cubic-bezier(.2,.8,.2,1)}
-.card.in{opacity:1;transform:translate(-50%,0) scale(1)}
-.card.up{transform:translate(-50%,-100%) translateY(16px) scale(.92);transform-origin:50% 100%}
-.card.up.in{transform:translate(-50%,-100%)}
-.card img{display:block;width:100%;aspect-ratio:1/1;object-fit:contain;margin-bottom:6px}
+/* outline card: swings out from under the dot, overshoots slightly, settles; reverses on close */
+.card{--cw:150px;--rot:-4deg;position:absolute;width:var(--cw);padding:8px;background:var(--pop);border-radius:14px;box-shadow:0 10px 36px rgba(0,0,0,.2);pointer-events:auto;
+  transform:translateX(-50%);transform-origin:50% 0;
+  translate:0 -26px;rotate:var(--rot);scale:.9;opacity:0;
+  transition:translate .75s cubic-bezier(.3,1.5,.5,1),rotate .9s cubic-bezier(.3,1.7,.5,1),scale .6s cubic-bezier(.3,1.4,.5,1),opacity .25s}
+.card.in{translate:0 0;rotate:0deg;scale:1;opacity:1}
+.card.up{transform:translateX(-50%) translateY(-100%);transform-origin:50% 100%;translate:0 26px}
+.card.up.in{translate:0 0}
+.card.leaving{translate:0 -18px;rotate:calc(var(--rot) * -.8);scale:.92;opacity:0;pointer-events:none;transition:translate .35s ease-in,rotate .35s ease-in,scale .35s ease-in,opacity .3s ease-in}
+.card.up.leaving{translate:0 18px}
+.card img{display:block;width:100%;aspect-ratio:1/1;object-fit:contain}
 a.card:hover{box-shadow:0 12px 40px rgba(0,0,0,.3)}
 [data-theme=dark] img.ol{filter:invert(1)}
 @media (max-width:520px){.card{--cw:118px}}
 #tip{position:fixed;z-index:6;pointer-events:none;background:var(--pop);color:var(--ink);border-radius:10px;padding:6px;box-shadow:0 8px 28px rgba(0,0,0,.25);font-weight:500;font-size:12px;text-align:center;max-width:170px}
 #tip[hidden]{display:none}
+#tip:not([hidden]){animation:tipin .5s cubic-bezier(.3,1.5,.5,1)}
+@keyframes tipin{from{opacity:0;translate:0 -12px;rotate:-4deg}to{opacity:1;translate:0 0;rotate:0deg}}
+#tip.ol-only{padding:6px}
+#tip.ol-only img{margin-bottom:0}
 #tip img{display:block;width:150px;height:150px;object-fit:cover;border-radius:6px;margin-bottom:6px}
 #tip img.ol{object-fit:contain;padding:4px}
 #tip span{display:block;padding:0 4px 2px}
@@ -129,6 +136,7 @@ body.live #mapwrap{visibility:hidden}
 
 <nav id="menu" hidden></nav>
 <div id="kids"></div>
+<div id="cards"></div>
 <div id="tip" hidden></div>
 <iframe id="amtrakFrame" title="Amtrak live map" hidden></iframe>
 
@@ -198,7 +206,7 @@ $('#themeBtn').addEventListener('click',()=>{
 });
 
 /* menu + zoom */
-const menu=$('#menu'), kids=$('#kids'), tip=$('#tip'), wrap=$('#mapwrap'), svg=$('#usmap');
+const menu=$('#menu'), kids=$('#kids'), cards=$('#cards'), tip=$('#tip'), wrap=$('#mapwrap'), svg=$('#usmap');
 const BASE=[-90,-60,1155,730], pins={};
 let vb=BASE.slice(), anim=0, current=null, tipT=0;
 const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
@@ -226,7 +234,7 @@ function showTip(a,it){
   clearTimeout(tipT);
   tipT=setTimeout(()=>{
     tip.replaceChildren(); if(it.outline) tip.append(el('img',{class:'ol',src:OUTLINE(it.outline),alt:''})); else if(it.img) tip.append(el('img',{src:THUMB(it.img),alt:''}));
-    tip.append(el('span',{text:it.t})); tip.hidden=false;
+    if(!it.outline) tip.append(el('span',{text:it.t})); tip.classList.toggle('ol-only',!!it.outline); tip.hidden=false;
     const r=a.getBoundingClientRect(), below=r.top<230||!!it.outline;
     tip.style.left=Math.min(Math.max(r.left+r.width/2,90),innerWidth-90)+'px';
     tip.style.top=(below?r.bottom+10:r.top-10)+'px';
@@ -257,16 +265,20 @@ function renderMenu(r){
   menu.hidden=false; menu.scrollTop=0;
 }
 
+function hideCard(){
+  cards.querySelectorAll('.card:not(.leaving)').forEach(c=>{c.classList.remove('in');c.classList.add('leaving');setTimeout(()=>c.remove(),450)});
+}
 function showCard(r,v){
   if(!r.card) return;
   const [x,y]=toScreen(r.pt,v), rect=wrap.getBoundingClientRect(), mob=rect.width<=520, cw=mob?118:150;
   const only=r.live.length===1?LIVE(r.live[0].s):null;
-  const c=el(only?'a':'div',{class:'card'},[el('img',{class:'ol',src:OUTLINE(r.card),alt:''}),el('span',{text:r.name})]);
+  const c=el(only?'a':'div',{class:'card'},[el('img',{class:'ol',src:OUTLINE(r.card),alt:only?r.name+' live map':r.name})]);
   if(only){c.href=only;c.target='_blank';c.rel='noopener'}
+  c.style.setProperty('--rot',((Math.random()<.5?-1:1)*(3+Math.random()*2.5)).toFixed(1)+'deg');
   c.style.left=Math.min(Math.max(x,cw/2+8),rect.width-cw/2-8)+'px';
-  const h=cw+36, up=y+26+h>rect.height;
+  const h=cw+16, up=y+26+h>rect.height;
   c.style.top=(up?y-26:y+26)+'px'; if(up) c.classList.add('up');
-  kids.append(c);
+  cards.append(c);
   requestAnimationFrame(()=>requestAnimationFrame(()=>c.classList.add('in')));
 }
 function showGroup(sub){
@@ -305,7 +317,7 @@ function setLive(on){
   else { frame.hidden=true; frame.removeAttribute('src'); }
 }
 function reset(){
-  kids.replaceChildren(); kids.classList.remove('out','settled'); hideTip();
+  hideCard(); kids.replaceChildren(); kids.classList.remove('out','settled'); hideTip();
   Object.values(pins).forEach(p=>p.setAttribute('aria-pressed','false'));
   document.body.classList.remove('fan');
 }

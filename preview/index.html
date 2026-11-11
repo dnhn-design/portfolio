@@ -51,28 +51,41 @@ header{position:fixed;top:0;left:0;right:0;height:56px;z-index:5;display:flex;al
 .pin:focus{outline:none}
 .pin:focus-visible .dot{stroke:var(--ink)}
 
-/* zoom + split */
+/* menu: drops from the top bar (docks left when the map zooms) */
+#menu{position:fixed;z-index:4;top:56px;left:50%;transform:translateX(-50%);width:min(580px,calc(100vw - 24px));max-height:calc(100vh - 80px);overflow:auto;background:var(--pop);border-radius:14px;padding:12px 8px 8px;box-shadow:0 10px 40px rgba(0,0,0,.18)}
+#menu[hidden]{display:none}
+#menu.side{left:16px;transform:none;width:min(440px,calc(100vw - 32px))}
+#menu h2{margin:0 0 6px;padding:0 10px;font-size:18px;font-weight:600;letter-spacing:-.01em}
+#menu ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+#menu.side ul{grid-template-columns:repeat(3,minmax(0,1fr))}
+#menu ul+ul{margin-top:8px}
+.row{display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:6px;border-radius:10px;font-weight:500;font-size:12px;line-height:1.25;text-align:center}
+.row:hover{background:var(--hover)}
+.row .ic{aspect-ratio:1/1;width:100%;border-radius:8px;flex:none;overflow:hidden;background:var(--hover);display:grid;place-items:center}
+.row .ic img{width:100%;height:100%;object-fit:cover;display:block}
+.row .ic i{width:14px;height:14px;border-radius:50%;background:var(--live)}
+.row .ic.lv{aspect-ratio:2.4/1}
+.row .ic.pdf{color:var(--muted);font-size:11px;font-weight:600;letter-spacing:.04em}
+@media (max-width:520px){#menu ul,#menu.side ul{grid-template-columns:repeat(3,minmax(0,1fr))}#menu.side{left:12px;right:12px;width:auto;max-height:42vh}}
+
+/* zoomed view: hub + separate dots for items tied to a specific place */
 #kids{position:fixed;left:0;right:0;top:56px;bottom:0;z-index:2;pointer-events:none}
-#title{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:2;font-weight:600;font-size:18px;letter-spacing:-.01em;pointer-events:none}
-#title[hidden]{display:none}
-.hub,.kid{position:absolute;left:50%;top:50%;border-radius:50%;pointer-events:auto;display:block}
-.hub{--s:30px;width:var(--s);height:var(--s);margin:calc(var(--s)/-2);background:var(--accent);box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--accent);opacity:0;transition:opacity .25s}
+.hub,.kid{--s:30px;position:absolute;width:var(--s);height:var(--s);margin:calc(var(--s)/-2);border-radius:50%;pointer-events:auto;display:block;background:var(--accent)}
+.hub{box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--accent);opacity:0;transition:opacity .3s}
 #kids.out .hub{opacity:1}
-.kid{--s:30px;width:var(--s);height:var(--s);margin:calc(var(--s)/-2);background:var(--accent);box-shadow:0 0 0 3px var(--bg);
-  transform:translate(0,0) scale(.2);opacity:0;transition:transform .5s cubic-bezier(.2,.8,.2,1) var(--d,0s),opacity .3s var(--d,0s)}
+.kid{box-shadow:0 0 0 3px var(--bg);transform:translate(var(--fx),var(--fy)) scale(.3);opacity:0;transition:transform .6s cubic-bezier(.2,.8,.2,1) var(--d,0s),opacity .3s var(--d,0s)}
 .kid.lv{background:var(--live)}
-#kids.out .kid{transform:translate(var(--x),var(--y)) scale(1);opacity:1}
+#kids.out .kid{transform:none;opacity:1}
 #kids.settled .kid{transition-delay:0s}
-#kids.out .kid:hover,#kids.out .kid:focus-visible{transform:translate(var(--x),var(--y)) scale(1.3)}
-@media (max-width:520px){.kid{--s:26px}}
-#tip{position:fixed;z-index:6;pointer-events:none;background:var(--pop);color:var(--ink);border-radius:10px;padding:6px;box-shadow:0 8px 28px rgba(0,0,0,.25);font-weight:500;font-size:12px;text-align:center;max-width:170px;transform:translate(-50%,-100%)}
+#kids.out .kid:hover,#kids.out .kid:focus-visible{transform:scale(1.3)}
+@media (max-width:520px){.hub,.kid{--s:26px}}
+#tip{position:fixed;z-index:6;pointer-events:none;background:var(--pop);color:var(--ink);border-radius:10px;padding:6px;box-shadow:0 8px 28px rgba(0,0,0,.25);font-weight:500;font-size:12px;text-align:center;max-width:170px}
 #tip[hidden]{display:none}
 #tip img{display:block;width:150px;height:150px;object-fit:cover;border-radius:6px;margin-bottom:6px}
 #tip span{display:block;padding:0 4px 2px}
-#mapwrap{transition:opacity .3s}
-body.dim #mapwrap{opacity:.18}
 body.fan .pin{opacity:0;pointer-events:none;transition:opacity .15s}
 .pin{transition:opacity .2s}
+#mapwrap{transition:opacity .3s}
 
 #amtrakFrame{position:fixed;z-index:3;top:56px;left:0;right:0;bottom:0;width:100%;height:calc(100% - 56px);border:0;background:#0c1016}
 #amtrakFrame[hidden]{display:none}
@@ -101,7 +114,7 @@ body.live #mapwrap{visibility:hidden}
   <g id="pins"></g>
 </svg></div>
 
-<div id="title" hidden></div>
+<nav id="menu" hidden></nav>
 <div id="kids"></div>
 <div id="tip" hidden></div>
 <iframe id="amtrakFrame" title="Amtrak live map" hidden></iframe>
@@ -113,13 +126,12 @@ const ROOT = '../';
 const PDF  = n => ROOT + '000/maps/' + encodeURIComponent(n);
 const THUMB = n => ROOT + '0_thumb/' + n;
 const LIVE = s => ROOT + 'live/' + s + '/index.html';
-const PT = {"nyc": [869.7, 215.3], "bos": [908.7, 167.1], "phl": [854.3, 237.2], "dc": [827.4, 267.5], "chi": [638.2, 226.1], "cle": [738.4, 222.8], "dfw": [479.1, 438.8], "la": [86.9, 363.2], "bay": [38.4, 263], "pdx": [79.4, 90.2], "sea": [97.6, 46.5]};
+const PT = {"nyc": [869.79, 214.85], "bos": [908.7, 167.1], "phl": [854.3, 237.2], "dc": [827.4, 267.5], "chi": [638.2, 226.1], "cle": [738.4, 222.8], "dfw": [479.1, 438.8], "la": [86.9, 363.2], "bay": [38.4, 263], "pdx": [79.4, 90.2], "sea": [97.6, 46.5], "nj": [865.92, 211.76], "nice": [876.14, 214.28], "ct": [884.27, 198.17]};
 
 const REGIONS = [
   { id:'nyc', name:'NYC Area', pt:PT.nyc, dx:-16, dy:-14, anchor:'end',
     pdfs:[
       {t:'NYC Subway', f:'nyc_subway-2026.pdf', img:'04_NYC.png'},
-      {t:'North Jersey Transit', f:'2026_NJ.pdf', img:'03_NJ.png'},
       {t:'NY Line Diagrams', f:'2026-NYC-Rail.pdf', img:'07_strip.png'},
       {t:'LIRR', f:'LIRR_2026.pdf', img:'08_lirr.png'},
       {t:'NY Area Rail', f:'0719_NYC_rail.pdf', img:'09_ny_rail.png'},
@@ -129,7 +141,13 @@ const REGIONS = [
     ],
     live:[
       {t:'NYC Subway', s:'nyc-subway'},{t:'LIRR', s:'lirr'},{t:'Metro-North', s:'metro-north'},
-      {t:'Midtown SBS Buses', s:'midtown-bus'},{t:'Nassau NICE Bus', s:'nice-bus'},{t:'CT Rail & BRT', s:'ct-rail'}
+      {t:'Midtown SBS Buses', s:'midtown-bus'}
+    ],
+    /* items tied to a specific place: they get their own dots when the map zooms in */
+    sub:[
+      {t:'North Jersey Transit', f:'2026_NJ.pdf', img:'03_NJ.png', pt:PT.nj},
+      {t:'Nassau NICE Bus', s:'nice-bus', pt:PT.nice},
+      {t:'CT Rail & BRT', s:'ct-rail', pt:PT.ct}
     ]},
   { id:'bos', name:'Boston', pt:PT.bos, dx:16, dy:-10, anchor:'start', pdfs:[], live:[{t:'MBTA', s:'mbta'}]},
   { id:'phl', name:'Philadelphia', pt:PT.phl, dx:16, dy:14, anchor:'start', pdfs:[], live:[{t:'SEPTA', s:'septa'}]},
@@ -166,8 +184,8 @@ $('#themeBtn').addEventListener('click',()=>{
   document.documentElement.dataset.theme=t; try{localStorage.setItem('theme',t)}catch(e){}
 });
 
-/* zoom + split */
-const kids=$('#kids'), tip=$('#tip'), titleEl=$('#title'), wrap=$('#mapwrap'), svg=$('#usmap');
+/* menu + zoom */
+const menu=$('#menu'), kids=$('#kids'), tip=$('#tip'), wrap=$('#mapwrap'), svg=$('#usmap');
 const BASE=[-90,-60,1155,730], pins={};
 let vb=BASE.slice(), anim=0, current=null, tipT=0;
 const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
@@ -177,49 +195,69 @@ const isLive=()=>document.body.classList.contains('live');
 function setVB(v){vb=v;svg.setAttribute('viewBox',v.join(' '))}
 function flyTo(to,done){
   cancelAnimationFrame(anim);
-  const from=vb.slice(), t0=performance.now(), D=reduce?0:600;
+  const from=vb.slice(), t0=performance.now(), D=reduce?0:650;
   const step=now=>{const p=D?Math.min(1,(now-t0)/D):1, e=1-Math.pow(1-p,3);
     setVB(from.map((f,i)=>f+(to[i]-f)*e));
     if(p<1) anim=requestAnimationFrame(step); else if(done) done();};
   anim=requestAnimationFrame(step);
 }
-function zoomTarget(pt){const r=wrap.getBoundingClientRect(), w=150; return [pt[0]-w/2, pt[1]-w*r.height/r.width/2, w, w*r.height/r.width];}
+/* zoomed view that keeps the hub clear of the menu: right of it on desktop, below it on phones */
+function zoomTarget(pt){
+  const r=wrap.getBoundingClientRect(), mob=r.width<=520, w=r.width/(mob?11:18), h=w*r.height/r.width;
+  const ax=mob?.38:.62, ay=mob?.8:.6;
+  return [pt[0]-ax*w, pt[1]-ay*h, w, h];
+}
+const toScreen=(p,v)=>{const r=wrap.getBoundingClientRect();return [(p[0]-v[0])/v[2]*r.width,(p[1]-v[1])/v[3]*r.height]};
 
 function showTip(a,it){
   clearTimeout(tipT);
   tipT=setTimeout(()=>{
     tip.replaceChildren(); if(it.img) tip.append(el('img',{src:THUMB(it.img),alt:''}));
     tip.append(el('span',{text:it.t})); tip.hidden=false;
-    const r=a.getBoundingClientRect(); tip.style.left=Math.min(Math.max(r.left+r.width/2,90),innerWidth-90)+'px';
-    const below=r.top<230; tip.style.top=(below?r.bottom+10:r.top-10)+'px'; tip.style.transform=below?'translate(-50%,0)':'translate(-50%,-100%)';
-  },220);
+    const r=a.getBoundingClientRect(), below=r.top<230;
+    tip.style.left=Math.min(Math.max(r.left+r.width/2,90),innerWidth-90)+'px';
+    tip.style.top=(below?r.bottom+10:r.top-10)+'px';
+    tip.style.transform=below?'translate(-50%,0)':'translate(-50%,-100%)';
+  },200);
 }
 function hideTip(){clearTimeout(tipT);tip.hidden=true}
 
-function fan(r){
+const hrefOf=it=>it.raw||(it.f?PDF(it.f):LIVE(it.s));
+function tile(it,live){
+  const ic = live ? el('span',{class:'ic lv'},[el('i')])
+           : it.img ? el('span',{class:'ic'},[el('img',{src:THUMB(it.img),alt:'',loading:'lazy'})])
+           : el('span',{class:'ic pdf',text:'PDF'});
+  return el('li',{},[el('a',{class:'row',href:hrefOf(it),target:'_blank',rel:'noopener'},[ic,el('span',{text:it.t})])]);
+}
+function renderMenu(r){
+  menu.replaceChildren(el('h2',{text:r.name}));
+  if(r.id==='amtrak'){
+    const a=el('a',{class:'row',href:'#amtrak'},[el('span',{class:'ic'},[el('i')]),el('span',{text:'Live map'})]);
+    a.addEventListener('click',e=>{e.preventDefault();setLive(true)});
+    menu.append(el('ul',{},[el('li',{},[a])]));
+  }
+  if(r.pdfs.length) menu.append(el('ul',{},r.pdfs.map(p=>tile(p,false))));
+  if(r.live.length) menu.append(el('ul',{},r.live.map(l=>tile(l,true))));
+  menu.classList.toggle('side',!!r.sub);
+  menu.hidden=false; menu.scrollTop=0;
+}
+
+/* separate dots for place-specific items, splitting out of the main dot */
+function splitOut(r,v){
   kids.replaceChildren();
-  const items=[
-    ...(r.id==='amtrak'?[{t:'Live map',live:true,amtrak:true}]:[]),
-    ...r.pdfs.map(p=>({t:p.t,href:p.raw||PDF(p.f),img:p.img})),
-    ...r.live.map(l=>({t:l.t,href:LIVE(l.s),live:true}))
-  ];
-  const rect=wrap.getBoundingClientRect(), n=items.length;
-  const sp=Math.min(60,(Math.min(rect.width,rect.height)/2-46)/Math.sqrt(n+1.2));
+  const [hx,hy]=toScreen(r.pt,v);
   const hub=el('button',{type:'button',class:'hub','aria-label':'Close '+r.name});
-  hub.addEventListener('click',close); kids.append(hub);
-  items.forEach((it,i)=>{
-    const rad=sp*Math.sqrt(i+1.4), ang=i*2.39996+.6;
-    const a=el('a',{class:'kid'+(it.live?' lv':''),href:it.href||'#','aria-label':it.t});
-    if(it.href){a.target='_blank';a.rel='noopener'}
-    a.style.setProperty('--x',(Math.cos(ang)*rad).toFixed(1)+'px');
-    a.style.setProperty('--y',(Math.sin(ang)*rad).toFixed(1)+'px');
-    a.style.setProperty('--d',(i*30)+'ms');
-    if(it.amtrak) a.addEventListener('click',e=>{e.preventDefault();setLive(true)});
+  hub.style.left=hx+'px'; hub.style.top=hy+'px'; hub.addEventListener('click',close); kids.append(hub);
+  r.sub.forEach((it,i)=>{
+    const [x,y]=toScreen(it.pt,v), live=!!it.s;
+    const a=el('a',{class:'kid'+(live?' lv':''),href:hrefOf(it),target:'_blank',rel:'noopener','aria-label':it.t});
+    a.style.left=x+'px'; a.style.top=y+'px';
+    a.style.setProperty('--fx',(hx-x)+'px'); a.style.setProperty('--fy',(hy-y)+'px'); a.style.setProperty('--d',(i*80)+'ms');
     a.addEventListener('mouseenter',()=>showTip(a,it)); a.addEventListener('focus',()=>showTip(a,it));
     a.addEventListener('mouseleave',hideTip); a.addEventListener('blur',hideTip);
     kids.append(a);
   });
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{kids.classList.add('out');setTimeout(()=>kids.classList.add('settled'),900)}));
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{kids.classList.add('out');setTimeout(()=>kids.classList.add('settled'),1200)}));
 }
 
 function setLive(on){
@@ -232,22 +270,25 @@ function setLive(on){
 function reset(){
   kids.replaceChildren(); kids.classList.remove('out','settled'); hideTip();
   Object.values(pins).forEach(p=>p.setAttribute('aria-pressed','false'));
+  document.body.classList.remove('fan');
 }
 function close(){
   if(!current) return;
-  current=null; reset(); titleEl.hidden=true;
-  document.body.classList.remove('fan','dim'); amtrakBtn.setAttribute('aria-pressed','false');
-  flyTo(BASE);
+  current=null; reset(); menu.hidden=true; amtrakBtn.setAttribute('aria-pressed','false');
+  if(vb.some((n,i)=>Math.abs(n-BASE[i])>.01)) flyTo(BASE);
 }
 function open(r){
   if(isLive()) setLive(false);
+  const wasZoomed=vb.some((n,i)=>Math.abs(n-BASE[i])>.01);
   reset(); current=r.id;
   if(pins[r.id]) pins[r.id].setAttribute('aria-pressed','true');
   if(r.id==='amtrak') amtrakBtn.setAttribute('aria-pressed','true');
-  document.body.classList.toggle('dim',r.id==='amtrak');
-  document.body.classList.add('fan'); titleEl.textContent=r.name; titleEl.hidden=false;
-  const target = r.id==='amtrak' ? BASE : zoomTarget(r.pt);
-  flyTo(target,()=>{ if(current===r.id) fan(r); });
+  renderMenu(r);
+  if(r.sub){
+    document.body.classList.add('fan');
+    const v=zoomTarget(r.pt);
+    flyTo(v,()=>{ if(current===r.id) splitOut(r,v); });
+  } else if(wasZoomed) flyTo(BASE);
 }
 const toggle = r => current===r.id ? close() : open(r);
 

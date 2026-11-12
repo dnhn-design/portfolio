@@ -122,9 +122,14 @@ html.intro .pin{opacity:0;pointer-events:none}
 html.intro .pin .dot{scale:0}
 #mapwrap{transition:opacity .3s}
 
-#amtrakFrame{position:fixed;z-index:3;top:56px;left:0;right:0;bottom:0;width:100%;height:calc(100% - 56px);border:0;background:#0c1016}
-#amtrakFrame[hidden]{display:none}
-body.live #mapwrap{visibility:hidden}
+/* live maps open inside the page: the camera zooms into the city, then the map fades in over it */
+#liveFrame{position:fixed;z-index:3;top:56px;left:0;right:0;bottom:0;width:100%;height:calc(100% - 56px);border:0;background:#0c1016;
+  opacity:0;visibility:hidden;scale:1.06;transition:opacity .55s ease,scale .9s cubic-bezier(.2,.8,.2,1),visibility 0s .55s}
+#liveFrame.show{opacity:1;visibility:visible;scale:1;transition:opacity .55s ease,scale .9s cubic-bezier(.2,.8,.2,1),visibility 0s}
+body.live-done #mapwrap{visibility:hidden}
+body.live .brand::before{content:"\2190\00a0"}
+body.live .brand{cursor:pointer}
+#kids.away{opacity:0;transition:opacity .3s}
 @media (max-width:700px){.pin .dot{r:13}.pin:hover .dot,.pin[aria-pressed=true] .dot{r:16}}
 
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -155,7 +160,6 @@ body.live #mapwrap{visibility:hidden}
 <div id="cards"></div>
 <div id="tip" hidden></div>
 <div id="stlabel" aria-hidden="true"></div>
-<iframe id="amtrakFrame" title="Amtrak live map" hidden></iframe>
 
 <script>
 /* ROOT: path from this page to the repo root. When this page replaces the
@@ -193,6 +197,13 @@ const REGIONS = [
 ];
 
 
+/* where each live map belongs on the map (camera target) and which city view to return to */
+const LIVEMETA={amtrak:{t:'Amtrak live map',pt:null,ret:null}};
+REGIONS.forEach(r=>{
+  r.live.forEach(l=>LIVEMETA[l.s]={t:l.t+' live map',pt:r.pt,ret:r});
+  (r.sub||[]).forEach(it=>{ if(it.s) LIVEMETA[it.s]={t:it.t+' live map',pt:it.pt,ret:r}; });
+});
+
 const $ = (s,r=document)=>r.querySelector(s);
 const el = (tag,attrs={},kids=[])=>{const e=document.createElement(tag);
   for(const k in attrs){ if(k==='text') e.textContent=attrs[k]; else e.setAttribute(k,attrs[k]); }
@@ -211,15 +222,18 @@ const menu=$('#menu'), kids=$('#kids'), cards=$('#cards'), tip=$('#tip'), wrap=$
 const BASE=[-90,-60,1155,730], pins={};
 let vb=BASE.slice(), anim=0, current=null, tipT=0;
 const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
-const amtrakBtn=$('#amtrakBtn'), frame=$('#amtrakFrame');
-const isLive=()=>document.body.classList.contains('live');
+const amtrakBtn=$('#amtrakBtn'); let frame=null;   // a fresh <iframe> per open: no extra browser-history entries, and removing it fully unloads the map
+let live=null;                                  // {slug, ret}: the live map currently open (ret = region to come back to)
+const isLive=()=>!!live;
 
 function setVB(v){vb=v;svg.setAttribute('viewBox',v.join(' '))}
-function flyTo(to,done){
+function flyTo(to,done,o={}){
   cancelAnimationFrame(anim);
-  const from=vb.slice(), t0=performance.now(), D=reduce?0:650;
-  const step=now=>{const p=D?Math.min(1,(now-t0)/D):1, e=1-Math.pow(1-p,3);
+  const from=vb.slice(), t0=performance.now(), D=reduce?0:(o.D||650);
+  const ease=o.inout?(p=>p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2):(p=>1-Math.pow(1-p,3));
+  const step=now=>{const p=D?Math.min(1,(now-t0)/D):1, e=ease(p);
     setVB(from.map((f,i)=>f+(to[i]-f)*e));
+    if(o.onProgress) o.onProgress(p);
     if(p<1) anim=requestAnimationFrame(step); else if(done) done();};
   anim=requestAnimationFrame(step);
 }
@@ -248,7 +262,7 @@ const hrefOf=it=>it.f?PDF(it.f):LIVE(it.s);
 let dock='';
 function renderMenu(r){
   menu.replaceChildren(el('h2',{text:r.name}),
-    el('ul',{class:'stack'},r.live.map(l=>el('li',{},[el('a',{class:'row',href:hrefOf(l),target:'_blank',rel:'noopener'},[el('span',{class:'ic lv'},[el('i')]),el('span',{text:l.t})])]))));
+    el('ul',{class:'stack'},r.live.map(l=>{ const a=el('a',{class:'row',href:hrefOf(l),target:'_blank',rel:'noopener'},[el('span',{class:'ic lv'},[el('i')]),el('span',{text:l.t})]); a.addEventListener('click',e=>go(e,l.s)); return el('li',{},[a]); })));
   menu.classList.add('stack'); menu.classList.toggle('side',!!dock); menu.classList.toggle('right',dock==='right');
   menu.hidden=false; menu.scrollTop=0;
 }
@@ -261,7 +275,7 @@ function showCard(r,v){
   const [x,y]=toScreen(r.pt,v), rect=wrap.getBoundingClientRect(), mob=rect.width<=520, cw=mob?118:150;
   const only=r.live.length===1?LIVE(r.live[0].s):null;
   const c=el(only?'a':'div',{class:'card'},[el('img',{class:'ol',src:OUTLINE(r.card),alt:only?r.name+' live map':r.name})]);
-  if(only){c.href=only;c.target='_blank';c.rel='noopener'}
+  if(only){c.href=only;c.target='_blank';c.rel='noopener';c.addEventListener('click',e=>go(e,r.live[0].s))}
   c.style.setProperty('--rot',((Math.random()<.5?-1:1)*(3+Math.random()*2.5)).toFixed(1)+'deg');
   c.style.left=Math.min(Math.max(x,cw/2+8),rect.width-cw/2-8)+'px';
   const h=cw+16, up=y+26+h>rect.height;
@@ -278,6 +292,7 @@ function splitOut(r,v){
   r.sub.forEach((it,i)=>{
     const [x,y]=toScreen(it.pt,v);
     const a=el('a',{class:'kid'+(it.s?' lv':''),href:hrefOf(it),target:'_blank',rel:'noopener','aria-label':it.t});
+    if(it.s) a.addEventListener('click',e=>go(e,it.s));
     a.style.left=x+'px'; a.style.top=y+'px';
     a.style.setProperty('--fx',(hx-x)+'px'); a.style.setProperty('--fy',(hy-y)+'px'); a.style.setProperty('--d',(i*80)+'ms');
     const tipItem={t:it.t,outline:it.outline,img:it.img};
@@ -288,15 +303,54 @@ function splitOut(r,v){
   requestAnimationFrame(()=>requestAnimationFrame(()=>{kids.classList.add('out');setTimeout(()=>kids.classList.add('settled'),1200)}));
 }
 
-function setLive(on){
-  if(on) close();
-  document.body.classList.toggle('live',on);
-  amtrakBtn.setAttribute('aria-pressed',String(on));
-  if(on){ frame.src=LIVE('amtrak'); frame.hidden=false; }
-  else { frame.hidden=true; frame.removeAttribute('src'); }
+/* ===== live maps inside the page =====
+   Enter: hide the city UI, set the iframe loading, zoom the camera into the place, and fade the map in near the end of the zoom.
+   Leave: fade it out, unload it, and zoom back to the city view you came from. Nothing loads until you enter a map. */
+function liveTarget(pt){
+  const r=wrap.getBoundingClientRect(), w=r.width/(r.width<=520?14:28), h=w*r.height/r.width;
+  return [pt[0]-w/2, pt[1]-h/2, w, h];
 }
+function go(e,slug){                      // plain clicks open in-page; modified clicks keep the normal link behavior
+  if(e.metaKey||e.ctrlKey||e.shiftKey||e.button===1) return;
+  e.preventDefault(); hideTip(); const m=LIVEMETA[slug]; openLive(slug,m.pt,m.ret);
+}
+function openLive(slug,pt,ret,instant){
+  if(live) return;
+  live={slug,ret};
+  const body=document.body; body.classList.add('live','fan');
+  hideCard(); menu.hidden=true; hideTip(); kids.classList.add('away');
+  amtrakBtn.setAttribute('aria-pressed',String(slug==='amtrak'));
+  try{ history[instant?'replaceState':'pushState']({live:slug},'','#'+slug); }catch(e){}
+  let shown=false, loaded=false, p=pt&&!instant?0:1;
+  const show=()=>{ if(shown||!live||live.slug!==slug||!loaded||p<.7) return; shown=true;
+    frame.classList.add('show'); setTimeout(()=>{ if(live&&live.slug===slug) body.classList.add('live-done'); },instant?0:900); };
+  if(frame) frame.remove();
+  frame=document.createElement('iframe'); frame.id='liveFrame'; frame.title=LIVEMETA[slug].t;
+  frame.onload=()=>{ loaded=true; show(); };
+  frame.src=LIVE(slug); document.body.append(frame);
+  if(pt&&!instant) flyTo(liveTarget(pt),()=>{p=1;show()},{D:1150,inout:true,onProgress:q=>{p=q;if(q>=.7)show()}});
+}
+function closeLive(){
+  if(!live) return;
+  const {ret}=live; live=null;
+  const body=document.body; body.classList.remove('live-done','live'); frame.classList.remove('show');
+  const f=frame; setTimeout(()=>{ if(f&&f!==frame||!live){ f.remove(); if(f===frame) frame=null; } },700);   // unload the page once it has faded out
+  amtrakBtn.setAttribute('aria-pressed','false');
+  if(ret) open(ret);                                     // zoom back out to the city view
+  else { body.classList.remove('fan'); kids.classList.remove('away'); flyTo(BASE,null,{D:900,inout:true}); }
+}
+function exitLive(){                      // browser Back and the UI both end up here
+  if(!live) return;
+  if(history.state&&history.state.live){ try{ history.back(); return; }catch(e){} }
+  closeLive();
+}
+addEventListener('popstate',e=>{
+  const sl=e.state&&e.state.live;
+  if(live&&!sl) closeLive();
+  else if(!live&&sl&&LIVEMETA[sl]) openLive(sl,LIVEMETA[sl].pt,LIVEMETA[sl].ret,true);
+});
 function reset(){
-  hideCard(); kids.replaceChildren(); kids.classList.remove('out','settled'); hideTip();
+  hideCard(); kids.replaceChildren(); kids.classList.remove('out','settled','away'); hideTip();
   Object.values(pins).forEach(p=>p.setAttribute('aria-pressed','false'));
   document.body.classList.remove('fan');
 }
@@ -306,7 +360,6 @@ function close(){
   if(vb.some((n,i)=>Math.abs(n-BASE[i])>.01)) flyTo(BASE);
 }
 function open(r){
-  if(isLive()) setLive(false);
   const same=(a,b)=>a.every((n,i)=>Math.abs(n-b[i])<.01), wasZoomed=!same(vb,BASE);
   const rect=wrap.getBoundingClientRect(), mob=rect.width<=520;
   reset(); current=r.id;
@@ -428,10 +481,11 @@ REGIONS.forEach(r=>{
 })();
 
 /* corner dot: toggles the live Amtrak map (press it again, or Esc, to leave) */
-amtrakBtn.addEventListener('click',()=>setLive(!isLive()));
+amtrakBtn.addEventListener('click',()=>{ if(live) exitLive(); else { close(); openLive('amtrak',null,null); } });
+$('.brand').addEventListener('click',e=>{ if(live){ e.preventDefault(); exitLive(); } });
 $('#usmap').addEventListener('click',e=>{ if(!e.target.closest('.pin')) close(); });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(isLive()) setLive(false); else close(); }});
-if(location.hash==='#amtrak') setLive(true);
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(live) exitLive(); else close(); }});
+{ const sl=location.hash.slice(1); if(LIVEMETA[sl]){ document.documentElement.classList.remove('intro'); openLive(sl,LIVEMETA[sl].pt,LIVEMETA[sl].ret,true); } }
 </script>
 </body>
 </html>

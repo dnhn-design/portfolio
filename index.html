@@ -161,6 +161,7 @@ body.live #mapwrap{visibility:hidden}
 /* ROOT: path from this page to the repo root. When this page replaces the
    root index.html, set it to ''. */
 const ROOT = '';
+/* the one PDF exception: North Jersey Transit (everything else on the page is a live map) */
 const PDF  = n => ROOT + '000/maps/' + encodeURIComponent(n);
 const THUMB = n => ROOT + '0_thumb/' + n;
 const OUTLINE = n => ROOT + 'outlines/' + n + '.webp';
@@ -170,46 +171,27 @@ const PT = {"nyc": [869.79, 214.85], "bos": [908.7, 167.1], "phl": [854.3, 237.2
 
 const REGIONS = [
   { id:'nyc', name:'NYC Area', pt:PT.nyc, dx:-16, dy:-14, anchor:'end',
-    pdfs:[
-      {t:'NYC Subway', f:'nyc_subway-2026.pdf', img:'04_NYC.png'},
-      {t:'NY Line Diagrams', f:'2026-NYC-Rail.pdf', img:'07_strip.png'},
-      {t:'NY Area Rail', f:'0719_NYC_rail.pdf', img:'09_ny_rail.png'},
-      {t:'Subway Strip Map', f:'0719_nyc_strip.pdf', img:'10_strip_subway.png'},
-      {t:'NYC Ferry', f:'NYC_Ferry.pdf', img:'11_ferry.png'},
-    ],
-    live:[
-      {t:'NYC Subway', s:'nyc-subway'},{t:'Midtown SBS Buses', s:'midtown-bus'}
-    ],
+    live:[{t:'NYC Subway', s:'nyc-subway'},{t:'Midtown SBS Buses', s:'midtown-bus'}],
     /* items tied to a specific place: they get their own dots when the map zooms in */
     sub:[
-      {t:'North Jersey Transit', pt:PT.nj, items:[{t:'North Jersey Transit', f:'2026_NJ.pdf', img:'03_NJ.png'}]},
-      {t:'Metro-North', outline:'metro-north', pt:PT.mnr, items:[{t:'Metro-North', s:'metro-north'}]},
-      {t:'Nassau NICE Bus', outline:'nice-bus', pt:PT.nice, items:[{t:'Nassau NICE Bus', s:'nice-bus'}]},
-      {t:'LIRR', outline:'lirr', pt:PT.lirr, items:[{t:'LIRR Diagram', f:'LIRR_2026.pdf', img:'08_lirr.png'},{t:'LIRR Strip Map', f:'0719-LIRR-strip.pdf'},{t:'LIRR', s:'lirr'}]},
-      {t:'CT Rail & BRT', outline:'ct-rail', pt:PT.ct, items:[{t:'CT Rail & BRT', s:'ct-rail'}]}
+      {t:'North Jersey Transit', f:'2026_NJ.pdf', img:'03_NJ.png', pt:PT.nj},
+      {t:'Metro-North', s:'metro-north', outline:'metro-north', pt:PT.mnr},
+      {t:'Nassau NICE Bus', s:'nice-bus', outline:'nice-bus', pt:PT.nice},
+      {t:'LIRR', s:'lirr', outline:'lirr', pt:PT.lirr},
+      {t:'CT Rail & BRT', s:'ct-rail', outline:'ct-rail', pt:PT.ct}
     ]},
-  { id:'bos', card:'mbta', name:'Boston', pt:PT.bos, dx:16, dy:-10, anchor:'start', pdfs:[], live:[{t:'MBTA', s:'mbta'}]},
-  { id:'phl', card:'septa', name:'Philadelphia', pt:PT.phl, dx:16, dy:14, anchor:'start', pdfs:[], live:[{t:'SEPTA', s:'septa'}]},
-  { id:'dc', card:'md-va-rail', name:'Washington, DC', pt:PT.dc, dx:-16, dy:16, anchor:'end',
-    pdfs:[{t:'DC Metrorail', f:'2026-DCmetro.pdf', img:'02_DC.png'}], live:[{t:'MD-VA Rail', s:'md-va-rail'}]},
-  { id:'chi', card:'chicago', name:'Chicago', pt:PT.chi, dx:-16, dy:-12, anchor:'end',
-    pdfs:[{t:'Chicago L', f:'2026_Chicago.pdf', img:'05_CHI.png'}], live:[{t:'Chicago', s:'chicago'}]},
-  { id:'cle', card:'gcrta', name:'Cleveland', pt:PT.cle, dx:0, dy:30, anchor:'middle', pdfs:[], live:[{t:'GCRTA', s:'gcrta'}]},
-  { id:'dfw', card:'dfw-rail', name:'Dallas–Fort Worth', pt:PT.dfw, dx:18, dy:6, anchor:'start', pdfs:[], live:[{t:'DFW Rail', s:'dfw-rail'}]},
-  { id:'la', card:'la-rail', name:'Los Angeles', pt:PT.la, dx:18, dy:6, anchor:'start', pdfs:[], live:[{t:'LA Rail', s:'la-rail'}]},
-  { id:'bay', card:'bay-rail', name:'Bay Area', pt:PT.bay, dx:18, dy:6, anchor:'start',
-    pdfs:[{t:'SF Bay Area Transit', f:'2026_BART.pdf', img:'01_SF.png'}], live:[{t:'Bay Rail', s:'bay-rail'}]},
-  { id:'pdx', card:'portland-rail', name:'Portland', pt:PT.pdx, dx:18, dy:6, anchor:'start', pdfs:[], live:[{t:'Portland Rail', s:'portland-rail'}]},
-  { id:'sea', card:'sound-transit', name:'Seattle', pt:PT.sea, dx:18, dy:6, anchor:'start', pdfs:[], live:[{t:'Sound Transit', s:'sound-transit'}]}
+  { id:'bos', card:'mbta', name:'Boston', pt:PT.bos, dx:16, dy:-10, anchor:'start', live:[{t:'MBTA', s:'mbta'}]},
+  { id:'phl', card:'septa', name:'Philadelphia', pt:PT.phl, dx:16, dy:14, anchor:'start', live:[{t:'SEPTA', s:'septa'}]},
+  { id:'dc', card:'md-va-rail', name:'Washington, DC', pt:PT.dc, dx:-16, dy:16, anchor:'end', live:[{t:'MD-VA Rail', s:'md-va-rail'}]},
+  { id:'chi', card:'chicago', name:'Chicago', pt:PT.chi, dx:-16, dy:-12, anchor:'end', live:[{t:'Chicago', s:'chicago'}]},
+  { id:'cle', card:'gcrta', name:'Cleveland', pt:PT.cle, dx:0, dy:30, anchor:'middle', live:[{t:'GCRTA', s:'gcrta'}]},
+  { id:'dfw', card:'dfw-rail', name:'Dallas–Fort Worth', pt:PT.dfw, dx:18, dy:6, anchor:'start', live:[{t:'DFW Rail', s:'dfw-rail'}]},
+  { id:'la', card:'la-rail', name:'Los Angeles', pt:PT.la, dx:18, dy:6, anchor:'start', live:[{t:'LA Rail', s:'la-rail'}]},
+  { id:'bay', card:'bay-rail', name:'Bay Area', pt:PT.bay, dx:18, dy:6, anchor:'start', live:[{t:'Bay Rail', s:'bay-rail'}]},
+  { id:'pdx', card:'portland-rail', name:'Portland', pt:PT.pdx, dx:18, dy:6, anchor:'start', live:[{t:'Portland Rail', s:'portland-rail'}]},
+  { id:'sea', card:'sound-transit', name:'Seattle', pt:PT.sea, dx:18, dy:6, anchor:'start', live:[{t:'Sound Transit', s:'sound-transit'}]}
 ];
 
-const AMTRAK = { id:'amtrak', name:'dnhn.design', stack:true, live:[],
-  pdfs:[
-    {t:'Amtrak v3', f:'amtrak_v3.pdf'},
-    {t:'Amtrak v2', f:'2026_Amtrak.pdf', img:'06_US.png'},
-    {t:'Amtrak v1', f:'07 19 Amtrak Diagrams.pdf'}
-  ],
-  extra:[{t:'Mini Diagram Collection', raw:ROOT+'000/mini%20diagrams.pdf', img:'12_mini.png'}] };
 
 const $ = (s,r=document)=>r.querySelector(s);
 const el = (tag,attrs={},kids=[])=>{const e=document.createElement(tag);
@@ -262,25 +244,12 @@ function showTip(a,it){
 }
 function hideTip(){clearTimeout(tipT);tip.hidden=true}
 
-const hrefOf=it=>it.raw||(it.f?PDF(it.f):LIVE(it.s));
-function tile(it,live){
-  const ic = live ? el('span',{class:'ic lv'},[el('i')])
-           : it.img ? el('span',{class:'ic'},[el('img',{src:THUMB(it.img),alt:'',loading:'lazy'})])
-           : el('span',{class:'ic pdf',text:'PDF'});
-  return el('li',{},[el('a',{class:'row',href:hrefOf(it),target:'_blank',rel:'noopener'},[ic,el('span',{text:it.t})])]);
-}
-let group=false, dock='';
+const hrefOf=it=>it.f?PDF(it.f):LIVE(it.s);
+let dock='';
 function renderMenu(r){
-  group=false;
-  menu.replaceChildren(el('h2',{text:r.name}));
-  if(r.stack){   // vertical list: live map, then v3 / v2 / v1, then a gap and the extras
-    const a=el('a',{class:'row',href:'#amtrak'},[el('span',{class:'ic lv'},[el('i')]),el('span',{text:'Amtrak Live Map'})]);
-    a.addEventListener('click',e=>{e.preventDefault();setLive(true)});
-    menu.append(el('ul',{class:'stack'},[el('li',{},[a]),...r.pdfs.map(p=>tile(p,false))]));
-    if(r.extra) menu.append(el('ul',{class:'stack'},r.extra.map(p=>tile(p,false))));
-  } else if(r.pdfs.length) menu.append(el('ul',{},r.pdfs.map(p=>tile(p,false))));
-  if(r.live.length) menu.append(el('ul',{},r.live.map(l=>tile(l,true))));
-  menu.classList.toggle('stack',!!r.stack); menu.classList.toggle('side',!!dock); menu.classList.toggle('right',dock==='right');
+  menu.replaceChildren(el('h2',{text:r.name}),
+    el('ul',{class:'stack'},r.live.map(l=>el('li',{},[el('a',{class:'row',href:hrefOf(l),target:'_blank',rel:'noopener'},[el('span',{class:'ic lv'},[el('i')]),el('span',{text:l.t})])]))));
+  menu.classList.add('stack'); menu.classList.toggle('side',!!dock); menu.classList.toggle('right',dock==='right');
   menu.hidden=false; menu.scrollTop=0;
 }
 
@@ -300,27 +269,18 @@ function showCard(r,v){
   cards.append(c);
   requestAnimationFrame(()=>requestAnimationFrame(()=>c.classList.add('in')));
 }
-function showGroup(sub){
-  group=true; menu.replaceChildren(el('h2',{text:sub.t}));
-  const p=sub.items.filter(i=>i.f||i.raw), l=sub.items.filter(i=>i.s);
-  if(p.length) menu.append(el('ul',{},p.map(i=>tile(i,false))));
-  if(l.length) menu.append(el('ul',{},l.map(i=>tile(i,true))));
-  menu.hidden=false; menu.scrollTop=0;
-}
 /* separate dots for place-specific items, splitting out of the main dot */
 function splitOut(r,v){
   kids.replaceChildren();
   const [hx,hy]=toScreen(r.pt,v);
   const hub=el('button',{type:'button',class:'hub','aria-label':'Close '+r.name});
-  hub.style.left=hx+'px'; hub.style.top=hy+'px'; hub.addEventListener('click',()=>{ if(group) renderMenu(r); else close(); }); kids.append(hub);
+  hub.style.left=hx+'px'; hub.style.top=hy+'px'; hub.addEventListener('click',close); kids.append(hub);
   r.sub.forEach((it,i)=>{
-    const [x,y]=toScreen(it.pt,v), one=it.items.length===1, first=one?it.items[0]:null;
-    const live=it.items.every(k=>k.s);
-    const a=el('a',{class:'kid'+(live?' lv':''),href:one?hrefOf(first):'#','aria-label':it.t});
-    if(one){a.target='_blank';a.rel='noopener'} else a.addEventListener('click',e=>{e.preventDefault();showGroup(it)});
+    const [x,y]=toScreen(it.pt,v);
+    const a=el('a',{class:'kid'+(it.s?' lv':''),href:hrefOf(it),target:'_blank',rel:'noopener','aria-label':it.t});
     a.style.left=x+'px'; a.style.top=y+'px';
     a.style.setProperty('--fx',(hx-x)+'px'); a.style.setProperty('--fy',(hy-y)+'px'); a.style.setProperty('--d',(i*80)+'ms');
-    const tipItem={t:it.t,outline:it.outline,img:(it.items.find(k=>k.img)||{}).img};
+    const tipItem={t:it.t,outline:it.outline,img:it.img};
     a.addEventListener('mouseenter',()=>showTip(a,tipItem)); a.addEventListener('focus',()=>showTip(a,tipItem));
     a.addEventListener('mouseleave',hideTip); a.addEventListener('blur',hideTip);
     kids.append(a);
@@ -351,9 +311,8 @@ function open(r){
   const rect=wrap.getBoundingClientRect(), mob=rect.width<=520;
   reset(); current=r.id;
   if(pins[r.id]) pins[r.id].setAttribute('aria-pressed','true');
-  if(r.id==='amtrak') amtrakBtn.setAttribute('aria-pressed','true');
   dock = r.sub ? 'left' : (r.pt && !mob) ? (toScreen(r.pt,BASE)[0]>rect.width/2?'left':'right') : '';
-  renderMenu(r);
+  if(r.live.length===1&&r.card) menu.hidden=true; else renderMenu(r);
   if(r.sub){
     document.body.classList.add('fan');
     const v=zoomTarget(r.pt);
@@ -468,8 +427,8 @@ REGIONS.forEach(r=>{
   wake();
 })();
 
-/* Amtrak corner dot: opens its menu (diagrams + live map); pressing it again, or Esc, closes / leaves live mode */
-amtrakBtn.addEventListener('click',()=>{ if(isLive()) setLive(false); else toggle(AMTRAK); });
+/* corner dot: toggles the live Amtrak map (press it again, or Esc, to leave) */
+amtrakBtn.addEventListener('click',()=>setLive(!isLive()));
 $('#usmap').addEventListener('click',e=>{ if(!e.target.closest('.pin')) close(); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(isLive()) setLive(false); else close(); }});
 if(location.hash==='#amtrak') setLive(true);

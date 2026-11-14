@@ -3,6 +3,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="../shared/family.css">
+<script src="../shared/base-ne.js"></script><script src="../shared/basemap.js"></script>
 <style>
 /* Metro-North adapter: this schematic engine inside the shared UI (shared/family.css) */
 :root{
@@ -11,6 +12,11 @@
   --c1:#009B3A; --c2:#4C84FF; --c3:#FF2D55; --c4:#FF6E9F; --c5:#FF8A57; --c6:#E0405A;
 }
 #map{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:default;display:block}
+.bm{fill:none;vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round}
+.bm.land{fill:rgba(150,170,200,.04)}.bm.urban{fill:rgba(150,170,200,.05)}
+.bm.county{stroke:rgba(120,140,170,.17);stroke-width:1}.bm.state{stroke:rgba(140,160,190,.28);stroke-width:1}
+.bm.coast{stroke:rgba(80,130,190,.30);stroke-width:1.2}.bm.rivers{stroke:rgba(70,115,170,.22);stroke-width:1.6}
+.bm.road{stroke:rgba(130,150,180,.18);stroke-width:.9}.bm.road2{stroke:rgba(130,150,180,.11);stroke-width:.6}
 #map.pan{cursor:grabbing}#map.ptr{cursor:pointer}
 #tip{position:absolute}
 #pn{grid-area:side;background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;min-width:0}
@@ -118,7 +124,7 @@
 <div id="app">
   <div id="mapwrap">
     <svg id="map" aria-label="Metro-North map">
-      <g id="tracks"></g><g id="stations"></g><g id="trains"></g><circle id="halo" r="9"/><circle id="hl" r="0"/>
+      <g id="base"></g><g id="tracks"></g><g id="stations"></g><g id="trains"></g><circle id="halo" r="9"/><circle id="hl" r="0"/>
     </svg>
     <div id="zoomc"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">&minus;</button><button id="fit" aria-label="Reset view">&#8962;</button></div>
     <div id="legend">
@@ -181,7 +187,8 @@ const fmt=m=>hm(m)+' '+ap(m);
 const rel=m=>m<=0.5?'now':m<60?Math.ceil(m)+'m':Math.floor(m/60)+'h '+Math.round(m%60)+'m';
 
 /* ---------- build map ---------- */
-const gTracks=$('#tracks'),gSt=$('#stations'),gTr=$('#trains');
+const gTracks=$('#tracks'),gSt=$('#stations'),gTr=$('#trains'),gBase=$('#base');
+if(window.Basemap)Basemap.svg(gBase,(lo,la)=>lo*KX,(lo,la)=>-la*1000,el);   // county / coast / highway base layer
 for(const k in G){G[k].path=el('path',{class:'seg off'},gTracks);G[k].path.setAttribute('d','M'+G[k].pts.map(p=>p[0].toFixed(2)+' '+p[1].toFixed(2)).join('L'))}
 const LAB={'Grand Central':[10,17,'start'],'Poughkeepsie':[10,4,'start'],'Wassaic':[10,4,'start'],'New Haven':[12,16,'start'],'New Canaan':[-10,4,'end'],'Danbury':[-10,4,'end'],'Waterbury':[10,4,'start']};
 S.forEach(s=>{
@@ -404,7 +411,7 @@ function frame(now){
   for(const p of ['s','x','y']){const d=Vt[p]-V[p];if(Math.abs(d)>1e-4){V[p]+=d*k;viewDirty=true}else V[p]=Vt[p]}
   $('#stations').classList.toggle('z',V.s>fitS*3);
   if(viewDirty){
-    gTracks.setAttribute('transform',`translate(${V.x} ${V.y}) scale(${V.s})`);
+    gTracks.setAttribute('transform',`translate(${V.x} ${V.y}) scale(${V.s})`);gBase.setAttribute('transform',`translate(${V.x} ${V.y}) scale(${V.s})`);
     S.forEach(s=>{s.sx=s.x*V.s+V.x;s.sy=s.y*V.s+V.y;s.g.setAttribute('transform',`translate(${s.sx.toFixed(1)} ${s.sy.toFixed(1)})`)});
     viewDirty=false}
   for(const tr of TR){

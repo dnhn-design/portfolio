@@ -4,6 +4,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="../shared/family.css">
+<script src="../shared/base-ne.js"></script><script src="../shared/basemap.js"></script>
 <style>
 /* NYC Subway adapter: the heartbeat-flow engine inside the shared UI (shared/family.css).
    Focus legend uses round service bullets (subway + PATH). The right-hand panel (stats, top hubs, selected station) is the sidebar. */
@@ -319,6 +320,7 @@ function draw(now){
   const bg=css('--bg'),ink=css('--ink'),ink2=css('--ink2'),acc=css('--accent'),halo=css('--halo');
   dark=getComputedStyle(document.documentElement).colorScheme.indexOf('dark')>-1;
   ctx.setTransform(DPR,0,0,DPR,0,0);ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  if(window.Basemap)Basemap.draw(ctx,(lo,la)=>sx(84199.7*lo+6230760.1),(lo,la)=>sy(110756.3*la-4511102.5),{z:V.s/0.02});   // county / coast / highway base layer
   const s=series(day);
   // services
   ctx.lineCap='round';ctx.lineJoin='round';

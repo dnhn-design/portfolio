@@ -4,6 +4,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="../shared/family.css">
+<script src="../shared/base-ne.js"></script><script src="../shared/basemap.js"></script>
 <style>
 /* NICE adapter: this bus engine inside the shared UI (shared/family.css) */
 :root{--map:#0a0d13;--muted:var(--mute);--accent:#6cb6ff;--live:#47c47d;--halo:#0a0d13;--chip-text:#0a0d13;--f-display:var(--sans);--f-body:var(--sans)}
@@ -329,6 +330,7 @@ function render(){
   queued=false;if(!W)return;readTheme();
   ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.fillStyle=th.bg;ctx.fillRect(0,0,W,H);
+  if(window.Basemap)Basemap.draw(ctx,(lo,la)=>px(lo*K),(lo,la)=>py(-la),{z:V.k/3000});   // county / coast / highway base layer
   const foc=S.focus,rs=routes.map((_,i)=>i).filter(shown);
   const dim=r=>foc!==null&&r!==foc;
   ctx.lineJoin='round';ctx.lineCap='round';

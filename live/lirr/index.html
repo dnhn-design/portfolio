@@ -4,6 +4,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="../shared/family.css">
+<script src="../shared/base-ne.js"></script><script src="../shared/basemap.js"></script>
 <style>
 /* LIRR adapter: maps this engine's element ids onto the shared UI (shared/family.css) */
 :root{--surface:var(--panel);--muted:var(--mute);--bar:#273141;--bar-on:var(--fg)}
@@ -244,6 +245,7 @@ function trainPos(tr,tm){
 const lit=r=>focus.size===0||focus.has(r);
 function draw(){
   ctx.clearRect(0,0,W,H);
+  if(window.Basemap)Basemap.draw(ctx,(lo,la)=>sx(lo*K),(lo,la)=>sy(la),{z:view.s/fit});   // county / coast / highway base layer
   ctx.lineCap='round';ctx.lineJoin='round';
   const z=view.s/fit;
   // lines: dim first, lit on top

@@ -16,3 +16,10 @@ one file. The native engine reads a JSON blob (`<script id="data" type="applicat
 (stop-time patterns), `trips` (per day type: pattern, start time, train number), `hist`, plus optional base-map layers
 (`land`, `counties`, `rivers`, `coast`, `ghost`). Convert a GTFS feed to that shape, then use e.g. `live/chicago`
 as the template.
+
+## Base layer
+`base-ne.js` + `basemap.js` give the maps that had no background a basic one: land tint, county and state lines, coastline,
+the Hudson / Connecticut / Delaware rivers, urban areas and major highways for NYC, Long Island, the Hudson Valley and
+Connecticut (sources: US Census counties via `us-atlas`, Natural Earth 1:10m). LIRR, Metro-North, NICE Bus and NYC Subway use it.
+Amtrak already draws state and coast lines, the native maps ship their own, and Midtown Bus is a diagram, so none of those use it.
+Each page tells `Basemap` how to turn lon/lat into its own coordinates. A finer street grid would need an OpenStreetMap extract.

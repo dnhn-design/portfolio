@@ -2,124 +2,64 @@
 <title>Amtrak Live Map</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../shared/family.css">
 <style>
-/* Layout: full-bleed map, train list on the right, transport bar along the bottom. Dark only, one amber accent. */
-:root{
-  color-scheme:dark;
-  --bg:#0c1016;
-  --land:#1c2531;
-  --rail:#29323f;
-  --station:#4a5565;
-  --panel:#10151c;
-  --line:#1f2731;
-  --fg:#e8ecf2;
-  --dim:#6f7a89;
-  --chip:#e8ecf2;
-  --chip-fg:#0c1016;
-  --accent:#6cb6ff;
-  --bl:#f2e205;
-  --sans:'Geist',system-ui,-apple-system,'Segoe UI',sans-serif;
-  --mono:'Geist Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
-}
-html,body{height:100%;margin:0;overflow:hidden}
-body{background:var(--bg);color:var(--fg);font:400 13px/1.35 var(--sans);-webkit-font-smoothing:antialiased}
-button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
-button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.app{height:100%;display:grid;grid-template-columns:minmax(0,1fr) 300px;grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"map side" "bar bar"}
-#mapwrap{grid-area:map;position:relative;min-width:0;min-height:0;overflow:hidden}
-#map{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}
-#map.pt{cursor:pointer}
-#map.drag{cursor:grabbing}
-
-/* station card */
-#pop{position:absolute;z-index:3;width:236px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:0 12px 32px rgba(0,0,0,.45);pointer-events:auto}
-#pop .nm{font-weight:600;font-size:14px;display:flex;align-items:baseline;gap:8px;padding-right:18px}
-#pop .cd{font:500 11px var(--mono);color:var(--dim)}
-#pop .x{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:6px;color:var(--dim);display:grid;place-items:center}
-#pop .x:hover{color:var(--fg);background:var(--line)}
-#pop .meta{color:var(--dim);margin-top:2px;font-variant-numeric:tabular-nums}
-#pop ul{list-style:none;margin:10px 0 0;padding:8px 0 0;border-top:1px solid var(--line);display:grid;gap:6px}
-#pop li{display:grid;grid-template-columns:62px minmax(0,1fr);gap:8px;align-items:baseline;font-variant-numeric:tabular-nums}
-#pop li b{font-weight:500}
-#pop li span{color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-/* side list */
-#side{grid-area:side;background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;min-width:0}
-#side header{padding:16px 18px 12px;display:flex;align-items:baseline;gap:8px}
-#count{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-#side header small{color:var(--dim);font-size:13px}
-#list{flex:1;overflow-y:auto;padding:0 8px 12px;scrollbar-width:thin;scrollbar-color:var(--line) transparent;overscroll-behavior:contain}
-.row{display:block;width:100%;text-align:left;border-radius:10px;padding:8px 10px}
-.row:hover{background:#161d26}
-.row .top{display:grid;grid-template-columns:46px minmax(0,1fr);gap:6px;align-items:baseline}
-.row .num{font:500 12px var(--mono);color:var(--dim)}
-.row .dest{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.row .rt{margin-left:52px;color:var(--dim);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.row.sel{background:#1a222c}
-.row.sel .num{color:var(--accent)}
-.row.bl .num{color:var(--bl)}
-.row.bl.sel .num{color:var(--bl)}
-.row.bl.sel .track i{background:var(--bl)}
-.grp{display:flex;align-items:center;gap:8px;margin:12px 10px 4px;padding-top:12px;border-top:1px solid var(--line);color:var(--dim);font-size:12px;font-weight:500}
+/* Amtrak adapter: this engine's element ids/classes mapped onto the shared UI (shared/family.css) */
+:root{--accent:#6cb6ff;--bl:#f2e205}
+#mapwrap #map{cursor:grab}#map.pt{cursor:pointer}#map.drag{cursor:grabbing}
+#head .tag{margin-left:auto}
+.row{display:block;padding:6px 18px}
+.row .top{display:grid;grid-template-columns:54px minmax(0,1fr);gap:0 4px;align-items:baseline}
+.row .num{font:400 11.5px var(--sans);color:var(--mute);font-variant-numeric:tabular-nums}
+.row .dest{font-size:13px;font-weight:500;letter-spacing:-.005em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .rt{margin-left:58px;color:var(--mute);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row.sel{--c:var(--accent)}.row.bl.sel{--c:var(--bl)}
+.row.sel .num{color:var(--accent)}.row.bl .num{color:var(--bl)}
+.grp{display:flex;align-items:center;gap:8px;margin:12px 18px 4px;padding-top:12px;border-top:1px solid var(--line-2);color:var(--mute);font-size:12px;font-weight:500}
 .grp i{width:8px;height:8px;border-radius:50%;background:var(--bl)}
-#legend{position:absolute;left:14px;bottom:12px;display:flex;gap:14px;color:var(--dim);font-size:12px;pointer-events:none}
-#legend span{display:flex;align-items:center;gap:6px}
-#legend i{width:8px;height:8px;border-radius:50%;background:#f1f4f8}
-#legend span+span i{background:var(--bl)}
-#pop .op{color:var(--bl)}
-.det{margin:10px 0 4px 52px;display:grid;gap:7px;font-variant-numeric:tabular-nums}
+.det{margin:10px 0 4px 58px;display:grid;gap:7px;font-variant-numeric:tabular-nums}
 .det .ln{display:flex;justify-content:space-between;gap:10px;min-width:0}
 .det .ln span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.det .ln.dm{color:var(--dim);font-size:12px}
-.det .track{height:3px;border-radius:2px;background:#2a3441;overflow:hidden}
+.det .ln.dm{color:var(--mute);font-size:11.5px}
+.det .track{height:3px;border-radius:2px;background:var(--line-2);overflow:hidden}
 .det .track i{display:block;height:100%;background:var(--accent);width:0}
-.det .nx{color:var(--fg)}
-.det .nx em{font-style:normal;color:var(--dim)}
-
-/* transport bar */
-#bar{grid-area:bar;display:flex;align-items:center;gap:22px;padding-block:14px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));background:var(--bg);border-top:1px solid var(--line)}
-#play{width:52px;height:52px;border-radius:50%;background:var(--chip);color:var(--chip-fg);display:grid;place-items:center;flex:none}
-#play:hover{background:#fff}
-#clock{display:flex;align-items:baseline;gap:5px;flex:none;font-variant-numeric:tabular-nums;min-width:124px}
-#clock b{font-size:30px;font-weight:600;letter-spacing:-.02em}
-#clock span{color:var(--dim);font-size:16px}
-#clock small{color:#4e5866;font-size:11px;margin-left:2px}
-#speed{font-weight:600;font-size:15px;color:var(--dim);flex:none;min-width:48px;text-align:center;border-radius:8px;padding:4px 6px;font-variant-numeric:tabular-nums}
-#speed:hover{color:var(--fg)}
-#hist{flex:1 1 120px;min-width:0;height:48px;display:block;cursor:ew-resize;touch-action:none}
-#seg{display:flex;gap:2px;padding:4px;border:1px solid var(--line);border-radius:14px;background:#0f141a;flex:none}
-#seg button{padding:9px 17px;border-radius:10px;color:var(--dim);font-size:15px;font-weight:500}
-#seg button:hover{color:var(--fg)}
-#seg button[aria-pressed=true]{background:var(--chip);color:var(--chip-fg);font-weight:600}
-
-@media (max-width:760px){
-  .app{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) 34% auto;grid-template-areas:"map" "side" "bar"}
-  #side{border-left:0;border-top:1px solid var(--line)}
-  #side header{padding:10px 16px 6px}
-  #list{padding-inline:max(8px,env(safe-area-inset-left,0px))}
-  #clock small{display:none}
-  #bar{flex-wrap:wrap;gap:10px 12px;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-  #play{width:44px;height:44px}
-  #clock{min-width:0}
-  #clock b{font-size:24px}
-  #seg{margin-left:auto}
-  #seg button{padding:7px 12px;font-size:14px}
-  #speed{order:8;min-width:0}
-  #hist{order:9;height:36px}
-  #pop{width:210px}
-}
-@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+.row.bl.sel .track i{background:var(--bl)}
+.det .nx em{font-style:normal;color:var(--mute)}
+#pop{position:absolute;z-index:3;width:236px;background:var(--panel);border:1px solid var(--line-2);border-radius:10px;padding:12px 14px;box-shadow:0 12px 32px rgba(0,0,0,.5)}
+#pop[hidden]{display:none}
+#pop .nm{font-weight:600;font-size:14px;display:flex;align-items:baseline;gap:8px;padding-right:18px}
+#pop .cd{font:500 11px var(--sans);color:var(--mute)}
+#pop .x{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:6px;color:var(--mute);display:grid;place-items:center;background:none;border:0;cursor:pointer}
+#pop .x:hover{color:var(--fg);background:var(--line-2)}
+#pop .meta{color:var(--mute);margin-top:2px}
+#pop ul{list-style:none;margin:10px 0 0;padding:8px 0 0;border-top:1px solid var(--line-2);display:grid;gap:6px}
+#pop li{display:grid;grid-template-columns:62px minmax(0,1fr);gap:8px;align-items:baseline}
+#pop li b{font-weight:500}
+#pop li span{color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pop .op{color:var(--bl)}
+#clock b{font-weight:500}
+#clock span{font-size:14px;color:var(--mute);font-weight:500;margin-left:4px}
+#clock small{font:400 11px var(--sans);color:var(--dim);margin-left:8px}
+#hist{position:relative;display:block}
+#seg button[aria-pressed="true"]{background:var(--chip);color:var(--chip-fg)}
+#seg button[aria-pressed="false"]:hover{color:var(--fg)}
+#legend .k-lines button.on{background:#ffffff14;color:var(--fg)}
 </style>
 
-<div class="app">
+<div id="app">
   <div id="mapwrap">
     <canvas id="map" aria-label="Amtrak network map"></canvas>
-    <div id="legend"><span><i></i>Amtrak</span><span><i></i>Brightline</span></div>
+    <div id="zoomc"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">&minus;</button><button id="zfit" aria-label="Reset view">&#8962;</button></div>
+    <div id="legend">
+      <button id="keytog" aria-label="Show or hide the legend"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 8l4-4 4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div id="keybody"><div class="k-row"><span class="emph-l">Focus</span><div class="emph"><button id="fall" class="on">All</button></div></div>
+        <div class="k-lines" id="chips"><button data-f="amtrak" style="--c:#f1f4f8"><i></i>Amtrak</button><button data-f="bl" style="--c:#f2e205"><i></i>Brightline</button></div></div>
+    </div>
     <div id="pop" hidden></div>
   </div>
   <aside id="side">
-    <header><span id="count">0</span><small>running</small></header>
+    <div id="head"><span id="count">0</span><span class="lbl">running</span><span class="tag">Scheduled</span></div>
     <div id="list" role="list"></div>
   </aside>
   <div id="bar">
@@ -127,7 +67,7 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
     <div id="clock" title="Eastern Time"><b>7:41</b><span>AM</span><small>ET</small></div>
     <button id="speed" aria-label="Playback speed">120×</button>
     <canvas id="hist" aria-label="Trains running through the day"></canvas>
-    <div id="seg" role="group" aria-label="Day type">
+    <div id="seg" class="seg" role="group" aria-label="Day type">
       <button data-d="wkd" aria-pressed="true">Wkd</button>
       <button data-d="sat" aria-pressed="false">Sat</button>
       <button data-d="sun" aria-pressed="false">Sun</button>
@@ -177,7 +117,7 @@ shapes.forEach((s,si)=>{if(D.syn[si])return;for(let i=0;i<s.m;i++){const P=shape
   if(s.wx[i]<bx0)bx0=s.wx[i];if(s.wx[i]>bx1)bx1=s.wx[i];if(s.wy[i]<by0)by0=s.wy[i];if(s.wy[i]>by1)by1=s.wy[i];}});
 
 /* ---------- state ---------- */
-const S={day:'wkd',t:0,playing:true,speed:120,sel:null,hover:null,stationOpen:null,dirty:true};
+const S={day:'wkd',t:0,playing:true,speed:120,sel:null,hover:null,stationOpen:null,dirty:true,focus:'all'};
 const SPEEDS=[30,60,120,240,600];
 const DATES={};
 (function init(){
@@ -360,7 +300,7 @@ function hit(mx,my){
 
 /* ---------- render ---------- */
 function drawLabel(text,x,y,color){
-  ctx.font='500 12px Geist, system-ui, sans-serif';
+  ctx.font='500 12px Inter, system-ui, sans-serif';
   const w=ctx.measureText(text).width+16,h=22;
   let lx=x-w/2,ly=y-h-10;
   if(lx<6)lx=6;if(lx+w>W-6)lx=W-6-w;if(ly<6)ly=y+12;
@@ -382,7 +322,7 @@ function drawTripPath(sh,d0,d1,dm){
 function ac(bl,a){const c=bl?[242,226,5]:[108,182,255];return a==null?`rgb(${c})`:`rgba(${c},${a})`;}
 function render(){
   ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
-  ctx.fillStyle='#0c1016';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#0a0d13';ctx.fillRect(0,0,W,H);
   const sel=selInst();
   world(()=>{
     ctx.lineJoin='round';ctx.lineCap='round';
@@ -467,7 +407,7 @@ document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{
 document.querySelectorAll('#seg button').forEach(x=>{x.setAttribute('aria-pressed',x.dataset.d===S.day);x.title=fmtDate(DATES[x.dataset.d]);});
 addEventListener('keydown',e=>{
   if(e.code==='Space'&&!(document.activeElement&&document.activeElement.tagName==='BUTTON')){e.preventDefault();playBtn.click();}
-  if(e.key==='Escape'){if(S.stationOpen!=null)closePop();else if(S.sel)select(null);}
+  if(e.key==='Escape'){if(S.stationOpen!=null){closePop();e.preventDefault();}else if(S.sel){select(null);e.preventDefault();}else if(S.focus!=='all'){setFocus('all');e.preventDefault();}}   // handled here, so the page does not also close the map
 });
 
 /* ---------- map interaction ---------- */
@@ -527,6 +467,7 @@ function frame(now){
   }
   if(changed){
     actives=activeAt(S.t,S.day);
+    if(S.focus!=='all')actives=actives.filter(a=>(S.focus==='bl')===a.tr.bl);
     if(S.sel&&!selInst()){
       const alt=actives.find(a=>a.tr.id===S.sel.trip);
       if(alt)S.sel.k=alt.k;else{S.sel=null;sig='';}
@@ -542,6 +483,17 @@ function frame(now){
 new ResizeObserver(()=>{const had=W;resize();if(had)drawHist();}).observe(wrap);
 new ResizeObserver(()=>{S.dirty=true;}).observe(hc);
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{S.dirty=true;});
+function setFocus(f){
+  S.focus=f;sig='';S.dirty=true;
+  $('#fall').classList.toggle('on',f==='all');
+  document.querySelectorAll('#chips button').forEach(b=>{b.classList.toggle('on',b.dataset.f===f);b.classList.toggle('off',f!=='all'&&b.dataset.f!==f);});
+}
+$('#fall').onclick=()=>setFocus('all');
+document.querySelectorAll('#chips button').forEach(b=>b.onclick=()=>setFocus(S.focus===b.dataset.f?'all':b.dataset.f));
+$('#zin').onclick=()=>zoomAt(W/2,H/2,1.5);$('#zout').onclick=()=>zoomAt(W/2,H/2,1/1.5);
+$('#zfit').onclick=()=>{fitAll();S.dirty=true;};
+$('#keytog').onclick=()=>$('#legend').classList.toggle('min');
+if(matchMedia('(max-width:820px)').matches)$('#legend').classList.add('min');
 syncPlay();resize();
 requestAnimationFrame(frame);
 })();

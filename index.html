@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>dnhn</title>
+<title>Transit-pedia</title>
 <link rel="icon" href="000/signature.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -163,7 +163,7 @@ body.live .brand{cursor:pointer}
 </head>
 <body>
 <header>
-  <a class="brand" href="./"><span class="b-home">Donghoon Yi</span><span class="b-back">&larr; Back to Main</span></a>
+  <a class="brand" href="./"><span class="b-home">Transit-pedia</span><span class="b-back">&larr; Back to Main</span></a>
   <div class="tools">
     <button type="button" class="icon" id="sbBtn" aria-label="Show or hide the list of live maps" aria-expanded="false" aria-controls="sb"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></svg></button>
     <button type="button" class="icon" id="themeBtn" aria-label="Toggle light / dark">
@@ -353,7 +353,7 @@ function openLive(slug,pt,ret,instant){
   if(frame) frame.remove();
   frame=document.createElement('iframe'); frame.id='liveFrame'; frame.title=LIVEMETA[slug].t;
   frame.onload=()=>{ loaded=true; show();
-    try{ frame.contentWindow.addEventListener('keydown',e=>{ if(e.key==='Escape') exitLive(); }); frame.contentWindow.focus(); }catch(err){} };   // Esc works even when the map has keyboard focus
+    try{ frame.contentWindow.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!e.defaultPrevented) exitLive(); }); frame.contentWindow.focus(); }catch(err){} };   // Esc works even when the map has keyboard focus
   frame.src=LIVE(slug); document.body.append(frame);
   if(pt&&!instant) flyTo(liveTarget(pt),()=>{p=1;show()},{D:1150,inout:true,onProgress:q=>{p=q;if(q>=.7)show()}});
 }

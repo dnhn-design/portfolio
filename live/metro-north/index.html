@@ -1,57 +1,48 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>MNR Live</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../shared/family.css">
+<script src="../shared/base-ne.js"></script><script src="../shared/basemap.js"></script>
 <style>
-/* Layout: full-bleed schematic map; top bar = play, clock, speed, density scrubber, day switch; thin centered line buttons at the bottom; slide-over train list on the right. */
+/* Metro-North adapter: this schematic engine inside the shared UI (shared/family.css) */
 :root{
-  --bg:#F3F4F6; --ink:#10141B; --ink2:#667082; --dim:#CDD2DA; --trunk:#4C5668;
-  --card:#FFFFFF; --cardb:#D9DDE4; --shadow:0 10px 30px rgba(16,20,27,.14);
-  --seg:#E6E8EC; --bar:rgba(16,20,27,.22); --baron:#10141B; --onink:#F3F4F6;
-  --b1:#009B3A; --b2:#0039A6; --b3:#EE0034; --b4:#E0457B; --b5:#F26B3A; --b6:#A8102B;
-  --c1:#009B3A; --c2:#0039A6; --c3:#EE0034; --c4:#E0457B; --c5:#F26B3A; --c6:#A8102B;
-  --f:"Helvetica Neue",Helvetica,Arial,sans-serif; --tlh:64px;
+  --ink:var(--fg); --ink2:var(--mute); --dim:#2c3645; --trunk:#a9b1c0; --card:var(--panel); --cardb:var(--line-2); --shadow:0 10px 30px #000a;
+  --seg:#131b27; --bar:#2a3340; --baron:#a3acb9; --onink:#0a0d13; --f:var(--sans);
+  --c1:#009B3A; --c2:#4C84FF; --c3:#FF2D55; --c4:#FF6E9F; --c5:#FF8A57; --c6:#E0405A;
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0B0E14; --ink:#F2F4F8; --ink2:#8B94A5; --dim:#262C38; --trunk:#A9B1C0;
-  --card:#141922; --cardb:#2A3140; --shadow:0 12px 34px rgba(0,0,0,.55);
-  --seg:#141922; --bar:rgba(242,244,248,.20); --baron:#E9ECF2; --onink:#0B0E14;
-  --c2:#4C84FF; --c3:#FF2D55; --c4:#FF6E9F; --c5:#FF8A57; --c6:#E0405A; color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#0B0E14; --ink:#F2F4F8; --ink2:#8B94A5; --dim:#262C38; --trunk:#A9B1C0;
-  --card:#141922; --cardb:#2A3140; --shadow:0 12px 34px rgba(0,0,0,.55);
-  --seg:#141922; --bar:rgba(242,244,248,.20); --baron:#E9ECF2; --onink:#0B0E14;
-  --c2:#4C84FF; --c3:#FF2D55; --c4:#FF6E9F; --c5:#FF8A57; --c6:#E0405A; color-scheme:dark}
-
-html,body{height:100%}
-body{background:var(--bg);color:var(--ink);font-family:var(--f);font-weight:400;overflow:hidden;overflow:clip;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
-button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
-b{font-weight:700}
-#app{position:relative;height:100%;width:100%;overflow:hidden;overflow:clip}
-#map{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:default}
+#map{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:default;display:block}
+.bm{fill:none;vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round}
+.bm.land{fill:rgba(150,170,200,.04)}.bm.urban{fill:rgba(150,170,200,.05)}
+.bm.county{stroke:rgba(120,140,170,.17);stroke-width:1}.bm.state{stroke:rgba(140,160,190,.28);stroke-width:1}
+.bm.coast{stroke:rgba(80,130,190,.30);stroke-width:1.2}.bm.rivers{stroke:rgba(70,115,170,.22);stroke-width:1.6}
+.bm.road{stroke:rgba(130,150,180,.18);stroke-width:.9}.bm.road2{stroke:rgba(130,150,180,.11);stroke-width:.6}
 #map.pan{cursor:grabbing}#map.ptr{cursor:pointer}
-
-/* top bar */
-#tl{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;
-  padding:14px max(16px,env(safe-area-inset-right,0px)) 6px max(16px,env(safe-area-inset-left,0px));z-index:5}
-#play{width:38px;height:38px;border-radius:50%;background:var(--ink);display:grid;place-items:center;flex:none;transition:transform .15s}
-#play:hover{transform:scale(1.06)}
-#play svg{width:13px;height:13px;fill:var(--onink)}
+#tip{position:absolute}
+#pn{grid-area:side;background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;min-width:0}
+#pnh{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding:14px 18px 8px;font-size:12.5px}
+#pnh .cnt{font:500 28px/1 var(--sans);letter-spacing:-.02em}
+#pnh .lbl{color:var(--mute)}
+#pnh .tag{margin-left:auto;font:500 9px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+#pnh .sc{flex-basis:100%;display:flex;align-items:center;gap:7px;font-size:12px;color:var(--fg);margin-top:3px}
+#pnh .sc i{width:18px;height:3px;border-radius:2px}
+#pnl{overflow:auto;padding:0 0 8px;flex:1;min-height:0;scrollbar-width:thin;scrollbar-color:var(--line-2) transparent}
+#clock{display:flex;align-items:baseline;gap:4px;cursor:pointer;user-select:none;flex:none;font-variant-numeric:tabular-nums;min-width:0}
+#hm{font:500 26px/1 var(--sans);letter-spacing:-.02em}
+#ap{font-size:14px;color:var(--mute);font-weight:500}
+#clock em{font:400 11px var(--sans);color:var(--dim);margin-left:8px;font-style:normal}
+#play svg{width:13px;height:13px;fill:currentColor}
 #play .pa{display:none}#play.on .pl{display:none}#play.on .pa{display:block}
-#clock{display:flex;align-items:baseline;gap:5px;cursor:pointer;user-select:none;min-width:98px;font-variant-numeric:tabular-nums}
-#hm{font-weight:700;font-size:23px;letter-spacing:-.02em}
-#ap{font-size:13px;color:var(--ink2)}
-#spd{font-weight:700;font-size:13px;color:var(--ink2);min-width:46px;text-align:left;font-variant-numeric:tabular-nums;border-radius:8px;padding:4px 0}
-#spd:hover{color:var(--ink)}
-#trk{position:relative;flex:1 1 200px;min-width:0;height:40px;cursor:pointer;touch-action:none;outline:none}
-#trk:focus-visible{outline:2px solid var(--ink2);outline-offset:3px;border-radius:6px}
+#spd{background:none;border:0;font:400 12.5px var(--sans);color:var(--mute);cursor:pointer;padding:6px 4px;flex:none}
+#spd:hover{color:var(--fg)}
+#trk{position:relative;flex:1;height:36px;min-width:120px;cursor:ew-resize;touch-action:none;outline:none}
+#trk:focus-visible{outline:2px solid #5d7fa6;outline-offset:2px;border-radius:6px}
 #bars{position:absolute;inset:2px 0 0 0;width:100%;height:calc(100% - 2px);display:block}
-#ph{position:absolute;top:-2px;bottom:-4px;width:2px;margin-left:-1px;border-radius:2px;background:var(--ink)}
-#seg{display:flex;gap:2px;padding:3px;border-radius:14px;background:var(--seg);border:1px solid var(--cardb);flex:none}
-#seg button{height:30px;padding:0 14px;border-radius:11px;font-size:13px;font-weight:700;color:var(--ink2);transition:background .2s,color .2s}
-#seg button:hover{color:var(--ink)}
-#seg button.on{background:var(--ink);color:var(--onink)}
-@media (max-width:640px){#trk{order:5;flex:1 1 100%;height:34px}#seg{margin-left:auto}#clock{min-width:88px}}
-
+#ph{position:absolute;top:-2px;bottom:-4px;width:2px;margin-left:-1px;border-radius:2px;background:var(--fg)}
+#legend .k-lines button.sel{background:#ffffff14;color:var(--fg)}
+#legend #br{display:none;padding:6px 0 0;border-top:1px solid var(--line)}
+#legend #br.on{display:grid}
+.k-sub{color:var(--dim);font-size:10px;letter-spacing:.07em;text-transform:uppercase;grid-column:1/-1;padding:0 6px 2px}
 /* map */
 .seg{fill:none;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;stroke-width:3;transition:stroke .35s,opacity .35s}
 .seg.c1{stroke:var(--c1)}.seg.c2{stroke:var(--c2)}.seg.c3{stroke:var(--c3)}.seg.c4{stroke:var(--c4)}.seg.c5{stroke:var(--c5)}.seg.c6{stroke:var(--c6)}
@@ -107,27 +98,12 @@ b{font-weight:700}
 .mix{display:flex;height:4px;border-radius:3px;overflow:hidden;gap:2px;margin-top:9px}
 .mix i{display:block}
 
-/* slide-over */
-.ib{position:absolute;z-index:6;width:34px;height:34px;border-radius:11px;border:1.5px solid var(--dim);background:var(--bg);display:grid;place-items:center;
-  opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s,border-color .2s}
-.ib.show{opacity:1;visibility:visible}.ib:hover{border-color:var(--ink2)}
-.ib svg{width:15px;height:15px}
-#mb{top:calc(var(--tlh) + 8px);right:max(16px,env(safe-area-inset-right,0px))}
-#fit{top:calc(var(--tlh) + 8px);right:calc(max(16px,env(safe-area-inset-right,0px)) + 42px)}
-#pn{position:absolute;z-index:7;top:calc(var(--tlh) + 50px);bottom:66px;right:max(12px,env(safe-area-inset-right,0px));width:min(332px,calc(100% - 24px));
-  background:var(--card);border:1px solid var(--cardb);border-radius:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden;
-  transform:translateX(calc(100% + 30px));visibility:hidden;transition:transform .32s cubic-bezier(.2,.8,.2,1),visibility .32s}
-#pn.open{transform:none;visibility:visible}
-#app.nhsel #pn{bottom:112px}
-#pnh{display:flex;align-items:center;gap:8px;padding:14px 16px 10px;font-size:15px}
-#pnh .m{margin-left:auto;font-size:13px}
-#pnl{overflow:auto;padding:0 8px 8px;flex:1;min-height:0;overscroll-behavior:contain}
-.row{display:grid;grid-template-columns:auto 1fr auto;gap:9px;align-items:center;width:100%;text-align:left;padding:9px 8px;border-radius:11px;font-size:13px}
-.row:hover{background:var(--seg)}
-.row.sel{background:var(--seg)}
+.row{display:grid;grid-template-columns:8px 1fr auto;gap:10px;align-items:center;width:100%;text-align:left;padding:7px 18px;border-radius:0;font-size:13px;border-left:2px solid transparent;color:inherit}
+.row:hover{background:#10161f}
+.row.sel{background:#131b27;border-left-color:var(--fg)}
 .row .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .row .m{font-size:12px;white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis}
-.dt{padding:2px 10px 12px 24px;background:var(--seg);border-radius:0 0 11px 11px;margin:-6px 0 4px;font-size:12px}
+.dt{padding:2px 18px 12px 38px;background:#131b27;margin:0 0 4px;font-size:12px}
 .od{display:flex;gap:6px;align-items:baseline;padding-top:8px;font-weight:700;font-size:13px}
 .od span.a{color:var(--ink2);font-weight:400}
 .pg{height:4px;border-radius:3px;background:var(--dim);margin:9px 0 5px;overflow:hidden}
@@ -139,54 +115,44 @@ b{font-weight:700}
 .sr.nx .m{color:var(--ink)}
 .none{padding:18px 10px;color:var(--ink2);font-size:13px}
 
-/* bottom bar */
-#bar{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;gap:10px;
-  padding:0 max(16px,env(safe-area-inset-right,0px)) 14px max(16px,env(safe-area-inset-left,0px));z-index:6}
-.ln{position:relative;flex:1 1 0;min-width:0;max-width:138px;height:38px;border-radius:13px;color:#fff;font-weight:700;font-size:14px;transition:opacity .25s,transform .2s,box-shadow .25s}
-.ln[data-l="1"]{background:var(--b1)}.ln[data-l="2"]{background:var(--b2)}.ln[data-l="3"]{background:var(--b3)}
-.ln:hover{transform:translateY(-1px)}
-.ln:focus-visible,.bp:focus-visible,#play:focus-visible,#spd:focus-visible,#seg button:focus-visible,.ib:focus-visible,.row:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-#bar.has .ln:not(.sel){opacity:.42}
-#bar.has .ln:not(.sel):hover{opacity:.8}
-.ln.sel{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--ink)}
-.nh{position:relative;flex:1 1 0;min-width:0;max-width:138px;display:flex}
-.nh .ln{flex:1}
-#br{position:absolute;bottom:calc(100% + 10px);left:50%;display:flex;gap:6px;
-  transform:translateX(calc(-50% + var(--sx,0px))) translateY(8px);opacity:0;visibility:hidden;transition:opacity .25s,transform .25s,visibility .25s}
-#br.on{opacity:1;visibility:visible;transform:translateX(calc(-50% + var(--sx,0px))) translateY(0)}
-.bp{height:28px;padding:0 12px;border-radius:10px;color:#fff;font-weight:700;font-size:12px;white-space:nowrap;transition:opacity .25s,box-shadow .25s}
-.bp[data-l="4"]{background:var(--b4)}.bp[data-l="5"]{background:var(--b5)}.bp[data-l="6"]{background:var(--b6)}
-#br.has .bp:not(.sel){opacity:.45}
-.bp.sel{box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px var(--ink)}
-@media (max-width:430px){.ln{font-size:13px;height:36px}.bp{padding:0 9px;font-size:11px}#br{gap:5px}#seg button{padding:0 11px}}
-@media (prefers-reduced-motion:reduce){.pulse{animation:none;opacity:.35;transform:scale(2)}#halo.on{animation:none}*{transition:none!important}}
+.row{grid-template-columns:8px 1fr;gap:1px 10px;align-items:baseline}
+.row .dot{grid-row:1/3;align-self:center}
+.row .n{font-size:13px;font-weight:500}.row .n b{font-weight:500;color:var(--mute);margin-right:4px;font-variant-numeric:tabular-nums}
+.row .m{grid-column:2;max-width:none;font-size:11.5px;color:var(--mute)}
 </style>
 
 <div id="app">
-  <div id="tl">
+  <div id="mapwrap">
+    <svg id="map" aria-label="Metro-North map">
+      <g id="base"></g><g id="tracks"></g><g id="stations"></g><g id="trains"></g><circle id="halo" r="9"/><circle id="hl" r="0"/>
+    </svg>
+    <div id="zoomc"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">&minus;</button><button id="fit" aria-label="Reset view">&#8962;</button></div>
+    <div id="legend">
+      <button id="keytog" aria-label="Show or hide the legend"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 8l4-4 4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div id="keybody">
+        <div class="k-row"><span class="emph-l">Focus</span><div class="emph"><button id="fall" class="on">All</button></div></div>
+        <div class="k-lines" id="lg">
+          <button class="ln" data-l="1" style="--c:var(--c1)"><i></i>Hudson</button>
+          <button class="ln" data-l="2" style="--c:var(--c2)"><i></i>Harlem</button>
+          <button class="ln" data-l="3" style="--c:var(--c3)"><i></i>New Haven</button>
+        </div>
+        <div class="k-lines" id="br"><span class="k-sub">New Haven branches</span>
+          <button class="bp" data-l="4" style="--c:var(--c4)"><i></i>New Canaan</button><button class="bp" data-l="5" style="--c:var(--c5)"><i></i>Danbury</button><button class="bp" data-l="6" style="--c:var(--c6)"><i></i>Waterbury</button>
+        </div>
+      </div>
+    </div>
+    <div id="tip"></div>
+  </div>
+  <aside id="pn" class="open" aria-label="Trains running now"><div id="pnh"></div><div id="pnl"></div></aside>
+  <div id="bar">
     <button id="play" aria-label="Play or pause"><svg class="pl" viewBox="0 0 12 12"><path d="M2 .8v10.4L11 6z"/></svg><svg class="pa" viewBox="0 0 12 12"><path d="M1.8.8h3v10.4h-3zM7.2.8h3v10.4h-3z"/></svg></button>
-    <div id="clock" title="Now"><span id="hm">--:--</span><span id="ap"></span></div>
+    <div id="clock" title="Now"><span id="hm">--:--</span><span id="ap"></span><em>ET</em></div>
     <button id="spd" aria-label="Playback speed">600×</button>
     <div id="trk" role="slider" tabindex="0" aria-label="Time of day">
       <svg id="bars" viewBox="0 0 100 40" preserveAspectRatio="none"><defs><linearGradient id="gr" x1="0" x2="1" y1="0" y2="0"><stop id="g0" offset="0" style="stop-color:var(--baron)"/><stop id="g1" offset="0" style="stop-color:var(--baron)"/><stop id="g2" offset="0" style="stop-color:var(--bar)"/><stop offset="1" style="stop-color:var(--bar)"/></linearGradient></defs><path d="" fill="url(#gr)"/></svg>
       <div id="ph"></div>
     </div>
-    <div id="seg" role="group" aria-label="Schedule"><button data-d="wkd">Wkd</button><button data-d="sat">Sat</button><button data-d="sun">Sun</button></div>
-  </div>
-  <svg id="map" aria-label="Metro-North map">
-    <g id="tracks"></g><g id="stations"></g><g id="trains"></g><circle id="halo" r="9"/><circle id="hl" r="0"/>
-  </svg>
-  <button id="fit" class="ib" aria-label="Reset view"><svg viewBox="0 0 16 16"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-  <button id="mb" class="ib" aria-label="Trains on this line"><svg viewBox="0 0 16 16"><path d="M2 4h12M2 8h12M2 12h12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button>
-  <aside id="pn" aria-label="Trains running now"><div id="pnh"></div><div id="pnl"></div></aside>
-  <div id="tip"></div>
-  <div id="bar">
-    <button class="ln" data-l="1">Hudson</button>
-    <button class="ln" data-l="2">Harlem</button>
-    <div class="nh">
-      <div id="br"><button class="bp" data-l="4">New Canaan</button><button class="bp" data-l="5">Danbury</button><button class="bp" data-l="6">Waterbury</button></div>
-      <button class="ln" data-l="3">New Haven</button>
-    </div>
+    <div id="seg" class="seg" role="group" aria-label="Schedule"><button data-d="wkd">Wkd</button><button data-d="sat">Sat</button><button data-d="sun">Sun</button></div>
   </div>
 </div>
 
@@ -221,7 +187,8 @@ const fmt=m=>hm(m)+' '+ap(m);
 const rel=m=>m<=0.5?'now':m<60?Math.ceil(m)+'m':Math.floor(m/60)+'h '+Math.round(m%60)+'m';
 
 /* ---------- build map ---------- */
-const gTracks=$('#tracks'),gSt=$('#stations'),gTr=$('#trains');
+const gTracks=$('#tracks'),gSt=$('#stations'),gTr=$('#trains'),gBase=$('#base');
+if(window.Basemap)Basemap.svg(gBase,(lo,la)=>lo*KX,(lo,la)=>-la*1000,el);   // county / coast / highway base layer
 for(const k in G){G[k].path=el('path',{class:'seg off'},gTracks);G[k].path.setAttribute('d','M'+G[k].pts.map(p=>p[0].toFixed(2)+' '+p[1].toFixed(2)).join('L'))}
 const LAB={'Grand Central':[10,17,'start'],'Poughkeepsie':[10,4,'start'],'Wassaic':[10,4,'start'],'New Haven':[12,16,'start'],'New Canaan':[-10,4,'end'],'Danbury':[-10,4,'end'],'Waterbury':[10,4,'start']};
 S.forEach(s=>{
@@ -256,9 +223,8 @@ function visMask(){return sel===null?0x7E:sel===1?2:sel===2?4:(br?1<<br:0x78)}
 function computeFit(){
   const vs=S.filter(s=>s.vis);if(!vs.length)return;
   const bb=vs.reduce((b,s)=>({a:Math.min(b.a,s.x),b:Math.max(b.b,s.x),c:Math.min(b.c,s.y),d:Math.max(b.d,s.y)}),{a:1e9,b:-1e9,c:1e9,d:-1e9});
-  const W=innerWidth,H=innerHeight,tlh=$('#tl').offsetHeight;
-  document.documentElement.style.setProperty('--tlh',tlh+'px');
-  const pt=tlh+34,pb=(sel===3?150:112),px=W<600?70:Math.max(34,W*.06),pr=px+($('#pn').classList.contains('open')&&W>760?345:0);
+  const mr=$('#map').getBoundingClientRect(),W=mr.width,H=mr.height;
+  const pt=44,pb=36,px=Math.max(54,W*.05),pr=px-14;
   const aw=W-px-pr,ah=H-pt-pb,bw=Math.max(bb.b-bb.a,1),bh=Math.max(bb.d-bb.c,1);
   const s=Math.min(aw/bw,ah/bh);
   fitS=s;manual=false;$('#fit').classList.remove('show');
@@ -270,12 +236,12 @@ function applySel(){
       if(f===1)c='c1';else if(f===2)c='c2';else if(f===4){c=(m&8)?'c3':(m&16)?'c4':(m&32)?'c5':(m&64)?'c6':'c3'}else c='cn'}
     g.path.setAttribute('class','seg '+c)}
   S.forEach(s=>{s.vis=!!(s.mask&vis);s.g.classList.toggle('off',!s.vis)});
-  document.querySelectorAll('.ln').forEach(b=>b.classList.toggle('sel',+b.dataset.l===sel));
+  document.querySelectorAll('.ln').forEach(b=>b.classList.toggle('sel',+b.dataset.l===sel));$('#fall').classList.toggle('on',sel===null);
   $('#bar').classList.toggle('has',sel!==null);$('#app').classList.toggle('nhsel',sel===3);
   document.querySelectorAll('.bp').forEach(b=>b.classList.toggle('sel',+b.dataset.l===br));
   $('#br').classList.toggle('has',br!==null);$('#br').classList.toggle('on',sel===3);
   if(selTr&&!(vis&(1<<selTr.r)))selTr=null;
-  const show=sel!==null||menuShown;$('#mb').classList.toggle('show',show);if(!show)setPanel(false);
+  
   computeFit();clampBr();drawBars();setHover(null);lastPn=-1}
 function clampBr(){const b=$('#br');b.style.setProperty('--sx','0px');
   const r=b.getBoundingClientRect(),m=14;let sx=0;
@@ -350,26 +316,26 @@ function refreshTip(force){
   if(!hover){tip.classList.remove('on');$('#hl').setAttribute('r',0);return}
   const mn=Math.floor(t),o=hover;
   if(force||mn!==lastMin){lastMin=mn;tip.className=(o===GCT?'gct ':'')+'on';tip.innerHTML=o===GCT?gctHTML():stationHTML(o)}
-  const x=o.sx,y=o.sy,W=innerWidth,H=innerHeight,w=tip.offsetWidth,h=tip.offsetHeight;
-  let px=x+18,py=y-h/2;if(px+w>W-12)px=x-18-w;px=Math.max(12,px);py=Math.min(H-86-h,Math.max($('#tl').offsetHeight+6,py));
+  const mr=$('#map').getBoundingClientRect(),x=o.sx,y=o.sy,W=mr.width,H=mr.height,w=tip.offsetWidth,h=tip.offsetHeight;
+  let px=x+18,py=y-h/2;if(px+w>W-12)px=x-18-w;px=Math.max(12,px);py=Math.min(H-8-h,Math.max(8,py));
   tip.style.transform=`translate(${px}px,${py}px)`;
   const hl=$('#hl');hl.setAttribute('cx',x);hl.setAttribute('cy',y);hl.setAttribute('r',(o===GCT||o===H125?11:7.5))}
 function setHover(h){if(hover)hover.g.classList.remove('hov');hover=h;if(h)h.g.classList.add('hov');refreshTip(true)}
 
 /* ---------- slide-over ---------- */
 const pn=$('#pn');
-function setPanel(on){pn.classList.toggle('open',on);$('#mb').innerHTML=on?'<svg viewBox="0 0 16 16"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>':'<svg viewBox="0 0 16 16"><path d="M2 4h12M2 8h12M2 12h12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+function setPanel(on){return;pn.classList.toggle('open',on);$('#mb').innerHTML=on?'<svg viewBox="0 0 16 16"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>':'<svg viewBox="0 0 16 16"><path d="M2 4h12M2 8h12M2 12h12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
   if(on){lastPn=-1;renderPanel(true)}else if(selTr)selectTrain(null);
   if(!manual)computeFit()}
-$('#mb').onclick=()=>setPanel(!pn.classList.contains('open'));
-addEventListener('keydown',e=>{if(e.key==='Escape'){if(selTr)selectTrain(null);else setPanel(false)}});
+
+addEventListener('keydown',e=>{if(e.key==='Escape'){if(selTr){selectTrain(null);e.preventDefault()}else if(sel!==null){sel=null;br=null;menuShown=false;applySel();e.preventDefault()}}});   // handled here, so the page does not also close the map
 function selectTrain(tr){
   if(selTr)selTr.e.classList.remove('sel');
   selTr=tr;gTr.classList.toggle('focus',!!tr);$('#halo').classList.toggle('on',!!tr);
   if(tr){tr.e.classList.add('sel');gTr.appendChild(tr.e);
-    const p=tr._p;if(p){const sx=p.x*V.s+V.x,sy=p.y*V.s+V.y,W=innerWidth,H=innerHeight,tl=$('#tl').offsetHeight+60,
-      pr=pn.classList.contains('open')&&W>760?350:60;let dx=0,dy=0;
-      if(sx<60)dx=60-sx;else if(sx>W-pr)dx=W-pr-sx;if(sy<tl)dy=tl-sy;else if(sy>H-110)dy=H-110-sy;
+    const p=tr._p;if(p){const mr=$('#map').getBoundingClientRect(),sx=p.x*V.s+V.x,sy=p.y*V.s+V.y,W=mr.width,H=mr.height,tl=60,
+      pr=60;let dx=0,dy=0;
+      if(sx<60)dx=60-sx;else if(sx>W-pr)dx=W-pr-sx;if(sy<tl)dy=tl-sy;else if(sy>H-60)dy=H-60-sy;
       if(dx||dy){Vt.x+=dx;Vt.y+=dy;manual=true;$('#fit').classList.add('show')}}}
   lastPn=-1;renderPanel(true)}
 function rowHTML(tr){
@@ -389,7 +355,7 @@ function renderPanel(force){
   const act=TR.filter(x=>x.vis).sort((a,b)=>a.t1-b.t1);
   if(selTr&&!selTr.vis){selTr.e.classList.remove('sel');selTr=null;gTr.classList.remove('focus');$('#halo').classList.remove('on')}
   const c=sel===null?'var(--ink)':`var(--c${br||sel})`,name=sel===null?'All lines':(br?RN[br]:RN[sel]);
-  $('#pnh').innerHTML=`<span class="dot" style="background:${c}"></span><b>${name}</b><span class="m">${act.length}</span>`;
+  $('#pnh').innerHTML=`<span class="cnt">${act.length}</span><span class="lbl">running</span><span class="tag">Scheduled</span>`+(sel===null?'':`<div class="sc"><i style="background:${c}"></i>${name}</div>`);
   const L=$('#pnl'),st=L.scrollTop;
   L.innerHTML=act.length?act.map(rowHTML).join(''):'<div class="none">No trains running</div>';L.scrollTop=st}
 $('#pnl').addEventListener('click',e=>{const r=e.target.closest('.row');if(!r)return;const tr=TR[+r.dataset.i];selectTrain(selTr===tr?null:tr)});
@@ -445,7 +411,7 @@ function frame(now){
   for(const p of ['s','x','y']){const d=Vt[p]-V[p];if(Math.abs(d)>1e-4){V[p]+=d*k;viewDirty=true}else V[p]=Vt[p]}
   $('#stations').classList.toggle('z',V.s>fitS*3);
   if(viewDirty){
-    gTracks.setAttribute('transform',`translate(${V.x} ${V.y}) scale(${V.s})`);
+    gTracks.setAttribute('transform',`translate(${V.x} ${V.y}) scale(${V.s})`);gBase.setAttribute('transform',`translate(${V.x} ${V.y}) scale(${V.s})`);
     S.forEach(s=>{s.sx=s.x*V.s+V.x;s.sy=s.y*V.s+V.y;s.g.setAttribute('transform',`translate(${s.sx.toFixed(1)} ${s.sy.toFixed(1)})`)});
     viewDirty=false}
   for(const tr of TR){
@@ -469,7 +435,15 @@ function frame(now){
 $('#play').classList.toggle('on',playing);
 $('#spd').textContent=SPD[spdI]+'×';
 V.s=Vt.s;V.x=Vt.x;V.y=Vt.y;
+lastPn=-1;
 addEventListener('resize',()=>{if(!manual)computeFit();clampBr()});
+new ResizeObserver(()=>{if(!manual)computeFit();}).observe($('#mapwrap'));
+const zc=f=>{const r=map.getBoundingClientRect();zoomAt(r.width/2,r.height/2,f,false)};
+$('#zin').onclick=()=>zc(1.5);$('#zout').onclick=()=>zc(1/1.5);
+$('#fall').onclick=()=>{sel=null;br=null;menuShown=false;applySel()};
+$('#keytog').onclick=()=>$('#legend').classList.toggle('min');
+if(matchMedia('(max-width:820px)').matches)$('#legend').classList.add('min');
+$('#fall').classList.toggle('on',true);
 requestAnimationFrame(frame);
 </script>
 

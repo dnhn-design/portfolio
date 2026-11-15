@@ -4,7 +4,7 @@
 Focus legend, zoom buttons). It was extracted from the native maps.
 
 **Native maps** (own copy of the CSS inline, own engine and data): bay-rail, chicago, ct-rail, dfw-rail, gcrta,
-la-rail, mbta, md-va-rail, portland-rail, septa, sound-transit.
+socal-rail, mbta, md-va-rail, portland-rail, septa, sound-transit.
 
 **Restyled maps** (keep their own engine and data, but use `family.css` plus a small adapter inside the page):
 amtrak, lirr, metro-north, nice-bus, nyc-subway. Midtown Bus is a one-off design and is left as it is.

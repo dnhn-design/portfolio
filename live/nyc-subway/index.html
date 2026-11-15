@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html data-map="nyc-subway"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Subway Heartbeat Flow</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -76,6 +76,8 @@ details p{margin:6px 0 0}
 
 .row{padding:7px 6px;border-left:0}
 </style>
+<script src="../shared/theme.js"></script>
+<link rel="stylesheet" href="../shared/map-theme.css">
 
 <div id="app">
   <div id="mapwrap">
@@ -406,7 +408,8 @@ cv.addEventListener('pointermove',e=>{
 });
 cv.addEventListener('pointerleave',()=>{hover=null;$('tip').style.opacity=0});
 cv.addEventListener('pointerup',e=>{cv.classList.remove('drag');if(drag&&moved<4){const r=cv.getBoundingClientRect();const h=nearest(e.clientX-r.left,e.clientY-r.top);if(h)select(h)}drag=null});
-cv.addEventListener('wheel',e=>{e.preventDefault();const r=cv.getBoundingClientRect();zoom(e.deltaY<0?1.2:1/1.2,e.clientX-r.left,e.clientY-r.top)},{passive:false});
+cv.addEventListener('wheel',e=>{e.preventDefault();const r=cv.getBoundingClientRect(),dy=e.deltaMode===1?e.deltaY*16:e.deltaMode===2?e.deltaY*400:e.deltaY;
+  zoom(Math.exp(-dy*(e.ctrlKey?.012:.0016)),e.clientX-r.left,e.clientY-r.top)},{passive:false});   // same feel as the other maps: scales with how far the wheel / trackpad moved
 cv.addEventListener('keydown',e=>{const k=e.key,st=60/V.s;if(k==='+'||k==='=')zoom(1.25);else if(k==='-')zoom(.8);else if(k==='ArrowLeft')V.cx-=st;else if(k==='ArrowRight')V.cx+=st;else if(k==='ArrowUp')V.cy+=st;else if(k==='ArrowDown')V.cy-=st;else return;e.preventDefault()});
 function nearest(px,py){let b=null,bd=14*14;CX.forEach(c=>{if(c._X==null)return;const d=(c._X-px)**2+(c._Y-py)**2;if(d<bd){bd=d;b=c}});return b}
 function select(c){sel=c;renderSel();renderRank();$('panel').classList.add('open')}

@@ -147,6 +147,7 @@ html.intro .pin .dot{scale:0}
 #mapwrap{transition:opacity .3s}
 
 /* live maps open inside the page: the camera zooms into the city, then the map fades in over it */
+html[data-theme=light] #liveFrame{background:#edf0f5}
 #liveFrame{position:fixed;z-index:3;top:56px;left:0;right:0;bottom:0;width:100%;height:calc(100% - 56px);border:0;background:#0c1016;
   opacity:0;visibility:hidden;scale:1.06;transition:opacity .55s ease,scale .9s cubic-bezier(.2,.8,.2,1),visibility 0s .55s}
 #liveFrame.show{opacity:1;visibility:visible;scale:1;transition:opacity .55s ease,scale .9s cubic-bezier(.2,.8,.2,1),visibility 0s}

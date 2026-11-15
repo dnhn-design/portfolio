@@ -23,3 +23,11 @@ the Hudson / Connecticut / Delaware rivers, urban areas and major highways for N
 Connecticut (sources: US Census counties via `us-atlas`, Natural Earth 1:10m). LIRR, Metro-North, NICE Bus and NYC Subway use it.
 Amtrak already draws state and coast lines, the native maps ship their own, and Midtown Bus is a diagram, so none of those use it.
 Each page tells `Basemap` how to turn lon/lat into its own coordinates. A finer street grid would need an OpenStreetMap extract.
+
+## Light and dark
+`theme.js` follows the main page's choice (same `localStorage` key, `theme`) and sets `<html data-theme="light|dark">`; it reacts when the
+page toggles it while a map is open. `map-theme.css` holds the light theme and the Focus-menu button sizing and is linked by every map page.
+Maps whose engines read their colours from CSS variables (LIRR, Metro-North, NICE Bus, NYC Subway) just get light-theme variables.
+Maps that hard-code their dark colours (Amtrak and the native maps) load `theme.js` with `data-canvas="1"`, which remaps every colour they
+draw for a light background (neutrals mirrored; saturated colours darkened until they have enough contrast). A rebuilt map should read its
+colours from CSS variables like the first group; then it needs no remapping.

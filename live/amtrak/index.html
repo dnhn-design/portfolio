@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html data-map="amtrak"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Amtrak Live Map</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -46,6 +46,8 @@
 #seg button[aria-pressed="false"]:hover{color:var(--fg)}
 #legend .k-lines button.on{background:#ffffff14;color:var(--fg)}
 </style>
+<script src="../shared/theme.js" data-canvas="1"></script>
+<link rel="stylesheet" href="../shared/map-theme.css">
 
 <div id="app">
   <div id="mapwrap">
@@ -130,14 +132,14 @@ const DATES={};
   const today=Date.UTC(y,m-1,d)/864e5;
   // each day type points at the next real date of that kind, starting today
   const kind=n=>{const w=new Date(n*864e5).getUTCDay();return w===6?'sat':w===0?'sun':'wkd';};
-  for(let n=today;n<today+8;n++){const k=kind(n);if(!DATES[k])DATES[k]=n;}
-  S.day=kind(today);
+  for(let i=0;i<7;i++)DATES['d'+i]=today+i;      // today and the next six days: long-distance trains (Sunset Limited, Cardinal...) don't run every day
+  S.day='d0';
 })();
 function runsOn(tr,date){
   const [mask,a,b,ex]=tr.svc;if(date<a||date>b)return false;if(ex&&ex.includes(date))return false;
   const idx=(new Date(date*864e5).getUTCDay()+6)%7;return ((mask>>(6-idx))&1)===1;
 }
-for(const tr of trips){tr.run={};for(const k of ['wkd','sat','sun'])tr.run[k]=[0,1,2].map(j=>runsOn(tr,DATES[k]-j));}
+for(const tr of trips){tr.run={};for(const k of Object.keys(DATES))tr.run[k]=[0,1,2].map(j=>runsOn(tr,DATES[k]-j));}
 const fmtDate=n=>new Date(n*864e5).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',timeZone:'UTC'});
 
 /* ---------- helpers ---------- */
@@ -400,6 +402,11 @@ const ICON_PLAY='<svg width="18" height="18" viewBox="0 0 18 18"><path d="M5 2.6
 function syncPlay(){playBtn.innerHTML=S.playing?ICON_PAUSE:ICON_PLAY;playBtn.setAttribute('aria-label',S.playing?'Pause':'Play');}
 playBtn.onclick=()=>{S.playing=!S.playing;syncPlay();last=performance.now();};
 speedBtn.onclick=()=>{S.speed=SPEEDS[(SPEEDS.indexOf(S.speed)+1)%SPEEDS.length];speedBtn.textContent=S.speed+'×';};
+(function buildDays(){
+  const seg=$('#seg');seg.textContent='';
+  for(let i=0;i<7;i++){const b=document.createElement('button');b.dataset.d='d'+i;
+    b.textContent=i===0?'Today':new Date(DATES['d'+i]*864e5).toLocaleDateString('en-US',{weekday:'short',timeZone:'UTC'});seg.appendChild(b);}
+})();
 document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{
   S.day=b.dataset.d;document.querySelectorAll('#seg button').forEach(x=>x.setAttribute('aria-pressed',x===b));
   sig='';closePop();S.dirty=true;

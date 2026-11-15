@@ -13,14 +13,19 @@
   }
   function draw(g, fx, fy, o) {
     o = o || {}; const z = o.z || 1; g.save(); g.lineJoin = 'round'; g.lineCap = 'round';
-    trace(g, L.land, fx, fy, true); g.fillStyle = 'rgba(150,170,200,0.04)'; g.fill();
-    trace(g, L.urban, fx, fy, true); g.fillStyle = 'rgba(150,170,200,0.05)'; g.fill();
-    trace(g, L.county, fx, fy); g.strokeStyle = 'rgba(120,140,170,0.17)'; g.lineWidth = 1; g.stroke();
-    trace(g, L.state, fx, fy); g.strokeStyle = 'rgba(140,160,190,0.28)'; g.lineWidth = 1; g.stroke();
-    trace(g, L.road2, fx, fy); g.strokeStyle = 'rgba(130,150,180,0.11)'; g.lineWidth = lw(0.6, z); g.stroke();
-    trace(g, L.road, fx, fy); g.strokeStyle = 'rgba(130,150,180,0.18)'; g.lineWidth = lw(0.9, z); g.stroke();
-    trace(g, L.rivers, fx, fy); g.strokeStyle = 'rgba(70,115,170,0.22)'; g.lineWidth = lw(1.6, z); g.stroke();
-    trace(g, L.coast, fx, fy); g.strokeStyle = 'rgba(80,130,190,0.30)'; g.lineWidth = lw(1.2, z); g.stroke();
+    const lt = !!(window.Theme && Theme.light);
+    const C = lt ? { land: 'rgba(60,80,110,0.05)', urban: 'rgba(60,80,110,0.07)', county: 'rgba(70,90,120,0.20)', state: 'rgba(60,80,110,0.32)',
+        road2: 'rgba(70,90,120,0.14)', road: 'rgba(70,90,120,0.22)', rivers: 'rgba(50,110,175,0.38)', coast: 'rgba(40,105,180,0.50)' }
+      : { land: 'rgba(150,170,200,0.04)', urban: 'rgba(150,170,200,0.05)', county: 'rgba(120,140,170,0.17)', state: 'rgba(140,160,190,0.28)',
+        road2: 'rgba(130,150,180,0.11)', road: 'rgba(130,150,180,0.18)', rivers: 'rgba(70,115,170,0.22)', coast: 'rgba(80,130,190,0.30)' };
+    trace(g, L.land, fx, fy, true); g.fillStyle = C.land; g.fill();
+    trace(g, L.urban, fx, fy, true); g.fillStyle = C.urban; g.fill();
+    trace(g, L.county, fx, fy); g.strokeStyle = C.county; g.lineWidth = 1; g.stroke();
+    trace(g, L.state, fx, fy); g.strokeStyle = C.state; g.lineWidth = 1; g.stroke();
+    trace(g, L.road2, fx, fy); g.strokeStyle = C.road2; g.lineWidth = lw(0.6, z); g.stroke();
+    trace(g, L.road, fx, fy); g.strokeStyle = C.road; g.lineWidth = lw(0.9, z); g.stroke();
+    trace(g, L.rivers, fx, fy); g.strokeStyle = C.rivers; g.lineWidth = lw(1.6, z); g.stroke();
+    trace(g, L.coast, fx, fy); g.strokeStyle = C.coast; g.lineWidth = lw(1.2, z); g.stroke();
     g.restore();
   }
   /* SVG: appends one <path> per layer to group `g` (styled by the page via the .bm classes); `el(name, attrs, parent)` creates SVG nodes. */

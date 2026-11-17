@@ -7,6 +7,7 @@ Single-page site: an outlined US map with a dot per metro area. Click a city for
 * `0_thumb/` — diagram thumbnails (only the NJ one is used, in its hover card)
 * `outlines/` — network outline images shown on the city cards
 * `live/<name>/` — interactive live maps, each its own page (see `live/shared/README.md` for how they share one look)
+* `live/fare-cards/` — the fare card collection page (card images in `cards/`), opened from the card icon in the header or the sidebar
 * `archive/` — the previous portfolio homepage, kept for reference
 * `artifacts/` — original live-map source files
 

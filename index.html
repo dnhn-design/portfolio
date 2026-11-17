@@ -168,6 +168,7 @@ body.live .brand{cursor:pointer}
   <a class="brand" href="./"><span class="b-home">Transit-pedia</span><span class="b-back">&larr; Back to Main</span></a>
   <div class="tools">
     <button type="button" class="icon" id="sbBtn" aria-label="Show or hide the list of live maps" aria-expanded="false" aria-controls="sb"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></svg></button>
+    <a class="icon" id="cardsBtn" href="live/fare-cards/index.html" aria-label="Fare card collection" title="Fare cards"><svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2.2"/><path d="M3 10h18"/></svg></a>
     <button type="button" class="icon" id="themeBtn" aria-label="Toggle light / dark">
       <svg class="moon" viewBox="0 0 24 24"><path d="M21 13.2A8.5 8.5 0 1 1 10.8 3a7 7 0 0 0 10.2 10.2z"/></svg>
       <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.3M12 19.2v2.3M2.5 12h2.3M19.2 12h2.3M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>
@@ -251,7 +252,8 @@ const REGIONS = [
 
 
 /* where each live map belongs on the map (camera target) and which city view to return to */
-const LIVEMETA={amtrak:{t:'Amtrak live map',n:'Amtrak',pt:null,ret:null}};
+const LIVEMETA={amtrak:{t:'Amtrak live map',n:'Amtrak',pt:null,ret:null},
+  'fare-cards':{t:'Fare card collection',n:'Fare cards',pt:null,ret:null,page:1}};   // page:1 = not a live map (left out of the live-map count)
 REGIONS.forEach(r=>{
   r.live.forEach(l=>LIVEMETA[l.s]={t:l.t+' live map',n:l.t,pt:r.pt,ret:r});
   (r.sub||[]).forEach(it=>{ if(it.s) LIVEMETA[it.s]={t:it.t+' live map',n:it.t,pt:it.pt,ret:r}; });
@@ -543,7 +545,7 @@ REGIONS.forEach(r=>{
 /* ===== sidebar: the list of live maps (collapsible). Amtrak lives here now instead of a corner dot ===== */
 (function sidebar(){
   const root=document.documentElement, list=$('#sblist'), btn=$('#sbBtn'), mob=()=>matchMedia('(max-width:700px)').matches;
-  $('#sbn').textContent=Object.keys(LIVEMETA).length;
+  $('#sbn').textContent=Object.values(LIVEMETA).filter(m=>!m.page).length;
   const hl=(id,on)=>{ if(pins[id]){ pins[id].classList.toggle('hl',on); pins[id]._flag('s',on); } };
   function row(slug,main,sub,rid,nested){
     const a=el('a',{class:'sbr'+(nested?' in':''),href:LIVE(slug)},[el('i'),el('span',{class:'nm',text:main})]);
@@ -553,6 +555,7 @@ REGIONS.forEach(r=>{
     return a;
   }
   list.append(row('amtrak','Amtrak','National network',null));
+  { const fc=row('fare-cards','Fare cards','Transit card collection',null); fc.classList.add('pdf'); list.append(fc); }
   const nyc=REGIONS.find(r=>r.id==='nyc');
   const head=el('button',{type:'button',class:'sbg',text:nyc.name});
   head.addEventListener('click',()=>{ toggle(nyc); if(mob()) setSb(false); });
@@ -571,6 +574,7 @@ REGIONS.forEach(r=>{
   btn.setAttribute('aria-expanded',String(root.classList.contains('sb-open')));
   btn.addEventListener('click',()=>setSb(!root.classList.contains('sb-open')));
 })();
+$('#cardsBtn').addEventListener('click',e=>go(e,'fare-cards'));
 $('.brand').addEventListener('click',e=>{ if(live){ e.preventDefault(); exitLive(); } });
 $('#usmap').addEventListener('click',e=>{ if(!e.target.closest('.pin')) close(); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(live) exitLive(); else close(); }});

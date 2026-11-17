@@ -161,6 +161,26 @@ body.live .brand{cursor:pointer}
 @media (max-width:700px){.pin .dot{r:13}.pin:hover .dot,.pin[aria-pressed=true] .dot{r:16}}
 
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ===== fare cards: a fan of cards tucked in the bottom-left corner of the home view; click it to deal them out over a backdrop ===== */
+#fc{--fg:var(--ink);--shadow:rgba(20,24,40,.28);--shadow-soft:rgba(20,24,40,.14);position:fixed;inset:0;z-index:2;pointer-events:none;overflow:hidden;
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:opacity .3s,visibility 0s,z-index 0s .45s}
+[data-theme=dark] #fc{--shadow:rgba(0,0,0,.65);--shadow-soft:rgba(0,0,0,.4)}
+#fc.open{z-index:20;pointer-events:auto;transition:opacity .3s,visibility 0s,z-index 0s}
+.fcbg{position:absolute;inset:0;background:var(--bg);opacity:0;transition:opacity .45s}
+#fc.open .fcbg{opacity:.97}
+body.live #fc{opacity:0;visibility:hidden;pointer-events:none}
+.fcard{position:absolute;left:0;top:0;border-radius:21px;transform-style:preserve-3d;will-change:transform;pointer-events:auto;
+  box-shadow:0 1px 2px var(--shadow-soft),0 10px 26px -8px var(--shadow);cursor:pointer;outline:none;user-select:none;-webkit-user-select:none}
+.fcard img{position:absolute;left:0;top:0;display:block;width:100%;height:100%;pointer-events:none;-webkit-user-drag:none;border-radius:inherit;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.fcard img.back{transform:rotateY(180deg)}
+.fcard:focus-visible{box-shadow:0 0 0 3px var(--ink),0 10px 26px -8px var(--shadow)}
+.fcard.dead{pointer-events:none}
+.flbl{position:absolute;left:0;top:0;width:200px;margin-left:-100px;text-align:center;font-size:12px;letter-spacing:.05em;color:var(--muted);opacity:0;transition:opacity .35s;pointer-events:none;white-space:nowrap}
+.flbl.on{opacity:1}
+#fcap{position:absolute;left:50%;top:0;transform:translateX(-50%);text-align:center;font-size:13px;letter-spacing:.04em;color:var(--ink);opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;font-variant-numeric:tabular-nums}
+#fcap.on{opacity:1}
+#fcap small{display:block;margin-top:4px;font-size:11px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -168,7 +188,6 @@ body.live .brand{cursor:pointer}
   <a class="brand" href="./"><span class="b-home">Transit-pedia</span><span class="b-back">&larr; Back to Main</span></a>
   <div class="tools">
     <button type="button" class="icon" id="sbBtn" aria-label="Show or hide the list of live maps" aria-expanded="false" aria-controls="sb"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></svg></button>
-    <a class="icon" id="cardsBtn" href="live/fare-cards/index.html" aria-label="Fare card collection" title="Fare cards"><svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2.2"/><path d="M3 10h18"/></svg></a>
     <button type="button" class="icon" id="themeBtn" aria-label="Toggle light / dark">
       <svg class="moon" viewBox="0 0 24 24"><path d="M21 13.2A8.5 8.5 0 1 1 10.8 3a7 7 0 0 0 10.2 10.2z"/></svg>
       <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.3M12 19.2v2.3M2.5 12h2.3M19.2 12h2.3M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>
@@ -252,8 +271,7 @@ const REGIONS = [
 
 
 /* where each live map belongs on the map (camera target) and which city view to return to */
-const LIVEMETA={amtrak:{t:'Amtrak live map',n:'Amtrak',pt:null,ret:null},
-  'fare-cards':{t:'Fare card collection',n:'Fare cards',pt:null,ret:null,page:1}};   // page:1 = not a live map (left out of the live-map count)
+const LIVEMETA={amtrak:{t:'Amtrak live map',n:'Amtrak',pt:null,ret:null}};
 REGIONS.forEach(r=>{
   r.live.forEach(l=>LIVEMETA[l.s]={t:l.t+' live map',n:l.t,pt:r.pt,ret:r});
   (r.sub||[]).forEach(it=>{ if(it.s) LIVEMETA[it.s]={t:it.t+' live map',n:it.t,pt:it.pt,ret:r}; });
@@ -545,7 +563,7 @@ REGIONS.forEach(r=>{
 /* ===== sidebar: the list of live maps (collapsible). Amtrak lives here now instead of a corner dot ===== */
 (function sidebar(){
   const root=document.documentElement, list=$('#sblist'), btn=$('#sbBtn'), mob=()=>matchMedia('(max-width:700px)').matches;
-  $('#sbn').textContent=Object.values(LIVEMETA).filter(m=>!m.page).length;
+  $('#sbn').textContent=Object.keys(LIVEMETA).length;
   const hl=(id,on)=>{ if(pins[id]){ pins[id].classList.toggle('hl',on); pins[id]._flag('s',on); } };
   function row(slug,main,sub,rid,nested){
     const a=el('a',{class:'sbr'+(nested?' in':''),href:LIVE(slug)},[el('i'),el('span',{class:'nm',text:main})]);
@@ -555,7 +573,6 @@ REGIONS.forEach(r=>{
     return a;
   }
   list.append(row('amtrak','Amtrak','National network',null));
-  { const fc=row('fare-cards','Fare cards','Transit card collection',null); fc.classList.add('pdf'); list.append(fc); }
   const nyc=REGIONS.find(r=>r.id==='nyc');
   const head=el('button',{type:'button',class:'sbg',text:nyc.name});
   head.addEventListener('click',()=>{ toggle(nyc); if(mob()) setSb(false); });
@@ -574,11 +591,291 @@ REGIONS.forEach(r=>{
   btn.setAttribute('aria-expanded',String(root.classList.contains('sb-open')));
   btn.addEventListener('click',()=>setSb(!root.classList.contains('sb-open')));
 })();
-$('#cardsBtn').addEventListener('click',e=>go(e,'fare-cards'));
 $('.brand').addEventListener('click',e=>{ if(live){ e.preventDefault(); exitLive(); } });
 $('#usmap').addEventListener('click',e=>{ if(!e.target.closest('.pin')) close(); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(live) exitLive(); else close(); }});
 { const sl=location.hash.slice(1); if(LIVEMETA[sl]){ document.documentElement.classList.remove('intro'); openLive(sl,LIVEMETA[sl].pt,LIVEMETA[sl].ret,true); } }
+</script>
+<script>
+/* fare cards: the fan in the corner and the piles it deals out (images in fare-cards/) */
+(function(){
+var CARDS=[
+ // id, file, name, pile, portrait
+ ['nyc_metrocard_gold','MetroCard','New York',0,'nyc_metrocard_emergency_back'],
+ ['omny_card','OMNY','New York',1],
+ ['omny_ticket','OMNY Ticket','New York',1],
+ ['nyc_metrocard_bus_transfer','MetroCard Bus Transfer','New York',0,'nyc_mta_paper_bus_transfer'],
+ ['nj_transit_farepay','Fare-Pay','New Jersey'],
+ ['path_tapp','TAPP','New Jersey'],
+ ['path_smartlink','SmartLink','New Jersey'],
+ ['wmata_smartrip','SmarTrip','Washington DC'],
+ ['wmata_smartrip_cherry_blossom','SmarTrip, Cherry Blossom','Washington DC'],
+ ['la_metro_tap_usa','TAP, USA','Los Angeles'],
+ ['la_metro_tap_korea_republic','TAP, Korea Republic','Los Angeles'],
+ ['la_metro_tap_fifa_we_are','TAP, FIFA','Los Angeles'],
+ ['opus_montreal','OPUS','Montreal'],
+ ['loccasionnelle_montreal','L’occasionnelle','Montreal'],
+ ['charliecard_mbta','CharlieCard','Boston'],
+ ['clipper_bay_area','Clipper','Bay Area',1],
+ ['orca_seattle','ORCA','Seattle'],
+ ['ventra_chicago','Ventra','Chicago',1],
+ ['rtd_myride_denver','MyRide','Denver'],
+ ['marta_breeze','Breeze','Atlanta'],
+ ['valley_metro_copper','Copper','Phoenix'],
+ ['prt_connectcard_pittsburgh','ConnectCard','Pittsburgh'],
+ ['rta_smartcard','GCRTA Smartcard','Cleveland'],
+ ['nyc_metrocard_back_conditions','GCRTA Ticket','Cleveland'],
+ ['holo_honolulu','HOLO','Honolulu'],
+ ['goct_ctrides','GO CT','Connecticut'],
+ ['pronto','Pronto','Pronto']
+];
+var FAN=['nyc_metrocard_gold','charliecard_mbta','wmata_smartrip','path_tapp','orca_seattle'];
+var B=560, RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+var stage=document.createElement('div'); stage.id='fc'; stage.setAttribute('aria-label','Transit card collection');
+  var bg=document.createElement('div'); bg.className='fcbg'; var cap=document.createElement('div'); cap.id='fcap';
+  stage.append(bg,cap); document.body.append(stage);
+var vw=0,vh=0;
+
+// ---- data
+var cards={}, piles=[], pileMap={};
+CARDS.forEach(function(c,i){
+  var o={id:c[0],name:c[1],city:c[2],portrait:!!c[3],back:c[4]||null,idx:i};
+  o.w=o.portrait?B*0.63:B; o.h=o.portrait?B:B*0.63;
+  var el=document.createElement('div'); el.className='fcard dead'; el.setAttribute('role','button'); el.setAttribute('aria-label',o.name+', '+o.city);
+  el.style.width=o.w+'px'; el.style.height=o.h+'px';
+  var im=new Image(); im.src='fare-cards/'+o.id+'.webp'; im.alt=''; im.decoding='async'; el.appendChild(im);
+  if(o.back){var bi=new Image();bi.src='fare-cards/'+o.back+'.webp';bi.alt='';bi.className='back';bi.decoding='async';el.appendChild(bi)}
+  stage.appendChild(el); o.el=el; el._c=o;
+  o.s={x:-400,y:900,r:0,sc:.3,o:0,fy:0}; o.v={x:0,y:0,r:0,sc:0,o:0,fy:0}; o.t={x:-400,y:900,r:0,sc:.3,o:0,fy:0}; o.z=1;
+  o.seed=((i*7919)%97)/97;
+  cards[o.id]=o;
+  var p=pileMap[o.city]; if(!p){p=pileMap[o.city]={name:o.city,order:[],home:[],x:0,y:0,lbl:null};piles.push(p);var l=document.createElement('div');l.className='flbl';stage.appendChild(l);p.lbl=l;}
+  p.order.push(o.id); p.home.push(o.id); o.pile=p;
+});
+// bigger piles first, then the rest as listed
+piles.sort(function(a,b){return b.order.length-a.order.length});
+FAN.forEach(function(id,i){cards[id].fanIdx=i});
+
+// ---- springs
+var raf=0,last=0;
+function step(t){
+  var dt=Math.min((t-last)/1000,1/30); last=t; var moving=false;
+  var k=RM?900:190, c=RM?60:15.5;
+  for(var id in cards){var o=cards[id],keys=['x','y','r','sc','o','fy'];
+    for(var j=0;j<6;j++){var p=keys[j],kk=(p==='o')?260:k,cc=(p==='o')?24:c;
+      var d=o.t[p]-o.s[p]; o.v[p]+=(kk*d-cc*o.v[p])*dt; o.s[p]+=o.v[p]*dt;
+      if(Math.abs(d)>.02||Math.abs(o.v[p])>.02)moving=true; else {o.s[p]=o.t[p];o.v[p]=0}}
+    var op=Math.max(0,Math.min(1,o.s.o));
+    o.el.style.transform='translate3d('+(o.s.x-o.w/2)+'px,'+(o.s.y-o.h/2)+'px,0) rotate('+o.s.r+'deg) scale('+o.s.sc+') perspective(1800px) rotateY('+o.s.fy+'deg)';
+    o.el.style.opacity=op; o.el.style.visibility=op<.01?'hidden':'visible';
+  }
+  if(moving){raf=requestAnimationFrame(step)}else{raf=0}
+}
+function kick(){if(!raf){last=performance.now();raf=requestAnimationFrame(step)}}
+var flipped=false;
+function sync(){stage.classList.toggle('open',state!=='fan')}
+function set(o,t,delay){
+  if(t.fy===undefined)t.fy=0;
+  if(delay){setTimeout(function(){Object.assign(o.t,t);kick()},delay)}else{Object.assign(o.t,t);kick()}
+}
+function setZ(o,z){o.z=z;o.el.style.zIndex=z}
+
+// ---- state
+var state='fan', hoverFan=-1, hoverPile=null, hoverCard=null, selId=null, cur=null, layout=null;
+
+function fanGeom(){
+  var L=Math.min(Math.max(vw*.15,110),210);
+  return {L:L,px:-L*.12,py:vh+L*.16,D:L*.56};
+}
+function fanTarget(o){
+  var g=fanGeom(), i=o.fanIdx, phi=12+i*17.5;
+  var out=0, extra=0;
+  if(hoverFan>=0){ if(i===hoverFan){out=g.L*.16;extra=-1}else if(i>hoverFan){extra=5}else{extra=-2.5} }
+  phi+=extra*(i===hoverFan?0:1);
+  var a=phi*Math.PI/180, d=g.D+out;
+  return {x:g.px+d*Math.sin(a), y:g.py-d*Math.cos(a), r:phi-90, sc:g.L/B, o:1};
+}
+function applyFan(delayBase){
+  for(var id in cards){var o=cards[id];
+    if(o.fanIdx!==undefined){set(o,fanTarget(o),delayBase?delayBase+o.fanIdx*60:0);setZ(o,10+o.fanIdx);o.el.classList.remove('dead');o.el.tabIndex=0}
+    else{var g=fanGeom();set(o,{x:g.px+g.D*.5,y:g.py-g.D*.5,r:-60,sc:g.L/B,o:0},delayBase?delayBase*.3:0);setZ(o,1);o.el.classList.add('dead');o.el.tabIndex=-1}
+  }
+  piles.forEach(function(p){p.lbl.classList.remove('on')});
+  cap.classList.remove('on');
+}
+
+function computeLayout(){
+  var n=piles.length, aw=vw-32, ah=vh*.84, best=null;
+  for(var L=150;L>=56;L-=4){
+    var cw=L*1.22, ch=L*.63+46, cols=Math.max(1,Math.floor(aw/cw)), rows=Math.ceil(n/cols);
+    if(rows*ch<=ah){best={L:L,cw:cw,ch:ch,cols:cols,rows:rows};break}
+  }
+  if(!best){var L2=56;best={L:L2,cw:L2*1.22,ch:L2*.63+46,cols:Math.max(1,Math.floor(aw/(L2*1.22))),rows:0};best.rows=Math.ceil(n/best.cols)}
+  var top=(vh-best.rows*best.ch)/2;
+  piles.forEach(function(p,i){
+    var row=Math.floor(i/best.cols), inRow=Math.min(best.cols,n-row*best.cols), col=i%best.cols;
+    var x0=(vw-inRow*best.cw)/2;
+    p.x=x0+best.cw*(col+.5); p.y=top+best.ch*row+best.L*.63/2+4;
+  });
+  layout=best;
+}
+function pileCardTarget(o,p,i,hov){
+  var L=layout.L, d=Math.min(i,4), s=(o.portrait?L*.72:L)/B;
+  var jx=(((o.seed*13)%1)-.5)*L*.05, jr=(((o.seed*29)%1)-.5)*7;
+  var x=p.x+d*L*.012+jx*(i?1:.2), y=p.y-d*L*.016, r=(i?jr:jr*.3);
+  if(hov&&i===0){y-=L*.06;r+=-1.5}
+  if(hov&&i>0){r+=i%2?2:-2}
+  return {x:x,y:y,r:r,sc:s,o:i>5?0:1};
+}
+function applyPiles(delayBase){
+  computeLayout();
+  piles.forEach(function(p,pi){
+    var hov=hoverPile===p;
+    p.order.forEach(function(id,i){var o=cards[id];
+      var t=pileCardTarget(o,p,i,hov); setZ(o,100+pi*40+(40-i));
+      set(o,t,delayBase?delayBase+pi*38+i*14:0); o.el.classList.toggle('dead',i!==0); o.el.tabIndex=i===0?0:-1;
+    });
+    var lt=p.y+layout.L*.63/2+22; p.lbl.style.transform='translate('+p.x+'px,'+lt+'px)';
+    p.lbl.textContent=p.name;
+    setTimeout(function(){if(state==='piles')p.lbl.classList.add('on')},delayBase?delayBase+pi*38+250:0);
+  });
+  cap.classList.remove('on');
+}
+
+function viewGeom(){
+  var land=Math.min(vw-40,500,vh*.5/.63), port=Math.min(vh*.5,(vw-40)/.63,500);
+  return {land:land,port:port,cx:vw/2,cy:vh*.46};
+}
+// loose spread of one pile's cards
+var spread=null;
+function computeSpread(p){
+  var n=p.home.length, aw=vw-32, ah=vh*.74, best=null;
+  for(var L=210;L>=44;L-=4){
+    var cw=L*1.1, ch=L*.74, cols=Math.max(1,Math.floor(aw/cw)), rows=Math.ceil(n/cols);
+    cols=Math.min(cols,n); rows=Math.ceil(n/cols);
+    if(rows*ch<=ah){best={L:L,cw:cw,ch:ch,cols:cols,rows:rows};break}
+  }
+  if(!best){var L2=44;best={L:L2,cw:L2*1.1,ch:L2*.74,cols:Math.max(1,Math.min(n,Math.floor(aw/(L2*1.1)))),rows:0};best.rows=Math.ceil(n/best.cols)}
+  // balance rows so the last row isn't a lone card
+  var per=Math.ceil(n/best.rows); best.cols=per;
+  var top=vh*.47-best.rows*best.ch/2+best.ch/2, pos={};
+  p.home.forEach(function(id,i){
+    var o=cards[id],row=Math.floor(i/per),inRow=Math.min(per,n-row*per),col=i%per;
+    var x0=(vw-inRow*best.cw)/2+best.cw/2;
+    var jx=(((o.seed*13)%1)-.5)*best.L*.07, jy=(((o.seed*31)%1)-.5)*best.L*.06, jr=(((o.seed*29)%1)-.5)*8;
+    pos[id]={x:x0+col*best.cw+jx,y:top+row*best.ch+jy,r:jr,sc:(o.portrait?best.L*.72:best.L)/B,o:1};
+  });
+  spread=best; spread.pos=pos; spread.bottom=top+(best.rows-1)*best.ch+best.ch/2;
+}
+function applySpread(delayBase){
+  var p=cur; computeSpread(p);
+  piles.forEach(function(q){
+    q.lbl.classList.remove('on');
+    if(q===p)return;
+    q.order.forEach(function(id){var o=cards[id];set(o,{x:q.x,y:q.y+8,r:o.t.r,sc:o.t.sc*.8,o:0});o.el.classList.add('dead')});
+  });
+  p.home.forEach(function(id,i){var o=cards[id];
+    var t=Object.assign({},spread.pos[id]);
+    if(hoverCard===id){t.y-=spread.L*.05;t.sc*=1.07;t.r*=.3}
+    setZ(o,500+(hoverCard===id?50:i)); set(o,t,delayBase?delayBase+i*35:0); o.el.classList.remove('dead'); o.el.tabIndex=0;
+  });
+  showCap(hoverCard?cards[hoverCard].name:p.name, spread.bottom+spread.ch*.5+8, null);
+}
+function applyView(){
+  var p=cur, g=viewGeom(), sel=cards[selId];
+  if(p.home.length>1){
+    computeSpread(p);
+    p.home.forEach(function(id){var o=cards[id]; if(id===selId)return;
+      var t=Object.assign({},spread.pos[id]);t.o=.12;t.sc*=.92;set(o,t);setZ(o,500);o.el.classList.remove('dead')});
+  }else{
+    piles.forEach(function(q){q.lbl.classList.remove('on');if(q===p)return;
+      q.order.forEach(function(id){var o=cards[id];set(o,{x:q.x,y:q.y+8,r:o.t.r,sc:o.t.sc*.8,o:0});o.el.classList.add('dead')})});
+  }
+  piles.forEach(function(q){q.lbl.classList.remove('on')});
+  var L=sel.portrait?g.port:g.land;
+  set(sel,{x:g.cx,y:g.cy,r:0,sc:L/B,o:1,fy:flipped?180:0}); setZ(sel,900); sel.el.classList.remove('dead');
+  var H=sel.portrait?g.port:g.land*.63;
+  showCap(sel.name+'', g.cy+H/2+26, p.home.length>1?(p.home.indexOf(selId)+1)+' / '+p.home.length:null);
+}
+function showCap(text,top,sub){
+  cap.classList.remove('on');
+  clearTimeout(showCap.t);
+  showCap.t=setTimeout(function(){
+    cap.style.top=top+'px'; cap.innerHTML=text+(sub?'<small>'+sub+'</small>':''); cap.classList.add('on');
+  },90);
+}
+function step2(dir){
+  if(state!=='view'||cur.home.length<2)return;
+  var i=cur.home.indexOf(selId); flipped=false; selId=cur.home[(i+dir+cur.home.length)%cur.home.length]; applyView();
+}
+
+function toFan(){state='fan';sync();hoverPile=null;cur=null;applyFan(0);stage.style.cursor=''}
+function toPiles(fromFan){state='piles';sync();cur=null;hoverCard=null;applyPiles(fromFan?30:0)}
+function toSpread(p){state='spread';sync();cur=p;hoverPile=null;hoverCard=null;applySpread(20)}
+function toView(p,id){flipped=false;state='view';sync();cur=p;hoverPile=null;selId=id;applyView()}
+function openPile(p){ if(p.home.length>1)toSpread(p); else toView(p,p.home[0]) }
+function back(){
+  flipped=false;
+  if(state==='view'){ if(cur.home.length>1){state='spread';selId=null;applySpread(0)} else toPiles(false) }
+  else if(state==='spread')toPiles(false);
+  else if(state==='piles')toFan();
+}
+
+// ---- events
+stage.addEventListener('click',function(e){
+  var el=e.target.closest&&e.target.closest('.fcard');
+  if(!el){back();return}
+  var o=el._c;
+  if(state==='fan'){toPiles(true)}
+  else if(state==='piles'){openPile(o.pile)}
+  else if(state==='spread'){toView(cur,o.id)}
+  else if(state==='view'){ if(o.id===selId){ if(o.back){flipped=!flipped;applyView()} else back() } else if(o.pile===cur){flipped=false;selId=o.id;applyView()} }
+});
+stage.addEventListener('pointermove',function(e){
+  if(e.pointerType==='touch')return;
+  var el=document.elementFromPoint(e.clientX,e.clientY), c=el&&el.closest&&el.closest('.fcard'), o=c&&c._c;
+  if(state==='fan'){
+    var h=(o&&o.fanIdx!==undefined)?o.fanIdx:-1;
+    if(h!==hoverFan){hoverFan=h;applyFan(0);stage.style.cursor=h>=0?'pointer':''}
+  }else if(state==='piles'){
+    var hp=o?o.pile:null;
+    if(hp!==hoverPile){hoverPile=hp;applyPiles(0);}
+  }else if(state==='spread'){
+    var hc=o?o.id:null;
+    if(hc!==hoverCard){hoverCard=hc;applySpread(0)}
+  }
+});
+stage.addEventListener('pointerout',function(e){
+  if(state==='fan'&&hoverFan!==-1){var t=e.relatedTarget; if(!(t&&t.closest&&t.closest('.fcard'))){hoverFan=-1;applyFan(0)}}
+});
+stage.addEventListener('pointerleave',function(){
+  if(state==='fan'&&hoverFan!==-1){hoverFan=-1;applyFan(0)}
+  if(state==='piles'&&hoverPile){hoverPile=null;applyPiles(0)}
+  if(state==='spread'&&hoverCard){hoverCard=null;applySpread(0)}
+});
+addEventListener('keydown',function(e){
+  if(state==='fan'&&e.key!=='Enter')return;
+  if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();back()}
+  else if(e.key==='ArrowRight')step2(1);
+  else if(e.key==='ArrowLeft')step2(-1);
+  else if(e.key==='Enter'&&document.activeElement&&document.activeElement._c){document.activeElement.click()}
+},true);
+function resize(){
+  vw=innerWidth;vh=innerHeight;
+  if(state==='fan')applyFan(0); else if(state==='piles')applyPiles(0); else if(state==='spread')applySpread(0); else if(state==='view')applyView();
+}
+addEventListener('resize',resize);
+
+// ---- boot: cards slide in from the corner
+vw=innerWidth;vh=innerHeight;
+(function(){
+  var g=fanGeom();
+  for(var id in cards){var o=cards[id];o.s={x:-g.L,y:vh+g.L*.4,r:-80,sc:g.L/B,o:0,fy:0};}
+  applyFan(0);
+  FAN.forEach(function(id,i){var o=cards[id];o.t=Object.assign({fy:0},fanTarget(o));setTimeout(function(){o.s.o=1;kick()},150+i*90);o.t.x=o.t.x;o.s.x=-g.L*.3+i*8;o.s.y=vh+g.L*.2;});
+  kick();
+})();
+})();
 </script>
 </body>
 </html>

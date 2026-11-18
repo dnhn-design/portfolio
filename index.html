@@ -126,14 +126,15 @@ body.live #sb,html.sb-open body.live #sb{transform:translateX(100%);visibility:h
 .card::before{box-shadow:0 10px 36px rgba(0,0,0,.2)}
 a.card:hover::before{box-shadow:0 12px 40px rgba(0,0,0,.3)}
 .card img.ol{position:relative;z-index:1;display:block;width:100%;aspect-ratio:1/1;object-fit:contain}
-/* fare cards peeking out from behind the card, fanned a little; they slide out just after the card settles */
-.fares{position:absolute;inset:0;pointer-events:none}
-.fares img{position:absolute;z-index:-1;left:50%;display:block;border-radius:5px;box-shadow:0 2px 8px rgba(0,0,0,.3);opacity:0;transform-origin:50% 0;
-  transform:translateY(calc(var(--hid) * -.9)) rotate(0deg);
+/* small fare cards on the edge of the card nearest the dot (in front of it, fanned from a corner); text-only tips keep them tucked behind the panel instead */
+.fares{position:absolute;inset:0;z-index:2;pointer-events:none}
+.fares img{position:absolute;display:block;border-radius:4px;box-shadow:0 1px 6px rgba(0,0,0,.38);opacity:0;
+  transform:translateY(var(--sl)) rotate(0deg);
   transition:transform .8s cubic-bezier(.3,1.5,.5,1) calc(.28s + var(--i) * .07s),opacity .2s calc(.28s + var(--i) * .07s)}
 .card.in .fares img,#tip.fin .fares img{transform:translateY(0) rotate(var(--r));opacity:1}
-.fares.up img{transform-origin:50% 100%;transform:translateY(calc(var(--hid) * .9)) rotate(0deg)}
-.card.in .fares.up img,#tip.fin .fares.up img{transform:translateY(0) rotate(var(--r))}
+.fares.behind{z-index:auto}
+.fares.behind img{z-index:-1;border-radius:5px;box-shadow:0 2px 8px rgba(0,0,0,.3);transform-origin:50% 0}
+.fares.behind.up img{transform-origin:50% 100%}
 [data-theme=dark] img.ol{filter:invert(1)}
 @media (max-width:520px){.card{--cw:118px}}
 #tip{position:fixed;z-index:6;pointer-events:none;color:var(--ink);border-radius:10px;padding:6px;font-weight:500;font-size:12px;text-align:center;max-width:170px}
@@ -241,14 +242,21 @@ const FARE_ID={
   'nj-transit':['nj_transit_farepay'], 'ct-rail':['goct_ctrides']
 };
 const FARE_P=new Set(['ventra_chicago','clipper_bay_area','omny_card','omny_ticket','goct_ctrides']);
-function fareStack(ids,cw,up,ph){      // ph = height of the panel they hide behind
-  const L=cw*.5, n=ids.length, step=n>3?L*.42:L*.52, g=el('div',{class:'fares'+(up?' up':'')});
+function fareStack(ids,cw,up,ph,mode,side){      // up: the panel hangs above its dot; ph: panel height; mode 'front' (default) or 'behind'; side: corner 'l' or 'r'
+  const front=mode!=='behind', L=cw*(front?.42:.5), n=ids.length, g=el('div',{class:'fares'+(front?'':' behind')+(up?' up':'')});
   ids.forEach((id,i)=>{
-    const p=FARE_P.has(id), w=p?L*.63:L, h=p?L:L*.63, k=i-(n-1)/2, peek=Math.max(Math.min(24,h*.5),h-(ph-6));
-    const im=el('img',{src:'fare-cards/'+id+'.webp',alt:'',loading:'lazy',decoding:'async'});
-    im.style.cssText='width:'+w.toFixed(1)+'px;height:'+h.toFixed(1)+'px;margin-left:'+(k*step-w/2).toFixed(1)+'px;'+(up?'bottom':'top')+':calc(100% - '+(h-peek).toFixed(1)+'px)';
-    im.style.setProperty('--hid',(h-peek).toFixed(1)+'px'); im.style.setProperty('--i',i);
-    im.style.setProperty('--r',(k*7+(((i*37)%7)-3)*.8).toFixed(1)+'deg');
+    const p=FARE_P.has(id), w=p?L*.63:L, h=p?L:L*.63, im=el('img',{src:'fare-cards/'+id+'.webp',alt:'',loading:'lazy',decoding:'async'});
+    im.style.width=w.toFixed(1)+'px'; im.style.height=h.toFixed(1)+'px'; im.style.setProperty('--i',i);
+    const jit=(((i*37)%7)-3)*.8;
+    if(front){
+      const dir=side==='r'?-1:1, x=side==='r'?cw+16-20-i*L*.3:20+i*L*.3, r=dir*(-12+i*8)+jit;
+      im.style.left=x.toFixed(1)+'px'; im.style.top=up?'100%':'0'; im.style.marginLeft=(-w/2).toFixed(1)+'px'; im.style.marginTop=(-h/2+(up?4:-4)).toFixed(1)+'px';
+      im.style.setProperty('--r',r.toFixed(1)+'deg'); im.style.setProperty('--sl',(up?22:-22)+'px'); im.style.zIndex=n-i;
+    }else{
+      const k=i-(n-1)/2, step=n>3?L*.42:L*.52, peek=Math.max(Math.min(24,h*.5),h-(ph-6)), hid=h-peek;
+      im.style.left='50%'; im.style.marginLeft=(k*step-w/2).toFixed(1)+'px'; im.style[up?'bottom':'top']='calc(100% - '+hid.toFixed(1)+'px)';
+      im.style.setProperty('--sl',(up?hid*.9:-hid*.9).toFixed(1)+'px'); im.style.setProperty('--r',(k*7+jit).toFixed(1)+'deg');
+    }
     g.append(im);
   });
   return g;
@@ -361,7 +369,7 @@ function showTip(a,it){
     tip.replaceChildren(); if(it.outline) tip.append(el('img',{class:'ol',src:OUTLINE(it.outline),alt:''})); else if(it.img) tip.append(el('img',{src:THUMB(it.img),alt:''}));
     if(!it.outline) tip.append(el('span',{text:it.t})); tip.classList.toggle('ol-only',!!it.outline); tip.classList.remove('fin'); tip.hidden=false;
     const r=a.getBoundingClientRect(), below=r.top<230||!!it.outline;
-    if(it.s&&FARE_ID[it.s]){ tip.append(fareStack(FARE_ID[it.s],150,!below,it.outline?162:30)); requestAnimationFrame(()=>requestAnimationFrame(()=>tip.classList.add('fin'))); }
+    if(it.s&&FARE_ID[it.s]){ tip.append(fareStack(FARE_ID[it.s],150,!below,it.outline?162:30,it.outline?'front':'behind','l')); requestAnimationFrame(()=>requestAnimationFrame(()=>tip.classList.add('fin'))); }
     tip.style.left=Math.min(Math.max(r.left+r.width/2,90),innerWidth-90)+'px';
     tip.style.top=(below?r.bottom+10:r.top-10)+'px';
     tip.style.transform=below?'translate(-50%,0)':'translate(-50%,-100%)';
@@ -393,7 +401,7 @@ function showCard(r,v){
   const mob=rect.width<=520, cw=mob?118:150, gap=DOT_R*mapScale(v,rect)+CARD_GAP, up=y+gap+cw+16+10>rect.height;
   c.style.left=Math.min(Math.max(x,cw/2+8),rect.width-cw/2-8)+'px';
   c.style.top=(up?y-gap:y+gap)+'px'; if(up) c.classList.add('up');
-  if(FARE_ID[r.id]) c.append(fareStack(FARE_ID[r.id],cw,up,cw+16));
+  if(FARE_ID[r.id]) c.append(fareStack(FARE_ID[r.id],cw,up,cw+16,'front',r.anchor==='start'?'l':'r'));
   cards.append(c);
   requestAnimationFrame(()=>requestAnimationFrame(()=>c.classList.add('in')));
 }

@@ -115,11 +115,42 @@ for(const g of D.geo){for(let i=0;i<g.length;i+=2){const w=proj(g[i],g[i+1]);i?g
 const railPath=new Path2D(),railBL=new Path2D();
 const shapeBL=new Uint8Array(shapes.length);for(const tr of trips)if(tr.bl)shapeBL[tr.shape]=1;
 let bx0=1e9,bx1=-1e9,by0=1e9,by1=-1e9;
+/* "syn" shapes are stitched from other shapes (their real stretches duplicate lines that are already drawn) or are straight station-to-station chords.
+   Draw the real stretches too, so lines that only a stitched shape carries (the Pennsylvanian west of Harrisburg) show up; the chords stay hidden. */
+const segOK=D.shapes.map((f,si)=>{              // which segments are real track (not a straight chord between stations)
+  const n=f.length/2-1,ok=new Uint8Array(Math.max(n,0));if(n<1)return ok;
+  if(!D.syn[si]){ok.fill(1);return ok;}
+  let km=0;for(let i=0;i<n;i++)km+=Math.hypot((f[2*i+2]-f[2*i])*85,(f[2*i+3]-f[2*i+1])*111);
+  if((n+1)/Math.max(km,1)<.3)return ok;          // sparse: chords
+  for(let i=0;i<n;i++)if(Math.hypot((f[2*i+2]-f[2*i])*85,(f[2*i+3]-f[2*i+1])*111)<25)ok[i]=1;
+  return ok;});
+shapes.forEach((s,si)=>{if(!D.syn[si])return;const ok=segOK[si],P=railPath;let pen=false;
+  for(let i=0;i<s.m-1;i++){if(ok[i]){if(!pen){P.moveTo(s.wx[i],s.wy[i]);pen=true;}P.lineTo(s.wx[i+1],s.wy[i+1]);}else pen=false;}});
 shapes.forEach((s,si)=>{if(D.syn[si])return;for(let i=0;i<s.m;i++){const P=shapeBL[si]?railBL:railPath;i?P.lineTo(s.wx[i],s.wy[i]):P.moveTo(s.wx[i],s.wy[i]);
   if(s.wx[i]<bx0)bx0=s.wx[i];if(s.wx[i]>bx1)bx1=s.wx[i];if(s.wy[i]<by0)by0=s.wy[i];if(s.wy[i]>by1)by1=s.wy[i];}});
 
+/* route <-> shape index (for picking a route by clicking its line) */
+const shapeRoutes=new Map(),routeShapes=new Map(),routeStops=new Map();
+for(const tr of trips){
+  if(!shapeRoutes.has(tr.shape))shapeRoutes.set(tr.shape,new Map());const m=shapeRoutes.get(tr.shape);m.set(tr.route,(m.get(tr.route)||0)+1);
+  if(!routeShapes.has(tr.route)){routeShapes.set(tr.route,new Set());routeStops.set(tr.route,new Set());}
+  routeShapes.get(tr.route).add(tr.shape);const ss=routeStops.get(tr.route);for(let i=0;i<tr.m;i++)ss.add(tr.st[i]);
+}
+const shapeCand=new Map();shapeRoutes.forEach((m,si)=>shapeCand.set(si,[...m.entries()].sort((a,b)=>b[1]-a[1]).map(e=>e[0])));
+const shapeBB=shapes.map(s=>{let a=1e9,b=-1e9,c=1e9,d=-1e9;for(let i=0;i<s.m;i++){a=Math.min(a,s.wx[i]);b=Math.max(b,s.wx[i]);c=Math.min(c,s.wy[i]);d=Math.max(d,s.wy[i]);}return [a,b,c,d];});
+const lineShapes=[...shapeRoutes.keys()].filter(si=>segOK[si].some(Boolean));
+const routePaths=new Map();
+function routePath(route){
+  if(routePaths.has(route))return routePaths.get(route);
+  const P=new Path2D();
+  for(const si of routeShapes.get(route)){const s=shapes[si],ok=segOK[si];let pen=false;
+    for(let i=0;i<s.m-1;i++){if(ok[i]){if(!pen){P.moveTo(s.wx[i],s.wy[i]);pen=true;}P.lineTo(s.wx[i+1],s.wy[i+1]);}else pen=false;}}
+  routePaths.set(route,P);return P;
+}
+function routeBox(route){let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;for(const i of routeStops.get(route)){const s=stops[i];x0=Math.min(x0,s.x);x1=Math.max(x1,s.x);y0=Math.min(y0,s.y);y1=Math.max(y1,s.y);}return [x0,y0,x1,y1];}
+
 /* ---------- state ---------- */
-const S={day:'wkd',t:0,playing:true,speed:120,sel:null,hover:null,stationOpen:null,dirty:true,focus:'all'};
+const S={day:'wkd',t:0,playing:true,speed:120,sel:null,hover:null,stationOpen:null,dirty:true,focus:'all',route:null,routeAt:null};
 const SPEEDS=[30,60,120,240,600];
 const DATES={};
 (function init(){
@@ -232,6 +263,20 @@ function select(inst){
   S.dirty=true;sig='';
 }
 
+function setRoute(route,at){
+  S.route=route;S.routeAt=at||null;sig='';closePop();
+  if(S.sel&&route&&trips[S.sel.trip].route!==route)S.sel=null;
+  if(route){const b=routeBox(route),m=24;   // bring the route into view only if it is not already
+    const inView=sx(b[0])>m&&sx(b[2])<W-m&&sy(b[1])>m&&sy(b[3])<H-m;if(!inView)flyToBox(b[0],b[1],b[2],b[3]);}
+  S.dirty=true;
+}
+function pickRoute(line){            // click a line: its route; where several lines overlap, click again to step through them
+  const cand=line.cands;if(!cand.length)return;
+  const i=cand.indexOf(S.route);
+  if(i>=0&&cand.length===1){setRoute(null);return;}
+  setRoute(cand[i>=0?(i+1)%cand.length:0],{x:line.x,y:line.y});
+}
+
 /* ---------- sidebar ---------- */
 const listEl=$('#list'),countEl=$('#count');
 let sig='',actives=[],lastDetail=0;
@@ -297,7 +342,19 @@ function hit(mx,my){
   if(best)return best;
   bd=10*10;
   for(let i=0;i<stops.length;i++){const dx=sx(stops[i].x)-mx,dy=sy(stops[i].y)-my,d=dx*dx+dy*dy;if(d<bd){bd=d;best={station:i};}}
-  return best;
+  if(best)return best;
+  const wx=cam.x+(mx-W/2)/cam.k,wy=cam.y+(my-H/2)/cam.k,tol=7/cam.k,t2=tol*tol,near=new Map();
+  for(const si of lineShapes){const bb=shapeBB[si];if(wx<bb[0]-tol||wx>bb[1]+tol||wy<bb[2]-tol||wy>bb[3]+tol)continue;
+    const s=shapes[si],ok=segOK[si];let sd=t2;
+    for(let i=0;i<s.m-1;i++){if(!ok[i])continue;
+      const ax=s.wx[i],ay=s.wy[i],dx=s.wx[i+1]-ax,dy=s.wy[i+1]-ay,L=dx*dx+dy*dy;
+      let u=L?((wx-ax)*dx+(wy-ay)*dy)/L:0;u=u<0?0:u>1?1:u;
+      const ex=ax+u*dx-wx,ey=ay+u*dy-wy,d=ex*ex+ey*ey;if(d<sd)sd=d;}
+    if(sd<t2){const r=shapeCand.get(si)[0];if(!near.has(r)||near.get(r)>sd)near.set(r,sd);}}
+  if(!near.size)return null;
+  // routes whose lines run under the cursor, nearest first (lines that overlap, like the Northeast Corridor, can be stepped through by clicking again)
+  const cands=[...near.entries()].sort((a,b)=>Math.round(a[1]*cam.k*cam.k/4)-Math.round(b[1]*cam.k*cam.k/4)||a[0].localeCompare(b[0])).map(e=>e[0]);
+  return {line:1,cands,x:wx,y:wy};
 }
 
 /* ---------- render ---------- */
@@ -329,8 +386,11 @@ function render(){
   world(()=>{
     ctx.lineJoin='round';ctx.lineCap='round';
     ctx.strokeStyle='#1d2631';ctx.lineWidth=1/cam.k;ctx.stroke(geoPath);
-    ctx.strokeStyle=sel?'#1f2833':'#2b3542';ctx.lineWidth=1.3/cam.k;ctx.stroke(railPath);
-    ctx.strokeStyle=sel?'#2a2810':'#5a5413';ctx.stroke(railBL);
+    ctx.strokeStyle=sel||S.route?'#1f2833':'#2b3542';ctx.lineWidth=1.3/cam.k;ctx.stroke(railPath);
+    ctx.strokeStyle=sel||S.route?'#2a2810':'#5a5413';ctx.stroke(railBL);
+    const hr=S.hover&&S.hover.line!=null?S.hover.cands[0]:null;
+    if(hr&&hr!==S.route){ctx.strokeStyle='rgba(150,170,195,.55)';ctx.lineWidth=2/cam.k;ctx.stroke(routePath(hr));}
+    if(S.route){const bl=S.route==='Brightline';ctx.strokeStyle=ac(bl,.85);ctx.lineWidth=2.4/cam.k;ctx.stroke(routePath(S.route));}
     if(sel){
       const tr=sel.tr,sh=shapes[tr.shape];
       ctx.beginPath();drawTripPath(sh,tr.d[0],tr.d[tr.m-1]);ctx.strokeStyle=ac(tr.bl,.35);ctx.lineWidth=2/cam.k;ctx.stroke();
@@ -369,6 +429,8 @@ function render(){
     ctx.beginPath();ctx.arc(x,y,i===S.stationOpen?5.5:5,0,6.2832);i===S.stationOpen?ctx.fill():ctx.stroke();
   }
   if(hs!=null&&hs!==S.stationOpen){const s=stops[hs];drawLabel(s.name,sx(s.x),sy(s.y)-2);}
+  if(S.route&&S.routeAt)drawLabel(S.route,sx(S.routeAt.x),sy(S.routeAt.y)-4,ac(S.route==='Brightline'));
+  if(S.hover&&S.hover.line!=null){const c=S.hover.cands;if(c.length&&!(c[0]===S.route&&c.length===1))drawLabel(c[0]+(c.length>1?'  +'+(c.length-1):''),sx(S.hover.x),sy(S.hover.y)-4);}
   if(S.hover&&S.hover.train&&!(sel&&sel.key===S.hover.train.key)){const a=S.hover.train;drawLabel(a.tr.route+' '+a.tr.num,sx(a.x),sy(a.y)-tr);}
 }
 
@@ -403,9 +465,12 @@ function syncPlay(){playBtn.innerHTML=S.playing?ICON_PAUSE:ICON_PLAY;playBtn.set
 playBtn.onclick=()=>{S.playing=!S.playing;syncPlay();last=performance.now();};
 speedBtn.onclick=()=>{S.speed=SPEEDS[(SPEEDS.indexOf(S.speed)+1)%SPEEDS.length];speedBtn.textContent=S.speed+'×';};
 (function buildDays(){
+  /* Mo..Su in fixed order; each button shows the schedule for the next date of that weekday (starting today), so every day of the week is covered */
   const seg=$('#seg');seg.textContent='';
-  for(let i=0;i<7;i++){const b=document.createElement('button');b.dataset.d='d'+i;
-    b.textContent=i===0?'Today':new Date(DATES['d'+i]*864e5).toLocaleDateString('en-US',{weekday:'short',timeZone:'UTC'});seg.appendChild(b);}
+  const names=['Mo','Tu','We','Th','Fr','Sa','Su'];
+  for(let w=0;w<7;w++){
+    let i=0;while(i<6&&((new Date(DATES['d'+i]*864e5).getUTCDay()+6)%7)!==w)i++;
+    const b=document.createElement('button');b.dataset.d='d'+i;b.textContent=names[w];seg.appendChild(b);}
 })();
 document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{
   S.day=b.dataset.d;document.querySelectorAll('#seg button').forEach(x=>x.setAttribute('aria-pressed',x===b));
@@ -414,7 +479,7 @@ document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{
 document.querySelectorAll('#seg button').forEach(x=>{x.setAttribute('aria-pressed',x.dataset.d===S.day);x.title=fmtDate(DATES[x.dataset.d]);});
 addEventListener('keydown',e=>{
   if(e.code==='Space'&&!(document.activeElement&&document.activeElement.tagName==='BUTTON')){e.preventDefault();playBtn.click();}
-  if(e.key==='Escape'){if(S.stationOpen!=null){closePop();e.preventDefault();}else if(S.sel){select(null);e.preventDefault();}else if(S.focus!=='all'){setFocus('all');e.preventDefault();}}   // handled here, so the page does not also close the map
+  if(e.key==='Escape'){if(S.stationOpen!=null){closePop();e.preventDefault();}else if(S.sel){select(null);e.preventDefault();}else if(S.route){setRoute(null);e.preventDefault();}else if(S.focus!=='all'){setFocus('all');e.preventDefault();}}   // handled here, so the page does not also close the map
 });
 
 /* ---------- map interaction ---------- */
@@ -449,7 +514,8 @@ function endPtr(e){
     if(h&&h.train){const a=h.train;if(S.sel&&S.sel.trip===a.tr.id&&S.sel.k===a.k)select(null);else{select(a);}
       const row=listEl.querySelector('.row.sel');if(row)row.scrollIntoView({block:'nearest'});}
     else if(h&&h.station!=null){S.stationOpen===h.station?closePop():openPop(h.station);}
-    else{closePop();if(S.sel)select(null);}
+    else if(h&&h.line!=null){pickRoute(h);}
+    else{closePop();if(S.sel)select(null);else if(S.route)setRoute(null);}
   }
   if(ptrs.size===0)drag=null;
 }
@@ -475,11 +541,12 @@ function frame(now){
   if(changed){
     actives=activeAt(S.t,S.day);
     if(S.focus!=='all')actives=actives.filter(a=>(S.focus==='bl')===a.tr.bl);
+    if(S.route)actives=actives.filter(a=>a.tr.route===S.route);
     if(S.sel&&!selInst()){
       const alt=actives.find(a=>a.tr.id===S.sel.trip);
       if(alt)S.sel.k=alt.k;else{S.sel=null;sig='';}
     }
-    const ns=actives.map(a=>a.key).sort((a,b)=>a-b).join(',')+'|'+(S.sel?S.sel.trip+'.'+S.sel.k:'');
+    const ns=actives.map(a=>a.key).sort((a,b)=>a-b).join(',')+'|'+(S.sel?S.sel.trip+'.'+S.sel.k:'')+'|'+(S.route||'');
     if(ns!==sig){sig=ns;rebuildList();}
     if(now-lastSlow>250){lastSlow=now;fillDetail(false);updatePop();}
     const c=hm(S.t);clockB.textContent=c.t;clockS.textContent=c.ap;

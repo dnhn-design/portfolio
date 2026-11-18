@@ -280,11 +280,13 @@ function pickRoute(line){            // click a line: its route; where several l
 /* ---------- sidebar ---------- */
 const listEl=$('#list'),countEl=$('#count');
 let sig='',actives=[],lastDetail=0;
+/* a long-distance train that is still running from an earlier day is a different train from today's departure with the same number: say which day it left */
+const depDay=a=>new Date((DATES[S.day]-a.k)*864e5).toLocaleDateString('en-US',{weekday:'short',timeZone:'UTC'});
 function rebuildList(){
   const sorted=actives.slice().sort((p,q)=>(+p.tr.bl-+q.tr.bl)||p.tr.route.localeCompare(q.tr.route)||(+p.tr.num-+q.tr.num)||p.k-q.k);
   const top=listEl.scrollTop;
   let seenBL=false;
-  listEl.innerHTML=sorted.map(a=>(a.tr.bl&&!seenBL?(seenBL=true,'<div class="grp"><i></i>Brightline</div>'):'')+`<button class="row${a.tr.bl?' bl':''}${S.sel&&S.sel.trip===a.tr.id&&S.sel.k===a.k?' sel':''}" role="listitem" data-k="${a.key}"><div class="top"><span class="num">${a.tr.num}</span><span class="dest">${a.tr.head}</span></div><div class="rt">${a.tr.route}</div><div class="det" hidden></div></button>`).join('');
+  listEl.innerHTML=sorted.map(a=>(a.tr.bl&&!seenBL?(seenBL=true,'<div class="grp"><i></i>Brightline</div>'):'')+`<button class="row${a.tr.bl?' bl':''}${S.sel&&S.sel.trip===a.tr.id&&S.sel.k===a.k?' sel':''}" role="listitem" data-k="${a.key}"><div class="top"><span class="num">${a.tr.num}</span><span class="dest">${a.tr.head}</span></div><div class="rt">${a.tr.route}${a.k?' · left '+depDay(a):''}</div><div class="det" hidden></div></button>`).join('');
   listEl.scrollTop=top;
   countEl.textContent=actives.length;
   fillDetail(true);

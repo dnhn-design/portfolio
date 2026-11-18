@@ -465,9 +465,12 @@ function syncPlay(){playBtn.innerHTML=S.playing?ICON_PAUSE:ICON_PLAY;playBtn.set
 playBtn.onclick=()=>{S.playing=!S.playing;syncPlay();last=performance.now();};
 speedBtn.onclick=()=>{S.speed=SPEEDS[(SPEEDS.indexOf(S.speed)+1)%SPEEDS.length];speedBtn.textContent=S.speed+'×';};
 (function buildDays(){
+  /* Mo..Su in fixed order; each button shows the schedule for the next date of that weekday (starting today), so every day of the week is covered */
   const seg=$('#seg');seg.textContent='';
-  for(let i=0;i<7;i++){const b=document.createElement('button');b.dataset.d='d'+i;
-    b.textContent=i===0?'Today':new Date(DATES['d'+i]*864e5).toLocaleDateString('en-US',{weekday:'short',timeZone:'UTC'});seg.appendChild(b);}
+  const names=['Mo','Tu','We','Th','Fr','Sa','Su'];
+  for(let w=0;w<7;w++){
+    let i=0;while(i<6&&((new Date(DATES['d'+i]*864e5).getUTCDay()+6)%7)!==w)i++;
+    const b=document.createElement('button');b.dataset.d='d'+i;b.textContent=names[w];seg.appendChild(b);}
 })();
 document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{
   S.day=b.dataset.d;document.querySelectorAll('#seg button').forEach(x=>x.setAttribute('aria-pressed',x===b));

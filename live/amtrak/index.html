@@ -171,6 +171,30 @@ function runsOn(tr,date){
   const idx=(new Date(date*864e5).getUTCDay()+6)%7;return ((mask>>(6-idx))&1)===1;
 }
 for(const tr of trips){tr.run={};for(const k of Object.keys(DATES))tr.run[k]=[0,1,2].map(j=>runsOn(tr,DATES[k]-j));}
+/* Twins: the feed lists one physical train more than once (a through train under two numbers, like the Empire Builder's 7 and 27 that run together
+   from Chicago to Spokane, or a number repeated with an overlapping calendar). Trips of a route that share the exact stop times at 2+ stops are twins;
+   over the shared stretch only the lowest-numbered-in-the-feed one is shown, and it carries the other numbers. */
+(function findTwins(){
+  const md=v=>(((v%1440)+1440)%1440).toFixed(1);       // time of day: a twin can be listed a whole day later in its own timeline
+  const idx=new Map();
+  for(const tr of trips){tr.twins=[];for(let i=0;i<tr.m;i++){const k=tr.route+'|'+tr.st[i]+'|'+md(tr.b[i]);let l=idx.get(k);if(!l)idx.set(k,l=[]);l.push([tr,i]);}}
+  const pairs=new Map();
+  for(const l of idx.values()){if(l.length<2)continue;
+    for(let x=0;x<l.length;x++)for(let y=x+1;y<l.length;y++){const A=l[x][0],B=l[y][0];if(A===B)continue;
+      const lo=A.id<B.id?A:B,hi=lo===A?B:A,il=lo===A?l[x][1]:l[y][1],ih=lo===A?l[y][1]:l[x][1],key=lo.id*4096+hi.id,dl=Math.round((hi.b[ih]-lo.b[il])/1440);
+      let w=pairs.get(key);if(!w)pairs.set(key,w={o:lo,hi,n:0,i0:1e9,i1:-1,dl,bad:false});
+      if(dl!==w.dl)w.bad=true;w.n++;w.i0=Math.min(w.i0,ih);w.i1=Math.max(w.i1,ih);}}
+  for(const w of pairs.values())if(w.n>=2&&!w.bad)w.hi.twins.push({o:w.o,dl:w.dl,from:w.hi.a[w.i0],to:w.hi.b[w.i1]});
+})();
+function twinRoot(tr,k,day,tau){            // the twin that stands in for this train right now (or null)
+  let root=null,cur=tr,kk=k;
+  for(let g=0;g<4;g++){let nx=null,nk=0;
+    for(const w of cur.twins){const j=kk-w.dl;if(j<0||j>2||!w.o.run[day][j])continue;if(tau>=w.from&&tau<=w.to){nx=w.o;nk=j;break;}}
+    if(!nx)break;root=nx;cur=nx;kk=nk;}
+  return root?{tr:root,k:kk}:null;
+}
+const numOf=a=>[a.tr.num,...(a.alts||[]).map(t=>t.num)].filter((v,i,r)=>r.indexOf(v)===i).join(' / ');
+const headOf=a=>[a.tr.head,...(a.alts||[]).map(t=>t.head)].filter((v,i,r)=>r.indexOf(v)===i).join(' / ');
 const fmtDate=n=>new Date(n*864e5).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',timeZone:'UTC'});
 
 /* ---------- helpers ---------- */
@@ -197,9 +221,16 @@ function instAt(tr,k,tau){
   return {key:tr.id*3+k,tr,k,tau,d,x:p[0],y:p[1],moving,next,mph,prog:(d-tr.d[0])/Math.max(tr.d[tr.m-1]-tr.d[0],1)};
 }
 function activeAt(t,day){
-  const out=[];
+  const all=[];
   for(const tr of trips){const r=tr.run[day];
-    for(let k=0;k<3;k++){if(!r[k])continue;const tau=t+1440*k;if(tau>=tr.s&&tau<=tr.e)out.push(instAt(tr,k,tau));}}
+    for(let k=0;k<3;k++){if(!r[k])continue;const tau=t+1440*k;if(tau>=tr.s&&tau<=tr.e)all.push(instAt(tr,k,tau));}}
+  const by=new Map(all.map(a=>[a.key,a])),out=[];
+  for(const a of all){
+    let root=a.tr.twins.length?twinRoot(a.tr,a.k,day,a.tau):null;
+    if(!root)for(const w of a.tr.twins){const j=a.k-w.dl,r=j>=0&&j<=2&&w.o.run[day][j]&&by.get(w.o.id*3+j);   // twins still standing at the same station (one waits for the other)
+      if(r&&Math.hypot(r.x-a.x,r.y-a.y)<7.8e-5){root={tr:w.o,k:j};break;}}
+    if(root){const r=by.get(root.tr.id*3+root.k);if(r){(r.alts||(r.alts=[])).push(a.tr);continue;}}
+    out.push(a);}
   return out;
 }
 
@@ -210,7 +241,10 @@ function eventsFor(day){
   const map=new Map();
   for(const tr of trips){
     for(let i=0;i<tr.m;i++){const raw=(i===tr.m-1?tr.a[i]:tr.b[i]),kk=Math.floor(raw/1440);if(!tr.run[day][kk])continue;const tm=((raw%1440)+1440)%1440;
-      const a=map.get(tr.st[i])||[];a.push({tm,tr,i});map.set(tr.st[i],a);}}
+      const a=map.get(tr.st[i])||[];
+      const root=tr.twins.length?twinRoot(tr,kk,day,raw):null;
+      if(root){const ev=a.find(e=>e.tr===root.tr&&Math.abs(e.tm-tm)<.05);if(ev){(ev.alts||(ev.alts=[])).push(tr);continue;}}
+      a.push({tm,tr,i});map.set(tr.st[i],a);}}
   return stationEv[day]=map;
 }
 const histCache={};
@@ -219,7 +253,7 @@ function histFor(day,bins){
   const h=new Array(bins).fill(0);
   for(let b=0;b<bins;b++){const t=(b+.5)*1440/bins;
     for(const tr of trips){const r=tr.run[day];
-      for(let k=0;k<3;k++){if(!r[k])continue;const tau=t+1440*k;if(tau>=tr.s&&tau<=tr.e)h[b]++;}}}
+      for(let k=0;k<3;k++){if(!r[k])continue;const tau=t+1440*k;if(tau>=tr.s&&tau<=tr.e&&!(tr.twins.length&&twinRoot(tr,k,day,tau)))h[b]++;}}}
   return histCache[key]={h,max:Math.max(...h,1)};
 }
 
@@ -252,7 +286,7 @@ function flyToBox(x0,y0,x1,y1){
 function selInst(){
   if(!S.sel)return null;
   const tr=trips[S.sel.trip],tau=S.t+1440*S.sel.k;
-  if(tau>=tr.s&&tau<=tr.e&&tr.run[S.day][S.sel.k])return instAt(tr,S.sel.k,tau);
+  if(tau>=tr.s&&tau<=tr.e&&tr.run[S.day][S.sel.k]){const a=actives.find(x=>x.key===S.sel.trip*3+S.sel.k);return a||instAt(tr,S.sel.k,tau);}
   return null;
 }
 function select(inst){
@@ -284,7 +318,7 @@ function rebuildList(){
   const sorted=actives.slice().sort((p,q)=>(+p.tr.bl-+q.tr.bl)||p.tr.route.localeCompare(q.tr.route)||(+p.tr.num-+q.tr.num)||p.k-q.k);
   const top=listEl.scrollTop;
   let seenBL=false;
-  listEl.innerHTML=sorted.map(a=>(a.tr.bl&&!seenBL?(seenBL=true,'<div class="grp"><i></i>Brightline</div>'):'')+`<button class="row${a.tr.bl?' bl':''}${S.sel&&S.sel.trip===a.tr.id&&S.sel.k===a.k?' sel':''}" role="listitem" data-k="${a.key}"><div class="top"><span class="num">${a.tr.num}</span><span class="dest">${a.tr.head}</span></div><div class="rt">${a.tr.route}</div><div class="det" hidden></div></button>`).join('');
+  listEl.innerHTML=sorted.map(a=>(a.tr.bl&&!seenBL?(seenBL=true,'<div class="grp"><i></i>Brightline</div>'):'')+`<button class="row${a.tr.bl?' bl':''}${S.sel&&S.sel.trip===a.tr.id&&S.sel.k===a.k?' sel':''}" role="listitem" data-k="${a.key}"><div class="top"><span class="num">${numOf(a)}</span><span class="dest">${headOf(a)}</span></div><div class="rt">${a.tr.route}</div><div class="det" hidden></div></button>`).join('');
   listEl.scrollTop=top;
   countEl.textContent=actives.length;
   fillDetail(true);
@@ -324,7 +358,8 @@ function updatePop(){
   pop.querySelector('.meta').innerHTML=ev.length+' trains · '+TZ[s.off]+(s.bl?' · <span class="op">Brightline</span>':'');
   pop.querySelector('ul').innerHTML=up.map(({e})=>{
     const last=e.i===e.tr.m-1,from=stops[e.tr.st[0]].name;
-    return `<li><b>${loc(localOf(e.tm,s.off))}</b><span>${e.tr.route} ${e.tr.num}${last?'':' → '+e.tr.head}${last?' from '+from:''}</span></li>`;}).join('')||'<li><span>No service</span></li>';
+    const nums=[e.tr.num,...(e.alts||[]).map(t=>t.num)].filter((v,i,r)=>r.indexOf(v)===i).join(' / '),heads=[e.tr.head,...(e.alts||[]).map(t=>t.head)].filter((v,i,r)=>r.indexOf(v)===i).join(' / ');
+    return `<li><b>${loc(localOf(e.tm,s.off))}</b><span>${e.tr.route} ${nums}${last?'':' → '+heads}${last?' from '+from:''}</span></li>`;}).join('')||'<li><span>No service</span></li>';
 }
 function positionPop(){
   if(S.stationOpen==null)return;
@@ -419,7 +454,7 @@ function render(){
   if(sel){
     const x=sx(sel.x),y=sy(sel.y);
     ctx.strokeStyle=ac(sel.tr.bl,.6);ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(x,y,tr+7,0,6.2832);ctx.stroke();
-    drawLabel(sel.tr.route+' '+sel.tr.num,x,y-tr-6,ac(sel.tr.bl));
+    drawLabel(sel.tr.route+' '+numOf(sel),x,y-tr-6,ac(sel.tr.bl));
   }
   // hover / open station
   const hs=S.hover&&S.hover.station!=null?S.hover.station:null;
@@ -431,7 +466,7 @@ function render(){
   if(hs!=null&&hs!==S.stationOpen){const s=stops[hs];drawLabel(s.name,sx(s.x),sy(s.y)-2);}
   if(S.route&&S.routeAt)drawLabel(S.route,sx(S.routeAt.x),sy(S.routeAt.y)-4,ac(S.route==='Brightline'));
   if(S.hover&&S.hover.line!=null){const c=S.hover.cands;if(c.length&&!(c[0]===S.route&&c.length===1))drawLabel(c[0]+(c.length>1?'  +'+(c.length-1):''),sx(S.hover.x),sy(S.hover.y)-4);}
-  if(S.hover&&S.hover.train&&!(sel&&sel.key===S.hover.train.key)){const a=S.hover.train;drawLabel(a.tr.route+' '+a.tr.num,sx(a.x),sy(a.y)-tr);}
+  if(S.hover&&S.hover.train&&!(sel&&sel.key===S.hover.train.key)){const a=S.hover.train;drawLabel(a.tr.route+' '+numOf(a),sx(a.x),sy(a.y)-tr);}
 }
 
 /* ---------- histogram ---------- */

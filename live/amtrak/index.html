@@ -68,7 +68,7 @@
   <div id="bar">
     <button id="play" aria-label="Pause"></button>
     <div id="clock" title="Eastern Time"><b>7:41</b><span>AM</span><small>ET</small></div>
-    <button id="speed" aria-label="Playback speed">120×</button>
+    <button id="speed" aria-label="Playback speed">100×</button>
     <canvas id="hist" aria-label="Trains running through the day"></canvas>
     <div id="seg" class="seg" role="group" aria-label="Day type">
       <button data-d="wkd" aria-pressed="true">Wkd</button>
@@ -151,8 +151,8 @@ function routePath(route){
 function routeBox(route){let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;for(const i of routeStops.get(route)){const s=stops[i];x0=Math.min(x0,s.x);x1=Math.max(x1,s.x);y0=Math.min(y0,s.y);y1=Math.max(y1,s.y);}return [x0,y0,x1,y1];}
 
 /* ---------- state ---------- */
-const S={day:'wkd',t:0,playing:true,speed:120,sel:null,hover:null,stationOpen:null,dirty:true,focus:'all',route:null,routeAt:null};
-const SPEEDS=[30,60,120,240,600];
+const S={day:'wkd',t:0,playing:true,speed:100,sel:null,hover:null,stationOpen:null,dirty:true,focus:'all',route:null,routeAt:null};
+const SPEEDS=[100,200,400,600];
 const DATES={};
 (function init(){
   let y,m,d,wd='Mon';

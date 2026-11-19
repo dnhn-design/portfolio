@@ -188,7 +188,7 @@ const $ = (id) => document.getElementById(id);
 /* ---------- constants ---------- */
 const KM = 111195; // metres per degree; same equirectangular constant the preprocessor used
 const FIPS = { 49035: 'SALT LAKE', 49011: 'DAVIS', 49057: 'WEBER', 49049: 'UTAH', 49043: 'SUMMIT', 49045: 'TOOELE', 49003: 'BOX ELDER', 49029: 'MORGAN', 49051: 'WASATCH', 49005: 'CACHE', 49023: 'JUAB' };
-const SPEEDS = [30, 60, 120, 300, 900];
+const SPEEDS = [100, 200, 400, 600];
 const GROUPS = D.groups, routes = D.routes;
 const FOCUS = { all: null, rail: 'rail', metro: 'metro', bus: 'bus' };
 
@@ -275,7 +275,7 @@ const hist = $('hist'), hc = hist.querySelector('canvas'), hctx = hc.getContext(
 let W = 0, H = 0, dpr = 1;
 const view = { cx: 0.2, cy: 0.3, s: 1e5 };
 let s0 = 1e5, baseDirty = true, userMoved = false;
-let day = 'wkd', t = 8.25 * 3600, playing = true, speedIdx = 2;
+let day = 'wkd', t = __nowSec('America/Denver'), playing = true, speedIdx = 0;
 let emph = 'all', lineSel = null, selected = -1, hover = -1, hoverStation = null;
 let vehicles = [], trips = [];
 function pickDay() {

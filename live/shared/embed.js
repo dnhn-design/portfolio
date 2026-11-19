@@ -69,3 +69,12 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setup); else setup();
 })();
+
+/* Seconds since local midnight in a time zone, from the device clock: the starting time of every map's simulated clock. */
+window.__nowSec = function (tz) {
+  try {
+    const p = new Intl.DateTimeFormat('en-US', { timeZone: tz, hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false }).formatToParts(new Date());
+    const g = (k) => +p.find((x) => x.type === k).value;
+    return (g('hour') % 24) * 3600 + g('minute') * 60 + g('second');
+  } catch (e) { const d = new Date(); return d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds(); }
+};

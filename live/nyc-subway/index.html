@@ -39,9 +39,8 @@
 #play svg{width:14px;height:14px;fill:currentColor}
 #ecg{flex:1;min-width:120px;height:44px;display:block;cursor:ew-resize;touch-action:none}
 #ecg text{display:none}
-#spd{display:inline-flex;gap:2px;flex:none}
-#spd button{font:500 12px var(--sans);border:1px solid transparent;background:none;color:var(--mute);border-radius:8px;padding:5px 8px;cursor:pointer}
-#spd button[aria-pressed="true"]{border-color:var(--fg);color:var(--fg)}
+#spd{background:none;border:0;font:500 12.5px var(--sans);color:var(--mute);cursor:pointer;padding:6px 4px;flex:none;min-width:42px;text-align:center}
+#spd:hover{color:var(--fg)}
 #days button{border:0;background:none;color:var(--mute);font:500 12.5px var(--sans);padding:6px 13px;border-radius:7px;cursor:pointer}
 #days button[aria-pressed="true"]{background:var(--chip);color:var(--chip-fg)}
 #days button[aria-pressed="false"]:hover{color:var(--fg)}
@@ -120,7 +119,7 @@ details p{margin:6px 0 0}
     <button class="play" id="play" aria-label="Pause"></button>
     <div id="clock"><span id="clk">0:00</span><em>ET</em></div>
     <svg id="ecg" viewBox="0 0 900 70" preserveAspectRatio="none" role="img" aria-label="Trains in motion over the day. Drag to scrub."></svg>
-    <div id="spd" role="group" aria-label="Speed"><button data-s="3" aria-pressed="false">&times;1</button><button data-s="10" aria-pressed="true">&times;3</button><button data-s="30" aria-pressed="false">&times;10</button></div>
+    <button id="spd" aria-label="Playback speed">100&times;</button>
     <div class="seg" id="days" role="group" aria-label="Service day"><button data-d="0" aria-pressed="true">Weekday</button><button data-d="1" aria-pressed="false">Sat</button><button data-d="2" aria-pressed="false">Sun</button></div>
     <span id="dayl" class="hid">Weekday</span>
   </div>
@@ -152,7 +151,7 @@ const drawSet=[];{const seen=new Set();SEG.forEach(s=>{const k=s.r+'|'+s.g;if(!s
 // stations
 const CX=D.cx.map((c,i)=>({i,name:c[0],x:c[1],y:c[2],p:c[3],lines:c[4].slice().sort((a,b)=>rorder.indexOf(a)-rorder.indexOf(b)),g:c[5],off:c[6]}));
 
-let day=0,t=8*60,playing=!matchMedia('(prefers-reduced-motion: reduce)').matches,spd=10,sel=null,only=null,metric='p',hover=null;
+const SPEEDS=[100,200,400,600];let spdI=0;let day=0,t=__nowSec('America/New_York')/60,playing=!matchMedia('(prefers-reduced-motion: reduce)').matches,spd=SPEEDS[0]/60,sel=null,only=null,metric='p',hover=null;
 let active={},peak=1,heart=null,pulseCache={},heartCache={};
 const WIN=30;
 // station -> offset (minutes from trip start) per geometry
@@ -421,7 +420,7 @@ $('zi').onclick=()=>zoom(1.4);$('zo').onclick=()=>zoom(1/1.4);$('zf').onclick=()
 function setPlay(p){playing=p;const b=$('play');b.setAttribute('aria-label',p?'Pause':'Play');
   b.innerHTML=p?'<svg viewBox="0 0 14 14"><rect x="2" y="1" width="3.6" height="12"/><rect x="8.4" y="1" width="3.6" height="12"/></svg>':'<svg viewBox="0 0 14 14"><path d="M3 1l9 6-9 6z"/></svg>'}
 $('play').onclick=()=>setPlay(!playing);
-$('spd').onclick=e=>{const b=e.target.closest('button');if(!b)return;spd=+b.dataset.s;[...$('spd').children].forEach(x=>x.setAttribute('aria-pressed',x===b))};
+$('spd').onclick=()=>{spdI=(spdI+1)%SPEEDS.length;spd=SPEEDS[spdI]/60;$('spd').innerHTML=SPEEDS[spdI]+'&times;'};
 $('days').onclick=e=>{lastSample=0;const b=e.target.closest('button');if(!b)return;day=+b.dataset.d;[...$('days').children].forEach(x=>x.setAttribute('aria-pressed',x===b));$('dayl').textContent=DAYS[day];all()};
 $('metric').onclick=e=>{const b=e.target.closest('button');if(!b)return;metric=b.dataset.m;[...$('metric').children].forEach(x=>x.setAttribute('aria-pressed',x===b));renderRank()};
 const chips=$('chips');

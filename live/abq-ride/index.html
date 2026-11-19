@@ -124,7 +124,7 @@ canvas { position:absolute; inset:0; width:100%; height:100%; display:block; }
   <div id="bar">
     <button id="play" aria-label="Pause"></button>
     <div id="clock">8:15<small>AM</small><em>MT</em></div>
-    <button id="speed" title="Change speed">120&times;</button>
+    <button id="speed" title="Change speed">100&times;</button>
     <div id="hist" aria-label="Service over the day. Drag to change time."><canvas></canvas></div>
     <div class="seg" id="days" role="group" aria-label="Day type"><button data-d="wkd">Wkd</button><button data-d="sat">Sat</button><button data-d="sun">Sun</button></div>
   </div>
@@ -196,9 +196,9 @@ const stationOf=si=>ST[ST.idx.get(si)];
 /* trips */
 const DAYS={};['wkd','sat','sun'].forEach(k=>{DAYS[k]=D.trips[k].map(t=>({p:PATS[t[0]],pi:t[0],s:t[1],no:t[2],r:PATS[t[0]].r}));});
 /* ---------- state ---------- */
-const state={day:'wkd',T:8*3600+15*60,play:true,speed:120,focus:'all',hlG:null,hlSub:null,selT:null,hovT:null,keyMin:innerWidth<=820};
+const state={day:'wkd',T:__nowSec('America/Denver'),play:true,speed:100,focus:'all',hlG:null,hlSub:null,selT:null,hovT:null,keyMin:innerWidth<=820};
 {const dw=new Date().getDay(); state.day=dw===0?'sun':dw===6?'sat':'wkd';}
-const SPEEDS=[30,60,120,300,900];
+const SPEEDS=[100,200,400,600];
 let dirty=true, viewVer=0, userMoved=false, W=0,H=0,dpr=1;
 const view={cx:.5,cy:.5,z:1e5};
 const baseC=$('base'),liveC=$('live'),bctx=baseC.getContext('2d'),lctx=liveC.getContext('2d'),wrap=$('mapwrap');

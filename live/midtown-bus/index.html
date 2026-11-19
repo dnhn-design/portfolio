@@ -79,7 +79,7 @@ button:focus-visible,.hist:focus-visible{outline:2px solid var(--focus);outline-
   <div class="bar" role="group" aria-label="Playback">
     <button class="play" id="playBtn" aria-label="Pause"></button>
     <button class="clk live" id="clkBtn" aria-label="Back to live time"><i class="dot"></i><span class="t" id="clkT">--:--</span><span class="ap" id="clkA"></span></button>
-    <button class="spd" id="spdBtn" aria-label="Playback speed">1×</button>
+    <button class="spd" id="spdBtn" aria-label="Playback speed">100×</button>
     <div class="hist" id="hist" role="slider" tabindex="0" aria-label="Time of day" aria-valuemin="0" aria-valuemax="1439" aria-valuenow="0">
       <svg viewBox="0 0 360 44" preserveAspectRatio="none" aria-hidden="true"><g id="barsDim" fill="var(--bar-dim)"></g></svg>
       <svg class="hi" id="hiSvg" viewBox="0 0 360 44" preserveAspectRatio="none" aria-hidden="true"><g id="barsHi" fill="var(--bar-hi)"></g></svg>
@@ -164,7 +164,7 @@ function hm(min,sec){min=((min%1440)+1440)%1440;let h=Math.floor(min/60),m=Math.
   return h+':'+String(m).padStart(2,'0')+(sec!==undefined?':'+String(Math.floor((min%1)*60)).padStart(2,'0'):'')+' '+ap}
 
 // ---- state
-const S={live:true,paused:false,speed:1,day:'auto',t:nycNow(),routes:{M23:true,M34:true,M34A:true},sel:null,dayEff:null};
+const S={live:false,paused:false,speed:100,day:'auto',t:nycNow(),routes:{M23:true,M34:true,M34A:true},sel:null,dayEff:null};
 const $=id=>document.getElementById(id);
 const busLayer=$('buses'),stage=$('stage'),tip=$('tip');
 const active=new Map();
@@ -249,12 +249,12 @@ function loop(now){
 
 // ---- controls
 const PLAY='<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>',PAUSE='<svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
-const SPEEDS=[1,10,60,120,300];
+const SPEEDS=[100,200,400,600];
 function syncUI(){
   $('playBtn').innerHTML=(S.paused&&!S.live)?PLAY:PAUSE;$('playBtn').setAttribute('aria-label',(S.paused&&!S.live)?'Play':'Pause');
   $('clkBtn').classList.toggle('live',S.live);$('spdBtn').textContent=S.speed+'×';
 }
-function goLive(){S.live=true;S.paused=false;S.speed=1;S.day='auto';syncUI()}
+function goLive(){S.live=false;S.t=nycNow();S.paused=false;S.speed=100;S.day='auto';syncUI()}
 function leaveLive(){S.live=false}
 $('clkBtn').onclick=goLive;
 $('playBtn').onclick=()=>{if(S.live){leaveLive();S.paused=true}else S.paused=!S.paused;syncUI()};

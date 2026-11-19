@@ -152,7 +152,7 @@
   <div id="bar">
     <button id="play" aria-label="Play or pause"><svg class="pl" viewBox="0 0 12 12"><path d="M2 .8v10.4L11 6z"/></svg><svg class="pa" viewBox="0 0 12 12"><path d="M1.8.8h3v10.4h-3zM7.2.8h3v10.4h-3z"/></svg></button>
     <div id="clock" title="Now"><span id="hm">--:--</span><span id="ap"></span><em>ET</em></div>
-    <button id="spd" aria-label="Playback speed">600×</button>
+    <button id="spd" aria-label="Playback speed">100×</button>
     <div id="trk" role="slider" tabindex="0" aria-label="Time of day">
       <svg id="bars" viewBox="0 0 100 40" preserveAspectRatio="none"><defs><linearGradient id="gr" x1="0" x2="1" y1="0" y2="0"><stop id="g0" offset="0" style="stop-color:var(--baron)"/><stop id="g1" offset="0" style="stop-color:var(--baron)"/><stop id="g2" offset="0" style="stop-color:var(--bar)"/><stop offset="1" style="stop-color:var(--bar)"/></linearGradient></defs><path d="" fill="url(#gr)"/></svg>
       <div id="ph"></div>
@@ -181,8 +181,8 @@ for(const k in D.g){const a=D.g[k],pts=[],cum=[0];
 const GCT=S.find(s=>s.name==='Grand Central'), H125=S.find(s=>s.name==='Harlem-125 St');
 
 /* ---------- state ---------- */
-const SPD=[60,120,300,600,1200];
-let spdI=3,fitS=1,manual=false,sel=null,br=null,menuShown=false,vis=0x1FE,t=0,T0=0,T1=1560,day='wkd',TR=[],selTr=null,
+const SPD=[100,200,400,600];
+let spdI=0,fitS=1,manual=false,sel=null,br=null,menuShown=false,vis=0x1FE,t=__nowSec('America/New_York')/60,T0=0,T1=1560,day='wkd',TR=[],selTr=null,
     playing=!matchMedia('(prefers-reduced-motion:reduce)').matches,drag=false,viewDirty=true,hover=null,lastMin=-1,lastPn=-1;
 const SP=m=>m; 
 const V={s:1,x:0,y:0}, Vt={s:1,x:0,y:0};
@@ -274,7 +274,7 @@ trk.addEventListener('keydown',e=>{const k={ArrowRight:5,ArrowLeft:-5,ArrowUp:30
 $('#play').onclick=()=>{playing=!playing;$('#play').classList.toggle('on',playing)};
 $('#spd').onclick=()=>{spdI=(spdI+1)%SPD.length;$('#spd').textContent=SPD[spdI]+'×'};
 $('#fit').onclick=()=>computeFit();
-const nowMin=()=>{const n=new Date();let m=n.getHours()*60+n.getMinutes();return m<T0?m+1440:m};
+const nowMin=()=>{const m=__nowSec('America/New_York')/60;return m<T0?m+1440:m};
 $('#clock').onclick=()=>setT(nowMin());
 
 /* ---------- positions ---------- */
@@ -437,7 +437,7 @@ function frame(now){
   requestAnimationFrame(frame)}
 
 /* ---------- init ---------- */
-(()=>{const n=new Date(),w=n.getDay();t=n.getHours()*60+n.getMinutes();loadDay(w===6?'sat':w===0?'sun':'wkd');setT(nowMin())})();
+(()=>{const n=new Date(),w=n.getDay();t=__nowSec('America/New_York')/60;loadDay(w===6?'sat':w===0?'sun':'wkd');setT(nowMin())})();
 $('#play').classList.toggle('on',playing);
 $('#spd').textContent=SPD[spdI]+'×';
 V.s=Vt.s;V.x=Vt.x;V.y=Vt.y;

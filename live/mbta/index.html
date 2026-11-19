@@ -143,7 +143,7 @@ const D=JSON.parse(txt);
 
 /* ---------- constants ---------- */
 const T0=3*3600,SPAN=86400;
-const SPEEDS=[10,30,60,120,300];
+const SPEEDS=[100,200,400,600];
 const GROUPS=[
  {id:'CR',name:'Commuter Rail',c:'#c660d4',track:'#7a3a86',tag:''},
  {id:'Green',name:'Green Line',c:'#2fc46b',track:'#1f6b43',tag:'GL'},
@@ -378,7 +378,7 @@ const ICON={pause:'<svg viewBox="0 0 24 24"><rect x="5" y="4" width="5" height="
 function setPlay(p){st.playing=p;playEl.innerHTML=p?ICON.pause:ICON.play;playEl.setAttribute('aria-label',p?'Pause':'Play')}
 playEl.onclick=()=>setPlay(!st.playing);setPlay(true);
 const spdEl=$('spd');function setSp(i){st.sp=i;spdEl.textContent=SPEEDS[i]+'×'}
-spdEl.onclick=()=>setSp((st.sp+1)%SPEEDS.length);setSp(2);
+spdEl.onclick=()=>setSp((st.sp+1)%SPEEDS.length);setSp(0);
 document.querySelectorAll('#days button').forEach(b=>b.onclick=()=>setDay(b.dataset.d));
 function setDay(d){st.day=d;document.querySelectorAll('#days button').forEach(b=>b.classList.toggle('on',b.dataset.d===d));st.sel=null;cardEl.hidden=true;lastKey='';$('note').textContent='Scheduled service · sample '+DAYNAME[d];buildTL()}
 addEventListener('keydown',e=>{if(e.code==='Space'&&!/BUTTON/.test(document.activeElement.tagName)){e.preventDefault();setPlay(!st.playing)}if(e.key==='Escape'){if(st.sel)select(null);else if(st.focus)setFocus(null,[])}});

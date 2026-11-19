@@ -289,8 +289,8 @@ const hist = $('hist'), hc = hist.querySelector('canvas'), hctx = hc.getContext(
 let W = 0, H = 0, dpr = 1;
 const view = { cx: 0.2, cy: 0.3, s: 1e5 };
 let s0 = 1e5, baseDirty = true;
-let day = 'wkd', t = 8.25 * 3600, playing = true, speedIdx = 2;
-const SPEEDS = [30, 60, 120, 300, 900];
+let day = 'wkd', t = __nowSec('America/Chicago'), playing = true, speedIdx = 0;
+const SPEEDS = [100, 200, 400, 600];
 let emph = 'all', lineSel = null, selected = -1, hover = -1, hoverStation = null;
 let vehicles = [];
 function pickDay() {

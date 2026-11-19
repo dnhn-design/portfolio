@@ -120,8 +120,8 @@ stops.forEach(s=>{s.rs=[...s.rs].sort((a,b)=>a-b);s.hub=s.rs.length>=4;});
 
 /* ---------- state ---------- */
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-const SPEEDS=[60,120,300,600];
-let day=0, t=450, playing=!reduce, spd=1, focus=new Set(), hover=-1, sel=-1, selRoute=-1, panelOpen=true, selTrain=-1, panelDirty=true, lastPanel=0, lastOpen=false, hits=[];
+const SPEEDS=[100,200,400,600];
+let day=0, t=__nowSec('America/New_York')/60, playing=!reduce, spd=0, focus=new Set(), hover=-1, sel=-1, selRoute=-1, panelOpen=true, selTrain=-1, panelDirty=true, lastPanel=0, lastOpen=false, hits=[];
 let W=0,H=0,dpr=1, view={vx:0,vy:0,s:1}, fit=1, dirty=true, counts=new Array(routes.length).fill(0);
 let C={};
 function readTheme(){

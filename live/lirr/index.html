@@ -141,7 +141,7 @@ const chipEls=routes.map((r,i)=>{
   b.onmouseenter=()=>{b.title=counts[i]+' running';};
   $('chips').appendChild(b);return b;
 });
-function syncChips(){$('fall').classList.toggle('on',selRoute<0);chipEls.forEach((b,i)=>{b.classList.toggle('off',focus.size>0&&!focus.has(i));b.setAttribute('aria-pressed',focus.has(i)?'true':'false');});}
+function syncChips(){$('fall').classList.toggle('on',selRoute<0);chipEls.forEach((b,i)=>{b.classList.toggle('off',focus.size>0&&!focus.has(i));b.classList.toggle('act',focus.has(i));b.setAttribute('aria-pressed',focus.has(i)?'true':'false');});}
 const ico={play:'<svg viewBox="0 0 14 14"><path d="M3 1.5v11l9-5.5z"/></svg>',pause:'<svg viewBox="0 0 14 14"><path d="M2.5 1.5h3.2v11H2.5zM8.3 1.5h3.2v11H8.3z"/></svg>'};
 function syncPlay(){$('play').innerHTML=playing?ico.pause:ico.play;$('play').setAttribute('aria-label',playing?'Pause':'Play');}
 $('play').onclick=()=>{playing=!playing;syncPlay();last=0;dirty=true;frame();};
@@ -389,6 +389,8 @@ map.addEventListener('pointerup',e=>{
   if(d&&!d.moved){
     const k=pickTrain(e.clientX,e.clientY);
     if(k>=0){clickTrain(k);return;}
+    if(selTrain>=0){selectTrain(-1);return;}
+    if(selRoute>=0&&e.pointerType!=='touch'){setSelRoute(-1);return;}   // empty map click: clear the train, then the line
   }
   if(d&&!d.moved&&e.pointerType==='touch'){
     const h=nearest(e.clientX,e.clientY);hover=h;sel=h;

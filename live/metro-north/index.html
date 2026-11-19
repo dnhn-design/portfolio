@@ -25,7 +25,10 @@
 #pnh .lbl{color:var(--mute)}
 #pnh .tag{margin-left:auto;font:500 9px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
 #pnh .sc{flex-basis:100%;display:flex;align-items:center;gap:7px;font-size:12px;color:var(--fg);margin-top:3px}
-#pnh .sc i{width:18px;height:3px;border-radius:2px}
+#pnh .sc i{width:18px;height:3px;border-radius:2px;flex:none}
+#pnh .sc span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#pnh .scx{background:color-mix(in srgb,var(--fg) 8%,transparent);border:0;color:var(--mute);border-radius:50%;width:20px;height:20px;cursor:pointer;line-height:1;font-size:14px;flex:none}
+#pnh .scx:hover{color:var(--fg);background:color-mix(in srgb,var(--fg) 15%,transparent)}
 #pnl{overflow:auto;padding:0 0 8px;flex:1;min-height:0;scrollbar-width:thin;scrollbar-color:var(--line-2) transparent}
 #clock{display:flex;align-items:baseline;gap:4px;cursor:pointer;user-select:none;flex:none;font-variant-numeric:tabular-nums;min-width:0}
 #hm{font:500 26px/1 var(--sans);letter-spacing:-.02em}
@@ -246,9 +249,9 @@ function applySel(){
       if(f===1)c='c1';else if(f===2)c='c2';else if(f===4){c=(m&8)?'c3':(m&16)?'c4':(m&32)?'c5':(m&64)?'c6':'c3'}else if(f===8){c=(m&0x100)?'c8':NJSEG.has(k)?'c7n':'c7'}else c='cn'}
     g.path.setAttribute('class','seg '+c);if(g.over)g.over.setAttribute('class','seg '+(c==='c7n'?'c7':c))}
   S.forEach(s=>{s.vis=!!(s.mask&vis);s.g.classList.toggle('off',!s.vis)});
-  document.querySelectorAll('.ln').forEach(b=>b.classList.toggle('sel',+b.dataset.l===sel));$('#fall').classList.toggle('on',sel===null);
+  document.querySelectorAll('.ln').forEach(b=>{const on=+b.dataset.l===sel;b.classList.toggle('sel',on);b.classList.toggle('act',on);b.classList.toggle('off',sel!==null&&!on)});$('#fall').classList.toggle('on',sel===null);
   $('#bar').classList.toggle('has',sel!==null);$('#app').classList.toggle('nhsel',sel===3);
-  document.querySelectorAll('.bp').forEach(b=>b.classList.toggle('sel',+b.dataset.l===br));
+  document.querySelectorAll('.bp').forEach(b=>{const on=+b.dataset.l===br;b.classList.toggle('sel',on);b.classList.toggle('act',on);b.classList.toggle('off',br!==null&&!on)});
   $('#br').classList.toggle('has',br!==null);$('#br').classList.toggle('on',sel===3);
   if(selTr&&!(vis&(1<<selTr.r)))selTr=null;
   
@@ -365,9 +368,10 @@ function renderPanel(force){
   const act=TR.filter(x=>x.vis).sort((a,b)=>a.t1-b.t1);
   if(selTr&&!selTr.vis){selTr.e.classList.remove('sel');selTr=null;gTr.classList.remove('focus');$('#halo').classList.remove('on')}
   const c=sel===null?'var(--ink)':`var(--c${br||sel})`,name=sel===null?'All lines':(br?RN[br]:RN[sel]);
-  $('#pnh').innerHTML=`<span class="cnt">${act.length}</span><span class="lbl">running</span><span class="tag">Scheduled</span>`+(sel===null?'':`<div class="sc"><i style="background:${c}"></i>${name}</div>`);
+  $('#pnh').innerHTML=`<span class="cnt">${act.length}</span><span class="lbl">running</span><span class="tag">Scheduled</span>`+(sel===null?'':`<div class="sc"><i style="background:${c}"></i><span>${name}</span><button class="scx" aria-label="Clear line highlight">&times;</button></div>`);
   const L=$('#pnl'),st=L.scrollTop;
   L.innerHTML=act.length?act.map(rowHTML).join(''):'<div class="none">No trains running</div>';L.scrollTop=st}
+$('#pnh').addEventListener('click',e=>{if(e.target.closest('.scx')){sel=null;br=null;menuShown=false;applySel()}});
 $('#pnl').addEventListener('click',e=>{const r=e.target.closest('.row');if(!r)return;const tr=TR[+r.dataset.i];selectTrain(selTr===tr?null:tr)});
 
 /* ---------- map interaction ---------- */
@@ -405,7 +409,7 @@ map.addEventListener('pointermove',e=>{
   const h=hitStation(e);map.classList.toggle('ptr',!h&&!!hitTrack(e));
   if(h!==hover)setHover(h)});
 const up=e=>{
-  if(e.type==='pointerup'&&ptrs.size===1&&!panned&&!hitStation(e)){const g=hitTrack(e);if(g)clickLine(g)}
+  if(e.type==='pointerup'&&ptrs.size===1&&!panned&&!hitStation(e)){const g=hitTrack(e);if(g)clickLine(g);else if(selTr)selectTrain(null);else if(sel!==null){sel=null;br=null;menuShown=false;applySel()}}   // empty map click: clear the train, then the line
   ptrs.delete(e.pointerId);gd=0;if(!ptrs.size)map.classList.remove('pan')};
 map.addEventListener('pointerup',up);map.addEventListener('pointercancel',up);
 map.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'&&!ptrs.size)setHover(null)});

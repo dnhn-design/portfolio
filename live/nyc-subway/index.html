@@ -14,6 +14,9 @@
 .tip{position:absolute;pointer-events:none;background:#0f141cf2;color:var(--fg);border:1px solid var(--line-2);padding:6px 9px;border-radius:7px;font-size:12px;line-height:1.35;max-width:240px;opacity:0;z-index:3}
 #keybody{width:min(320px,100%);max-height:calc(100vh - 250px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line-2) transparent}
 .k-lines.one{grid-template-columns:1fr}
+.kh{grid-column:1/-1;font:600 10px var(--sans);letter-spacing:.07em;text-transform:uppercase;color:var(--dim);padding:6px 6px 2px}
+.kh:first-child{padding-top:2px}
+.k-lines{max-height:none}
 .kchips{display:flex;flex-wrap:wrap;align-items:center;gap:5px;padding:2px 2px 6px;border-bottom:1px solid var(--line)}
 .kchips[hidden]{display:none}
 .kchips .kl{font:600 10px var(--sans);letter-spacing:.07em;text-transform:uppercase;color:var(--dim);margin-right:3px}
@@ -201,7 +204,7 @@ function stationPass(c,r){let n=0;SEG.forEach(q=>{if(q.r===r&&c.g.indexOf(q.g)>-
 function computeHeart(){
   let best=null,bv=-1;
   if(!foc){CX.forEach(c=>{if(c.p[day]>bv){bv=c.p[day];best=c}})}
-  else CX.forEach(c=>{let v=0;foc.forEach(r=>{if(c.lines.indexOf(r)>-1)v+=stationPass(c,r)});if(v>bv){bv=v;best=c}});
+  else CX.forEach(c=>{if(lineSel&&lineSel.stn&&!lineSel.stn.has(c.i))return;let v=0;foc.forEach(r=>{if(c.lines.indexOf(r)>-1)v+=stationPass(c,r)});if(v>bv){bv=v;best=c}});
   if(!best){CX.forEach(c=>{if(c.p[day]>bv){bv=c.p[day];best=c}})}
   heart=best;heart._hv=bv;
   const r=focName();
@@ -345,17 +348,20 @@ function draw(now){
   // services
   ctx.lineCap='round';ctx.lineJoin='round';
   const faded=!!foc;
+  const CS=(lineSel&&lineSel.spans.length)?lineSel.spans.filter(sp=>!svc||sp.r===svc):null;
+  const SPG={};if(CS)CS.forEach(sp=>(SPG[sp.gi]||(SPG[sp.gi]=[])).push(sp));
   drawSet.forEach(([r,g],k)=>{
-    const on=!foc||foc.has(r);const G_=G[g];
+    const on=CS?false:(!foc||foc.has(r));const G_=G[g];
     ctx.strokeStyle=col(r).bg;ctx.globalAlpha=on?(faded?1:.62):(dark?.12:.16);ctx.lineWidth=LW[k]*(on?1:.6);
     ctx.beginPath();for(let i=0;i<G_.n;i++){const X=sx(G_.x[i]),Y=sy(G_.y[i]);i?ctx.lineTo(X,Y):ctx.moveTo(X,Y)}ctx.stroke();
   });
+  if(CS){ctx.globalAlpha=1;CS.forEach(sp=>{ctx.strokeStyle=col(sp.r).bg;ctx.lineWidth=Math.max(2.4,LW[PK[sp.r+'|'+sp.gi]]);ctx.beginPath();for(let i=0;i<sp.px.length;i++){const X=sx(sp.px[i]),Y=sy(sp.py[i]);i?ctx.lineTo(X,Y):ctx.moveTo(X,Y)}ctx.stroke()})}
   ctx.globalAlpha=1;
   // station discs: radius follows trains passing in the last 30 minutes, sampled every 1.5 s and eased
   const zf=Math.min(1.8,Math.max(.7,V.s*60));
   CX.forEach(c=>{
     c._X=null;
-    if(foc&&!c.lines.some(l=>foc.has(BASE[l]||l)))return;
+    if(CS?!lineSel.stn.has(c.i):(foc&&!c.lines.some(l=>foc.has(BASE[l]||l))))return;
     const X=sx(c.x),Y=sy(c.y);if(X<-40||Y<-40||X>W+40||Y>H+40)return;
     const r=circles?SR[c.i]*zf:0;
     c._X=X;c._Y=Y;c._r=circles?Math.max(r,2):3;
@@ -363,18 +369,22 @@ function draw(now){
       if(r>9&&CNT[c.i]>0){ctx.fillStyle=ink;ctx.font='600 '+Math.min(12,r*.7)+'px '+css('--f-body');ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(Math.round(CNT[c.i]),X,Y+.5);ctx.textAlign='start'}}
   });
   // trains
-  let moving=0;RUN={};const tr=Math.max(1.6,Math.min(4.5,V.s*190));
+  let moving=0;RUN={};RUNC={};const tr=Math.max(1.6,Math.min(4.5,V.s*190));
   SEG.forEach(sg=>{
     const inF=!foc||foc.has(sg.r);
     const a=sg.t[day],dur=G[sg.g].dur;
     for(const off of [0,1440]){
       const tt=t+off;let i=upper(a,tt)-1;
       for(;i>=0&&tt-a[i]<dur;i--){
-        moving++;RUN[sg.r]=(RUN[sg.r]||0)+1;if(!inF)continue;
+        moving++;RUN[sg.r]=(RUN[sg.r]||0)+1;
+        const fr=(tt-a[i])/dur,dd=fr*G[sg.g].len,cl=CBG[sg.g];
+        if(cl)for(let q=0;q<cl.length;q++){const sp=cl[q];if(sp.r===sg.r&&dd>=sp.lo&&dd<=sp.hi)RUNC[sp.l.k]=(RUNC[sp.l.k]||0)+1}
+        if(!inF)continue;
+        let inC=true;if(CS){const L=SPG[sg.g];inC=!!L&&L.some(sp=>sp.r===sg.r&&dd>=sp.lo&&dd<=sp.hi)}
         const p=pos(sg.g,(tt-a[i])/dur),X=sx(p[0]),Y=sy(p[1]);
         if(X<-6||Y<-6||X>W+6||Y>H+6)continue;
-        ctx.fillStyle=col(sg.r).bg;ctx.beginPath();ctx.arc(X,Y,tr,0,6.2832);ctx.fill();
-        ctx.strokeStyle=bg;ctx.lineWidth=2;ctx.stroke();
+        ctx.globalAlpha=inC?1:.22;ctx.fillStyle=col(sg.r).bg;ctx.beginPath();ctx.arc(X,Y,tr,0,6.2832);ctx.fill();
+        ctx.strokeStyle=bg;ctx.lineWidth=2;ctx.stroke();ctx.globalAlpha=1;
       }
     }
   });
@@ -443,18 +453,90 @@ __clk.live({tz:'America/New_York',get:()=>t*60,set:v=>{t=v/60;spdI=0;spd=SPEEDS[
 $('days').onclick=e=>{lastSample=0;const b=e.target.closest('button');if(!b)return;day=+b.dataset.d;[...$('days').children].forEach(x=>x.setAttribute('aria-pressed',x===b));$('dayl').textContent=DAYS[day];all()};
 $('metric').onclick=e=>{const b=e.target.closest('button');if(!b)return;metric=b.dataset.m;[...$('metric').children].forEach(x=>x.setAttribute('aria-pressed',x===b));renderRank()};
 
-// ---- lines: services that share track, grouped the way riders talk about them
+// ---- lines: the MTA's own corridor names. Manhattan trunks first, then the corridors beyond them.
 const isSub=i=>i.indexOf('PATH-')!==0&&i.indexOf('AIR-')!==0;
 const pathIds=rorder.filter(i=>i.indexOf('PATH-')===0),airIds=rorder.filter(i=>i.indexOf('AIR-')===0);
-const LINES=[
-  {k:'7av',n:'7 Av',s:['1','2','3'],c:'#D82233'},{k:'lex',n:'Lexington Av',s:['4','5','6'],c:'#009952'},{k:'flu',n:'Flushing',s:['7'],c:'#9A38A1'},
-  {k:'8av',n:'8 Av',s:['A','C','E'],c:'#0062CF'},{k:'6av',n:'6 Av',s:['B','D','F','M'],c:'#EB6800'},{k:'bwy',n:'Broadway',s:['N','Q','R','W'],c:'#F6BC26'},
-  {k:'xt',n:'Crosstown',s:['G'],c:'#799534'},{k:'nas',n:'Nassau St',s:['J','Z'],c:'#8E5C33'},{k:'can',n:'Canarsie',s:['L'],c:'#7C858C'},
-  {k:'shu',n:'Shuttles',s:['GS','FS','H'],c:'#7C858C'},{k:'sir',n:'Staten Island Railway',s:['SI'],c:'#08179C'}
-].map(l=>({...l,tab:'sub',s:l.s.filter(x=>R[x])})).filter(l=>l.s.length);
-pathIds.forEach(id=>LINES.push({k:id,n:R[id].name||'PATH',s:[id],c:R[id].bg,tab:'path'}));
-airIds.forEach(id=>LINES.push({k:id,n:R[id].name||'AirTrain JFK',s:[id],c:R[id].bg,tab:'air'}));
+const sv=x=>Array.isArray(x)?x:x.split('');
+// [key, name, services, [[from station, to station, only these services?], ...], colour]
+const TRUNKS=[
+ ['lex','Lexington Av','456',[['149 St-Hostos','Borough Hall','45'],['E 149 St','Chambers St','6']],'#009952'],
+ ['7av','Broadway–7 Av','123',[['96 St','Whitehall St-South Ferry','1'],['96 St','Borough Hall','23']],'#D82233'],
+ ['bwy','Broadway','NQRW',[['57 St-7 Av','DeKalb Av','NQR'],['57 St-7 Av','Whitehall St-South Ferry','W']],'#F6BC26'],
+ ['6av','6 Av','BDFM',[['59 St-Columbus Circle','DeKalb Av','BD'],['47-50 Sts-Rockefeller Ctr','Broadway-Lafayette St','FM']],'#EB6800'],
+ ['8av','8 Av','ACE',[['59 St-Columbus Circle','High St','AC'],['50 St','Canal St','E']],'#0062CF'],
+ ['flu','Flushing','7',[['Flushing-Main St','34 St-Hudson Yards']],'#9A38A1'],
+ ['can','Canarsie','L',[['8 Av','Canarsie-Rockaway Pkwy']],'#7C858C'],
+ ['xt','Crosstown','G',[['Court Sq','Church Av']],'#799534'],
+ ['shu','Shuttles',['GS','FS'],[['Times Sq-42 St','Grand Central-42 St',['GS']],['Franklin Av-Medgar Evers College','Prospect Park',['FS']]],'#7C858C'],
+ ['nas','Nassau St','JZ',[['Broad St','Delancey St-Essex St']],'#8E5C33']
+];
+const CORRS=[
+ ['2av','2 Av','Q',[['96 St','57 St-7 Av']]],
+ ['4av','4 Av','DNR',[['DeKalb Av','Bay Ridge-95 St','R'],['DeKalb Av','36 St','DN']]],
+ ['63st','63 St','FM',[['21 St-Queensbridge','47-50 Sts-Rockefeller Ctr']]],
+ ['8avn','8 Av North','ABCD',[['59 St-Columbus Circle','Inwood-207 St','A'],['59 St-Columbus Circle','145 St','BCD']]],
+ ['archer','Archer Av','E',[['Kew Gardens-Union Tpke','Jamaica Center-York College']]],
+ ['astoria','Astoria','NW',[['Astoria-Ditmars Blvd','57 St-7 Av']]],
+ ['brighton','Brighton','BQ',[['DeKalb Av','Coney Island-Stillwell Av','Q'],['DeKalb Av','Brighton Beach','B']]],
+ ['7avn','Broadway–7 Av North','1',[['Van Cortlandt Park-242 St','96 St']]],
+ ['concourse','Concourse','BD',[['Norwood-205 St','145 St','D'],['Bedford Park Blvd','145 St','B']]],
+ ['culver','Culver','F',[['Church Av','W 8 St-NY Aquarium']]],
+ ['dyre','Dyre Av','5',[['Eastchester-Dyre Av','E 180 St']]],
+ ['eastpkwy','Eastern Pkwy','2345',[['Borough Hall','Crown Hts-Utica Av']]],
+ ['fulton','Fulton St','AC',[['High St','Euclid Av']]],
+ ['jamaica','Jamaica / Myrtle','JZM',[['Delancey St-Essex St','Jamaica Center-York College','JZ'],['Delancey St-Essex St','Middle Village-Metropolitan Av','M']]],
+ ['jerome','Jerome Av','4',[['Woodlawn','149 St-Hostos']]],
+ ['lenox','Lenox Av','23',[['Harlem-148 St','96 St','3'],['149 St-Hostos','96 St','2']]],
+ ['liberty','Liberty Av','A',[['Euclid Av','Ozone Park-Lefferts Blvd']]],
+ ['newlots','New Lots','3',[['Crown Hts-Utica Av','New Lots Av']]],
+ ['nostrand','Nostrand Av','25',[['President St-Medgar Evers College','Flatbush Av-Brooklyn College']]],
+ ['pelham','Pelham','6',[['Pelham Bay Park','3 Av-138 St']]],
+ ['qbe','Queens Blvd East','F',[['Jamaica-179 St','Kew Gardens-Union Tpke']]],
+ ['qbw','Queens Blvd West','EFMR',[['Kew Gardens-Union Tpke','50 St','E'],['Kew Gardens-Union Tpke','47-50 Sts-Rockefeller Ctr','F'],['Forest Hills-71 Av','Queens Plaza','MR']]],
+ ['rockaways','Rockaways','AH',[['Rockaway Blvd','Far Rockaway-Mott Av','A'],['Broad Channel','Rockaway Park-Beach 116 St','H']]],
+ ['seabeach','Sea Beach','N',[['59 St','Coney Island-Stillwell Av']]],
+ ['sir','Staten Island Railway',['SI'],null],
+ ['westend','West End','D',[['36 St','Coney Island-Stillwell Av']]],
+ ['wpr','White Plains Rd','25',[['Wakefield-241 St','149 St-Hostos','2'],['E 180 St','149 St-Hostos','5']]]
+];
+const LINES=[];
+TRUNKS.forEach(t=>LINES.push({k:t[0],n:t[1],s:sv(t[2]).filter(x=>R[x]),pairs:t[3],c:t[4],tab:'sub',sec:'trunk'}));
+CORRS.forEach(t=>{const sa=sv(t[2]).filter(x=>R[x]);LINES.push({k:t[0],n:t[1],s:sa,pairs:t[3],c:R[sa[0]].bg,tab:'sub',sec:'corr'})});
+pathIds.forEach(id=>LINES.push({k:id,n:R[id].name||'PATH',s:[id],c:R[id].bg,tab:'path',sec:'path'}));
+airIds.forEach(id=>LINES.push({k:id,n:R[id].name||'AirTrain JFK',s:[id],c:R[id].bg,tab:'air',sec:'air'}));
+const SECN={trunk:'Manhattan trunks',corr:'Other corridors',path:'PATH',air:'AirTrain JFK'};
+/* resolve each corridor to stretches of track: for every service and shape that serves both end stations, the part between them */
+const CBG={};
+function projG(gi,x,y){const g=G[gi];let best=1e18,along=0;
+  for(let i=0;i<g.n-1;i++){const ax=g.x[i],ay=g.y[i],dx=g.x[i+1]-ax,dy=g.y[i+1]-ay,L=dx*dx+dy*dy;let u=L?((x-ax)*dx+(y-ay)*dy)/L:0;u=Math.max(0,Math.min(1,u));
+    const d=Math.hypot(x-ax-u*dx,y-ay-u*dy);if(d<best){best=d;along=g.c[i]+u*Math.sqrt(L)}}
+  return {d:best,a:along}}
+function subPoly(gi,lo,hi){const g=G[gi],px=[],py=[];
+  const at=d=>{let i=1;while(i<g.n-1&&g.c[i]<d)i++;const u=(d-g.c[i-1])/((g.c[i]-g.c[i-1])||1);return [g.x[i-1]+(g.x[i]-g.x[i-1])*u,g.y[i-1]+(g.y[i]-g.y[i-1])*u]};
+  let p=at(lo);px.push(p[0]);py.push(p[1]);for(let i=0;i<g.n;i++)if(g.c[i]>lo&&g.c[i]<hi){px.push(g.x[i]);py.push(g.y[i])}p=at(hi);px.push(p[0]);py.push(p[1]);return {px,py}}
+const stnByName={};CX.forEach(c=>(stnByName[c.name]||(stnByName[c.name]=[])).push(c));
+const UNRES=[];
+LINES.forEach(l=>{
+  l.spans=[];l.stn=null;
+  if(l.sec==='path'||l.sec==='air')return;
+  const pr=l.pairs||[];
+  if(!l.pairs){drawSet.forEach(([r,gi])=>{if(l.s.indexOf(r)>-1)l.spans.push({r,gi,lo:0,hi:G[gi].len,l})})}
+  pr.forEach(([A,B,only])=>{
+    const sa=only?sv(only).filter(x=>l.s.indexOf(x)>-1):l.s,ca=stnByName[A]||[],cb=stnByName[B]||[];let got=0;
+    sa.forEach(r=>{const cand=(L)=>{const m=L.filter(c=>c.lines.some(x=>(BASE[x]||x)===r));return m.length?m:L};
+      drawSet.forEach(([rr,gi])=>{if(rr!==r)return;let best=null;
+        cand(ca).forEach(a=>cand(cb).forEach(b=>{const pa=projG(gi,a.x,a.y),pb=projG(gi,b.x,b.y),d=pa.d+pb.d;if(pa.d<150&&pb.d<150&&(!best||d<best.d))best={d,lo:Math.min(pa.a,pb.a),hi:Math.max(pa.a,pb.a)}}));
+        if(best&&best.hi-best.lo>150){l.spans.push({r,gi,lo:best.lo,hi:best.hi,l});got++}})});
+    if(!got)UNRES.push(l.n+': '+A+' → '+B+(only?' ['+(Array.isArray(only)?only.join(','):only)+']':''));
+  });
+  l.spans.forEach(sp=>{Object.assign(sp,subPoly(sp.gi,sp.lo,sp.hi));(CBG[sp.gi]||(CBG[sp.gi]=[])).push(sp)});
+  l.stn=new Set();
+  l.spans.forEach(sp=>CX.forEach(c=>{if(c.g.indexOf(sp.gi)<0)return;const p=projG(sp.gi,c.x,c.y);if(p.d<80&&p.a>=sp.lo-30&&p.a<=sp.hi+30)l.stn.add(c.i)}));
+  let a1=1e9,b1=1e9,c1=-1e9,d1=-1e9;l.spans.forEach(sp=>sp.px.forEach((x,i)=>{a1=Math.min(a1,x);c1=Math.max(c1,x);b1=Math.min(b1,sp.py[i]);d1=Math.max(d1,sp.py[i])}));l.box=l.spans.length?[a1,b1,c1,d1]:null;
+});
+window.__unres=UNRES;
 const TABN={sub:'Subway',path:'PATH',air:'AirTrain JFK'},TABC={sub:'#0062CF',path:'#4d92fb',air:'#E4002B'};
+let RUNC={};
 function applyFocus(){
   let ids=rorder.filter(i=>tab==='all'||(tab==='sub'?isSub(i):tab==='path'?i.indexOf('PATH-')===0:i.indexOf('AIR-')===0));
   if(lineSel)ids=ids.filter(i=>lineSel.s.indexOf(i)>-1);
@@ -465,14 +547,14 @@ function focName(){return svc?col(svc).name:lineSel?lineSel.n+' line':tab!=='all
 function focColor(){return svc?col(svc).bg:lineSel?lineSel.c:tab!=='all'?TABC[tab]:'var(--ink)'}
 function focSeries(s){const k=fkey;if(s._fk===k)return s._fs;const a=new Int32Array(1441);let mx=1;
   foc.forEach(r=>{const p=s.per[r];if(p)for(let i=0;i<1441;i++)a[i]+=p[i]});for(let i=0;i<1441;i++)if(a[i]>mx)mx=a[i];a.mx=mx;s._fk=k;s._fs=a;return a}
-function runOf(l){let n=0;l.s.forEach(r=>n+=RUN[r]||0);return n}
+function runOf(l){if(l.spans&&l.spans.length)return RUNC[l.k]||0;let n=0;l.s.forEach(r=>n+=RUN[r]||0);return n}
 const listEl=$('list');
 function buildList(){
-  listEl.textContent='';let lastTab='';
+  listEl.textContent='';let lastSec='';
   LINES.filter(l=>tab==='all'||l.tab===tab).forEach(l=>{
-    if(tab==='all'&&l.tab!==lastTab){lastTab=l.tab;const h=document.createElement('div');h.className='lh';h.textContent=TABN[l.tab];listEl.appendChild(h)}
+    if((tab==='all'||tab==='sub')&&l.sec!==lastSec){lastSec=l.sec;const h=document.createElement('div');h.className='lh';h.textContent=SECN[l.sec];listEl.appendChild(h)}
     const b=document.createElement('button');b.className='row'+(lineSel===l?' sel':'');b.style.setProperty('--c',l.c);
-    b.innerHTML='<span class="no m"></span><span class="to"></span>'+(l.tab==='sub'?'<span class="ln"></span>':'');
+    b.innerHTML='<span class="no m"></span><span class="to"></span>'+(l.sec==='trunk'||l.sec==='corr'?'<span class="ln"></span>':'');
     b.querySelector('.to').textContent=l.n;
     const ln=b.querySelector('.ln');if(ln)l.s.forEach(id=>ln.appendChild(bullet(id)));
     l._no=b.querySelector('.no');l._row=b;l._n=-1;
@@ -494,8 +576,9 @@ function renderDetail(){
 }
 function renderKey(){
   const box=$('klines'),ls=LINES.filter(l=>tab==='all'||l.tab===tab);
-  box.className='k-lines'+(tab==='path'||tab==='air'?' one':'');box.textContent='';
-  ls.forEach(l=>{const b=document.createElement('button');b.type='button';b.dataset.k=l.k;b.title=l.n;
+  box.className='k-lines'+(tab==='path'||tab==='air'?' one':'');box.textContent='';let lastSec='';
+  ls.forEach(l=>{if((tab==='all'||tab==='sub')&&l.sec!==lastSec){lastSec=l.sec;const h=document.createElement('div');h.className='kh';h.textContent=SECN[l.sec];box.appendChild(h)}
+    const b=document.createElement('button');b.type='button';b.dataset.k=l.k;b.title=l.n;
     const i=document.createElement('i');i.style.setProperty('--c',l.c);b.append(i,document.createTextNode(l.n));
     b.classList.toggle('act',lineSel===l);b.classList.toggle('off',!!lineSel&&lineSel!==l);
     b.onclick=()=>pickLine(lineSel===l?null:l);box.appendChild(b)});
@@ -510,7 +593,7 @@ function refocus(fitTo){
   listEl.querySelectorAll('.row').forEach(r=>r.classList.toggle('sel',!!lineSel&&lineSel._row===r));
   renderDetail();renderKey();
   document.querySelectorAll('.emph button').forEach(b=>{const on=b.dataset.t===tab;b.classList.toggle('on',on)});
-  if(fitTo!==false){fit(foc?box(r=>foc.has(r)):fitBox)}
+  if(fitTo!==false){fit(lineSel&&lineSel.box?lineSel.box:foc?box(r=>foc.has(r)):fitBox)}
   computeHeart();renderEcg();renderKpi();
 }
 function pickLine(l){lineSel=l;svc=null;refocus()}

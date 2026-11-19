@@ -12,7 +12,11 @@
 #mapbox{position:absolute;inset:0}
 #map{cursor:grab}#map.drag{cursor:grabbing}
 .tip{position:absolute;pointer-events:none;background:#0f141cf2;color:var(--fg);border:1px solid var(--line-2);padding:6px 9px;border-radius:7px;font-size:12px;line-height:1.35;max-width:240px;opacity:0;z-index:3}
-#keybody{width:auto}
+#keybody{width:min(320px,100%);max-height:calc(100vh - 250px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line-2) transparent}
+.k-lines.one{grid-template-columns:1fr}
+.kchips{display:flex;flex-wrap:wrap;align-items:center;gap:5px;padding:2px 2px 6px;border-bottom:1px solid var(--line)}
+.kchips[hidden]{display:none}
+.kchips .kl{font:600 10px var(--sans);letter-spacing:.07em;text-transform:uppercase;color:var(--dim);margin-right:3px}
 #clock{display:flex;align-items:baseline;gap:6px;flex:none;font-variant-numeric:tabular-nums;white-space:nowrap}
 #clk{font:500 26px/1 var(--sans);letter-spacing:-.02em}
 #clock em{font:400 11px var(--sans);color:var(--dim);font-style:normal}
@@ -46,7 +50,9 @@
 .pill{border:0;background:none;padding:2px;border-radius:50%;cursor:pointer;opacity:.9;line-height:0}
 .pill:hover{opacity:1}
 .pill.on{box-shadow:0 0 0 2px var(--panel),0 0 0 3.5px var(--fg);opacity:1}
-.pills.has-on .pill:not(.on){opacity:.4}
+.pills.has-on .pill:not(.on),.kchips.has-on .pill:not(.on){opacity:.4}
+#legend .pill{padding:2px;border-radius:50%}
+#legend .pill:hover{background:none}
 .pill .bul{width:22px;height:22px;font-size:11px}
 .bul{width:15px;height:15px;border-radius:50%;font:700 9px/1 var(--f-display);display:inline-grid;place-items:center;flex:none}
 /* slide-over: stats unique to this map */
@@ -94,7 +100,7 @@ details p{margin:6px 0 0}
     <div id="zoomc"><button id="zi" aria-label="Zoom in">+</button><button id="zo" aria-label="Zoom out">&minus;</button><button id="zf" aria-label="Fit city">&#8962;</button><button id="za" class="tx" aria-label="Show Staten Island">All</button></div>
     <div id="legend">
       <button id="keytog" aria-label="Show or hide the legend"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 8l4-4 4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-      <div id="keybody"><div class="k-row"><span class="emph-l">Focus</span><span class="emph" role="group" aria-label="Focus"><button data-t="all" class="on">All</button><button data-t="sub">Subway</button><button data-t="path">PATH</button><button data-t="air">AirTrain</button></span></div></div>
+      <div id="keybody"><div class="kchips" id="kchips" hidden></div><div class="k-row"><span class="emph-l">Focus</span><span class="emph" role="group" aria-label="Focus"><button data-t="all" class="on">All</button><button data-t="sub">Subway</button><button data-t="path">PATH</button><button data-t="air">AirTrain</button></span></div><div class="k-lines" id="klines"></div></div>
     </div>
   </div>
   <aside id="side" aria-label="Lines">
@@ -484,15 +490,25 @@ function renderDetail(){
   const d=$('detail');if(!lineSel){d.hidden=true;d.textContent='';return}
   d.hidden=false;d.innerHTML='<div class="t"><b></b><span></span><button class="x" aria-label="Clear line">&times;</button></div>';
   d.querySelector('b').textContent=lineSel.n;d.querySelector('.x').onclick=()=>pickLine(null);
-  if(lineSel.s.length>1){const p=document.createElement('div');p.className='pills'+(svc?' has-on':'');
-    lineSel.s.forEach(id=>{const b=document.createElement('button');b.className='pill'+(svc===id?' on':'');b.title=col(id).name;b.setAttribute('aria-label',col(id).name);b.appendChild(bullet(id));b.firstChild.style.fontSize='11px';b.onclick=()=>pickSvc(svc===id?null:id);p.appendChild(b)});
-    d.appendChild(p)}
   updateList();
+}
+function renderKey(){
+  const box=$('klines'),ls=LINES.filter(l=>tab==='all'||l.tab===tab);
+  box.className='k-lines'+(tab==='path'||tab==='air'?' one':'');box.textContent='';
+  ls.forEach(l=>{const b=document.createElement('button');b.type='button';b.dataset.k=l.k;b.title=l.n;
+    const i=document.createElement('i');i.style.setProperty('--c',l.c);b.append(i,document.createTextNode(l.n));
+    b.classList.toggle('act',lineSel===l);b.classList.toggle('off',!!lineSel&&lineSel!==l);
+    b.onclick=()=>pickLine(lineSel===l?null:l);box.appendChild(b)});
+  const kc=$('kchips');kc.textContent='';
+  if(lineSel&&lineSel.s.length>1){kc.hidden=false;const lb=document.createElement('span');lb.className='kl';lb.textContent=lineSel.n;kc.appendChild(lb);
+    const p=document.createElement('span');p.className='pills'+(svc?' has-on':'');p.style.display='contents';
+    lineSel.s.forEach(id=>{const b=document.createElement('button');b.type='button';b.className='pill'+(svc===id?' on':'');b.title=col(id).name;b.setAttribute('aria-label',col(id).name);b.appendChild(bullet(id));b.onclick=()=>pickSvc(svc===id?null:id);kc.appendChild(b)});
+    kc.classList.toggle('has-on',!!svc)}else kc.hidden=true;
 }
 function refocus(fitTo){
   applyFocus();lastSample=0;
   listEl.querySelectorAll('.row').forEach(r=>r.classList.toggle('sel',!!lineSel&&lineSel._row===r));
-  renderDetail();
+  renderDetail();renderKey();
   document.querySelectorAll('.emph button').forEach(b=>{const on=b.dataset.t===tab;b.classList.toggle('on',on)});
   if(fitTo!==false){fit(foc?box(r=>foc.has(r)):fitBox)}
   computeHeart();renderEcg();renderKpi();
@@ -515,7 +531,7 @@ fitBox=mb(box(r=>r!=='SI'&&r.indexOf('PATH-')!==0&&r.indexOf('AIR-')!==0),boxX(r
 sel=CX.slice().sort((a,b)=>b.p[0]-a.p[0])[0];
 new ResizeObserver(()=>{resize()}).observe($('mapbox'));
 addEventListener('keydown',e=>{if(e.key!=='Escape')return;if($('slide').classList.contains('open')){openSlide(false);e.preventDefault()}else if(svc||lineSel||tab!=='all'){if(svc)pickSvc(null);else if(lineSel)pickLine(null);else setTab('all');e.preventDefault()}});   // handled here, so the page does not also close the map
-setPlay(playing);resize();applyFocus();buildList();renderDetail();all();requestAnimationFrame(frame);
+setPlay(playing);resize();applyFocus();buildList();renderDetail();renderKey();all();requestAnimationFrame(frame);
 })();
 </script>
 

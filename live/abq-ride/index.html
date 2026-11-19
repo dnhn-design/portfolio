@@ -104,6 +104,7 @@ canvas { position:absolute; inset:0; width:100%; height:100%; display:block; }
 @media (prefers-reduced-motion:reduce) { * { scroll-behavior:auto!important; } }
 </style>
 <script src="../shared/embed.js"></script>
+<script src="../shared/labels.js"></script>
 <script src="../shared/native-theme.js" data-key="abq-theme"></script>
 
 <div id="app">
@@ -233,15 +234,18 @@ function lw(base){return base*Math.max(.8,Math.min(1.9,.8+.28*Math.log2(view.z/f
 let stLabels=[]; // station render list for hit testing: {x,y,c}
 function labelBox(ax,ay,ux,uy,w,h,gap){const cx=ax+ux*gap+ux*w/2,cy=ay+uy*gap+uy*h/2;return [cx-w/2,cy-h/2,w,h];}
 function hit(a,b,pad){return !(a[0]+a[2]+pad<=b[0]||b[0]+b[2]+pad<=a[0]||a[1]+a[3]+pad<=b[1]||b[1]+b[3]+pad<=a[1]);}
-function placeLabels(ctx,items,placed){ // items: {x,y,text,tx,ty,prio}
-  const out=[];items.sort((a,b)=>b.prio-a.prio);ctx.font=bf(11);
+let LABPX=11;
+function placeLabels(ctx,items,placed,zz){ // items: {x,y,text,tx,ty,prio}; zz given = progressive disclosure by zoom
+  const out=[];items.sort((a,b)=>b.prio-a.prio);
+  if(zz!=null){items=items.slice(0,Math.ceil(items.length*Labels.frac(zz)));LABPX=Labels.px(zz)}else LABPX=11;
+  ctx.font=bf(LABPX);
   for(const it of items){if(it.x<-20||it.y<-20||it.x>W+20||it.y>H+20)continue;const w=ctx.measureText(it.text).width+2,h=13;let n=[-(it.ty||0),(it.tx||0)];const nl=Math.hypot(n[0],n[1]);
     const cands=[];if(nl>.01){n=[n[0]/nl,n[1]/nl];cands.push(n,[-n[0],-n[1]]);}
     cands.push([1,0],[-1,0],[0,-1],[0,1],[.7,-.7],[.7,.7],[-.7,-.7],[-.7,.7]);
     for(const u of cands){const b=labelBox(it.x,it.y,u[0],u[1],w,h,9);if(b[0]<2||b[1]<2||b[0]+b[2]>W-2||b[1]+b[3]>H-2)continue;if(placed.some(p=>hit(p,b,3)))continue;placed.push(b);out.push({text:it.text,x:b[0]+1,y:b[1]+h-3,col:it.col,prio:it.prio});break;}}
   return out;}
 function tangentAt(ri,x,y){let best=1e9,t=[1,0];(screenPts[ri]||[]).forEach(l=>{for(let i=0;i<l.X.length-1;i++){const ax=l.X[i],ay=l.Y[i],dx=l.X[i+1]-ax,dy=l.Y[i+1]-ay,L=dx*dx+dy*dy||1e-9;let u=((x-ax)*dx+(y-ay)*dy)/L;u=u<0?0:u>1?1:u;const d=Math.hypot(x-(ax+u*dx),y-(ay+u*dy));if(d<best){best=d;const m=Math.sqrt(L);t=[dx/m,dy/m];}}});return t;}
-function drawLabels(ctx,L){ctx.font=bf(11);ctx.textBaseline='alphabetic';L.forEach(l=>{ctx.lineJoin='round';ctx.lineWidth=3.2;ctx.strokeStyle=TH.halo;ctx.strokeText(l.text,l.x,l.y);ctx.fillStyle=l.col||TH.fg;ctx.fillText(l.text,l.x,l.y);});}
+function drawLabels(ctx,L){ctx.font=bf(LABPX);ctx.textBaseline='alphabetic';L.forEach(l=>{ctx.lineJoin='round';ctx.lineWidth=3.2;ctx.strokeStyle=TH.halo;ctx.strokeText(l.text,l.x,l.y);ctx.fillStyle=l.col||TH.fg;ctx.fillText(l.text,l.x,l.y);});}
 let baseLabelRects=[];
 function drawBase(){
   const ctx=bctx;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle=TH.bg;ctx.fillRect(0,0,W,H);ctx.lineCap='round';ctx.lineJoin='round';
@@ -268,7 +272,7 @@ function drawBase(){
       const skipLabel=trT&&hl.has(trT.r)&&c.routes.has(trT.r);
       items.push({x,y,text:c.name,tx:tr[0],ty:tr[1],prio:(anyTerm?3:0)+(c.xfer?1:0)+(R[ri].m==='brt'?.5:0),col:null,skip:skipLabel});});
     stLabels.forEach(s=>{const c=s.c,r0=c.term.size?5:3.6;ctx.beginPath();ctx.arc(s.x,s.y,r0+1.6,0,7);ctx.fillStyle=TH.halo;ctx.fill();ctx.beginPath();ctx.arc(s.x,s.y,r0,0,7);ctx.fillStyle=TH.dk?'#fff':'#fff';ctx.fill();ctx.lineWidth=1.8;ctx.strokeStyle=R[[...c.routes].find(r=>hl.has(r))].col;ctx.stroke();});
-    const lab=placeLabels(ctx,items.filter(i=>!i.skip),placed);drawLabels(ctx,lab);
+    const lab=placeLabels(ctx,items.filter(i=>!i.skip),placed,Labels.lvl(Math.log2(view.z/fitZ),true));drawLabels(ctx,lab);
   }
   dirty=false;
 }

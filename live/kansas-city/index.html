@@ -140,6 +140,7 @@ canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
 </style>
 <script src="../shared/embed.js"></script>
+<script src="../shared/labels.js"></script>
 <script src="../shared/native-theme.js" data-default="dark"></script>
 
 <div id="app">
@@ -367,10 +368,12 @@ function drawStops(sv) {
   const items = [];
   set.forEach((lab, i) => { const s = ST[i], x = sx(s.x), y = sy(s.y); if (x < -20 || y < -20 || x > W + 20 || y > H + 20) return;
     const rc = RT[s.r[0]].col; items.push({ i, x, y, lab, col: sv ? col : rc }); });
-  c.font = '500 11px ' + FONT; c.textBaseline = 'middle';
+  const zz = Labels.lvl(Math.log2(view.s / fitS()), true);
+  c.font = '500 ' + Labels.px(zz) + 'px ' + FONT; c.textBaseline = 'middle';
   const rects = items.map(it => [it.x - rad - 1, it.y - rad - 1, it.x + rad + 1, it.y + rad + 1]);
   const hit = (b) => rects.some(r => b[0] < r[2] && b[2] > r[0] && b[1] < r[3] && b[3] > r[1]);
-  const labs = items.filter(it => it.lab).sort((a, b) => (TERM.has(b.i) - TERM.has(a.i)) || (XFER.has(b.i) - XFER.has(a.i)));
+  const labs0 = items.filter(it => it.lab).sort((a, b) => (TERM.has(b.i) - TERM.has(a.i)) || (XFER.has(b.i) - XFER.has(a.i)));
+  const labs = labs0.slice(0, Math.ceil(labs0.length * Labels.frac(zz)));
   const placed = [];
   for (const it of labs) {
     const name = ST[it.i].n, w = c.measureText(name).width + 1, h = 13, off = rad + 4;

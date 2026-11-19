@@ -301,7 +301,7 @@ function draw(){
   counts.fill(0);hits=[];
   const tr=days[day].trips, rad=3.6+Math.min(2.4,Math.log2(Math.max(1,z))*.6), dim=selTrain>=0?.3:1;
   const trail=(T,x,y,steps,step,al,w)=>{
-    if(/AirTrain/.test(routes[T.r].name)){step*=0.04;steps=Math.min(steps,4);}   // AirTrain runs two or three cars: a short tail, not a commuter-train one
+    if(/AirTrain/.test(routes[T.r].name)){steps=3;step=0.0083;w=Math.min(w,rad*1.1);}   // AirTrain is two or three cars: just a hint of tail (~6 m), thin like the train itself
     ctx.beginPath();
     for(let j=steps;j>=1;j--){const q=trainPos(T,Math.max(T.t0,t-j*step));if(!q)continue;const qx=sx(q[0]),qy=sy(q[1]);j===steps?ctx.moveTo(qx,qy):ctx.lineTo(qx,qy);}
     ctx.lineTo(x,y);ctx.strokeStyle=routes[T.r].col;ctx.globalAlpha=al;ctx.lineWidth=w;ctx.stroke();ctx.globalAlpha=1;

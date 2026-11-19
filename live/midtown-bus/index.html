@@ -3,13 +3,13 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 /* Layout: the user's diagram fills the width as the stage; one slim dark control bar underneath (play, clock, speed, day-load timeline, day type). */
 :root{
   --paper:#eef0f6; --stage:#ffffff; --pink:#cd3cec; --blue:#676df8; --focus:#8fa6ff;
   --bar:#0e1117; --bar-ink:#f2f4f8; --bar-mute:#7d8494; --bar-dim:#4a5060; --bar-hi:#d6dae4; --bar-seg:#1a1e27; --bar-line:#232834;
-  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --sans:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--paper:#07090d;color-scheme:dark}}
 :root[data-theme="dark"]{--paper:#07090d;color-scheme:dark}
@@ -57,6 +57,7 @@ button:focus-visible,.hist:focus-visible{outline:2px solid var(--focus);outline-
 @media (max-width:640px){.bar{flex-wrap:wrap}.hist{order:5;flex-basis:100%}}
 @media (prefers-reduced-motion:reduce){.busin{transition:none}}
 </style>
+<script src="../shared/embed.js"></script>
 <script src="../shared/theme.js"></script>
 
 <div class="wrap">

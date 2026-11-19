@@ -16,8 +16,8 @@ try{var sbs=localStorage.getItem('sb');if(sbs!=='0'&&innerWidth>900)document.doc
 if(!matchMedia('(prefers-reduced-motion: reduce)').matches){document.documentElement.classList.add('intro');setTimeout(function(){document.documentElement.classList.remove('intro')},9000)}})();
 </script>
 <style>
-[data-theme=light]{color-scheme:light;--bg:#f7f6f2;--ink:#15171a;--muted:#5b616a;--hover:#ebe9e2;--state:#d3d0c5;--accent:#0a58ca;--live:#0a6b3d;--pop:#ffffff}
-[data-theme=dark]{color-scheme:dark;--bg:#0d1015;--ink:#eceff4;--muted:#9aa4b2;--hover:#1d242d;--state:#2b3440;--accent:#6cb6ff;--live:#5fd394;--pop:#171c23}
+[data-theme=light]{color-scheme:light;--bg:#f7f6f2;--ink:#15171a;--muted:#5b616a;--hover:#ebe9e2;--state:#d3d0c5;--accent:#0a58ca;--live:#0a6b3d;--pop:#ffffff;--panel:#fbfaf7;--line:#e3e0d6}
+[data-theme=dark]{color-scheme:dark;--bg:#0d1015;--ink:#eceff4;--muted:#9aa4b2;--hover:#1d242d;--state:#2b3440;--accent:#6cb6ff;--live:#5fd394;--pop:#171c23;--panel:#0f141b;--line:#1a212b}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden}
 body{background:var(--bg);color:var(--ink);font:400 14px/1.35 'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased;transition:background .25s,color .25s}
@@ -34,27 +34,31 @@ header{position:fixed;top:0;left:0;right:0;height:56px;z-index:5;display:flex;al
 [data-theme=light] .moon,[data-theme=dark] .sun{display:none}
 
 /* collapsible list of live maps (same shape as the roster inside each map) */
-html.sb-open{--sbw:300px}
+html.sb-open{--sbw:clamp(240px,18vw,300px)}
 html #mapwrap,html #kids,html #cards{right:var(--sbw,0px)}
 html #mapwrap{transition:opacity .3s,right .4s cubic-bezier(.2,.8,.2,1)}
 html #kids,html #cards{transition:right .4s cubic-bezier(.2,.8,.2,1)}
-#sb{position:fixed;top:56px;right:0;bottom:0;width:300px;z-index:4;background:var(--pop);display:flex;flex-direction:column;
+/* the roster looks like the panel inside each live map: big count, flat full-width rows, a thin line on the left */
+#sb{position:fixed;top:56px;right:0;bottom:0;width:clamp(240px,18vw,300px);z-index:4;background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;
   transform:translateX(100%);visibility:hidden;transition:transform .4s cubic-bezier(.2,.8,.2,1),visibility 0s .4s,background-color .3s}
 html.sb-open #sb{transform:none;visibility:visible;transition-delay:0s}
 body.live #sb,html.sb-open body.live #sb{transform:translateX(100%);visibility:hidden}
-.sbh{padding:18px 20px 10px;display:flex;align-items:baseline;gap:8px}
-.sbh b{font-size:26px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-.sbh span{color:var(--muted)}
-#sblist{overflow:auto;padding:0 8px 16px;flex:1;overscroll-behavior:contain}
-.sbr{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:10px;font-weight:500}
-.sbr:hover{background:var(--hover)}
-.sbr i{width:8px;height:8px;border-radius:50%;background:var(--live);flex:none}
-.sbr.pdf i{background:var(--accent)}
-.sbr.in{padding-left:24px}
-.sbr .nm small{display:block;color:var(--muted);font-size:12px;font-weight:400;margin-top:1px}
-.sbg{display:block;width:100%;text-align:left;margin-top:10px;padding:10px 12px 6px;border-radius:10px;font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-.sbg:hover{background:var(--hover);color:var(--ink)}
-.pin.hl .dot{r:13}
+.sbh{padding:14px 18px 8px;display:flex;align-items:baseline;gap:8px}
+.sbh b{font-size:28px;line-height:1;font-weight:500;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.sbh span{color:var(--muted);font-size:12.5px}
+#sblist{overflow:auto;padding:0 0 12px;flex:1;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.sbr{display:flex;align-items:center;gap:12px;min-height:48px;padding:6px 18px;border-left:2px solid transparent;font-weight:500;font-size:13px;letter-spacing:-.005em}
+.sbr:hover,.sbr.hl{background:var(--hover);color:var(--live);border-left-color:var(--live)}
+.sbr i{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none;transition:background-color .2s,transform .2s}
+.sbr.ca i{background:#e4572e}
+.sbr.in i{background:var(--live)}
+.sbr:hover i,.sbr.hl i{background:var(--live);transform:scale(1.35)}
+.sbr .nm small{display:block;color:var(--muted);font-size:11.5px;font-weight:400;margin-top:1px;transition:color .2s}
+.sbr:hover .nm small,.sbr.hl .nm small{color:inherit;opacity:.8}
+.sbg{display:block;width:100%;text-align:left;margin-top:8px;padding:9px 18px 5px;border-left:2px solid transparent;font-weight:600;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+button.sbg:hover,button.sbg.hl{color:var(--live)}
+.pin.hl .dot,.pin:hover .dot{fill:var(--live)}
+.pin.hl .dot{r:15}
 @media (max-width:700px){html.sb-open{--sbw:0px}#sb{width:min(320px,86vw);box-shadow:-12px 0 40px rgba(0,0,0,.2)}}
 /* theme changes fade instead of snapping */
 .nation,.states{transition:stroke .3s}
@@ -72,7 +76,8 @@ body.live #sb,html.sb-open body.live #sb{transform:translateX(100%);visibility:h
 .pin.ca .ring{fill:none;stroke:#e4572e}
 .pin .ring{fill:none;stroke:var(--accent);stroke-width:2.5}
 #plabels text{font:600 17px 'Inter',system-ui,sans-serif;fill:var(--ink);paint-order:stroke;stroke:var(--bg);stroke-width:5px;stroke-linejoin:round;opacity:0;pointer-events:none;transition:opacity .1s}
-#plabels text.on{opacity:1;transition:opacity .15s .3s}
+#plabels text.on{opacity:1;fill:var(--live);transition:opacity .15s .3s}
+.pin.ca.hl .dot,.pin.ca:hover .dot{fill:var(--live)}
 .pin:hover .dot,.pin[aria-pressed=true] .dot{r:13}
 .pin:focus{outline:none}
 .pin:focus-visible .dot{stroke:var(--ink)}
@@ -449,14 +454,17 @@ function openLive(slug,pt,ret,instant){
     frame.classList.add('show'); setTimeout(()=>{ if(live&&live.slug===slug) body.classList.add('live-done'); },instant?0:900); };
   if(frame) frame.remove();
   frame=document.createElement('iframe'); frame.id='liveFrame'; frame.title=LIVEMETA[slug].t;
-  frame.onload=()=>{ loaded=true; show();
+  frame.onload=()=>{ loaded=true; show(); sendLiveSb(); $('#sbBtn').setAttribute('aria-expanded',String(liveSb));
     try{ frame.contentWindow.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!e.defaultPrevented) exitLive(); }); frame.contentWindow.focus(); }catch(err){} };   // Esc works even when the map has keyboard focus
   frame.src=LIVE(slug); document.body.append(frame);
   if(pt&&!instant) flyTo(liveTarget(pt),()=>{p=1;show()},{D:1150,inout:true,onProgress:q=>{p=q;if(q>=.7)show()}});
 }
+let liveSb=true; try{ liveSb=localStorage.getItem('lsb')!=='0'; }catch(e){}
+function sendLiveSb(){ try{ if(frame&&frame.contentWindow) frame.contentWindow.postMessage({type:'transitpedia:sidebar',open:liveSb},'*'); }catch(e){} }
+function setLiveSb(open){ liveSb=open; try{ localStorage.setItem('lsb',open?'1':'0'); }catch(e){} $('#sbBtn').setAttribute('aria-expanded',String(open)); sendLiveSb(); }
 function closeLive(){
   if(!live) return;
-  const {ret}=live; live=null;
+  const {ret}=live; live=null; $('#sbBtn').setAttribute('aria-expanded',String(document.documentElement.classList.contains('sb-open')));
   const body=document.body; body.classList.remove('live-done','live'); frame.classList.remove('show');
   const f=frame; setTimeout(()=>{ if(f&&f!==frame||!live){ f.remove(); if(f===frame) frame=null; } },700);   // unload the page once it has faded out
   if(ret) open(ret);                                     // zoom back out to the city view
@@ -612,8 +620,10 @@ REGIONS.forEach(r=>{
   const root=document.documentElement, list=$('#sblist'), btn=$('#sbBtn'), mob=()=>matchMedia('(max-width:700px)').matches;
   $('#sbn').textContent=Object.keys(LIVEMETA).length;
   const hl=(id,on)=>{ if(pins[id]){ pins[id].classList.toggle('hl',on); pins[id]._flag('s',on); } };
-  function row(slug,main,sub,rid,nested){
-    const a=el('a',{class:'sbr'+(nested?' in':''),href:LIVE(slug)},[el('i'),el('span',{class:'nm',text:main})]);
+  const rowOf={};                                   // city id -> its roster row, so hovering a dot lights the row too
+  function row(slug,main,sub,rid,nested,ca){
+    const a=el('a',{class:'sbr'+(nested?' in':'')+(ca?' ca':''),href:LIVE(slug)},[el('i'),el('span',{class:'nm',text:main})]);
+    if(rid&&!nested) rowOf[rid]=a;
     if(sub) a.querySelector('.nm').append(el('small',{text:sub}));
     a.addEventListener('click',e=>{ go(e,slug); if(mob()) setSb(false); });
     if(rid){ a.addEventListener('mouseenter',()=>hl(rid,true)); a.addEventListener('mouseleave',()=>hl(rid,false)); }
@@ -624,19 +634,23 @@ REGIONS.forEach(r=>{
   const head=el('button',{type:'button',class:'sbg',text:nyc.name});
   head.addEventListener('click',()=>{ toggle(nyc); if(mob()) setSb(false); });
   head.addEventListener('mouseenter',()=>hl('nyc',true)); head.addEventListener('mouseleave',()=>hl('nyc',false));
-  list.append(head);
+  rowOf.nyc=head; list.append(head);
   ['nyc-subway','midtown-bus','nj-transit','metro-north','lirr','nice-bus','ct-rail'].forEach(sl=>list.append(row(sl,LIVEMETA[sl].n,null,'nyc',true)));
   list.append(el('div',{class:'sbg',style:'pointer-events:none;margin-top:6px',text:'Cities'}));
   REGIONS.filter(r=>r.id!=='nyc').sort((a,b)=>a.name.localeCompare(b.name)).forEach(r=>{
-    const sys=r.live[0].t; list.append(row(r.live[0].s,r.name,sys!==r.name?sys:null,r.id));
+    const sys=r.live[0].t; list.append(row(r.live[0].s,r.name,sys!==r.name?sys:null,r.id,false,!!r.ca));
   });
   function setSb(open){
     root.classList.toggle('sb-open',open); btn.setAttribute('aria-expanded',String(open));
     try{ localStorage.setItem('sb',open?'1':'0'); }catch(e){}
     if(current&&!live) close();            // the map area changes width, so drop any selection that was positioned for the old size
   }
+  Object.keys(rowOf).forEach(id=>{ const g=pins[id]; if(!g) return;
+    g.addEventListener('mouseenter',()=>{ rowOf[id].classList.add('hl'); if(root.classList.contains('sb-open')) rowOf[id].scrollIntoView({block:'nearest'}); });
+    g.addEventListener('mouseleave',()=>rowOf[id].classList.remove('hl')); });
   btn.setAttribute('aria-expanded',String(root.classList.contains('sb-open')));
-  btn.addEventListener('click',()=>setSb(!root.classList.contains('sb-open')));
+  /* on the home view the button folds the roster; inside a live map it folds that map's own panel */
+  btn.addEventListener('click',()=>{ if(live){ setLiveSb(!liveSb); } else setSb(!root.classList.contains('sb-open')); });
 })();
 $('.brand').addEventListener('click',e=>{ if(live){ e.preventDefault(); exitLive(); } });
 $('#usmap').addEventListener('click',e=>{ if(!e.target.closest('.pin')) close(); });

@@ -16,6 +16,13 @@
 .k-lines.one{grid-template-columns:1fr}
 .kh{grid-column:1/-1;font:600 10px var(--sans);letter-spacing:.07em;text-transform:uppercase;color:var(--dim);padding:6px 6px 2px}
 .kh:first-child{padding-top:2px}
+.tgl{display:flex;align-items:center;gap:6px;width:100%;background:none;border:0;cursor:pointer;text-align:left;font:inherit}
+.lh.tgl,.kh.tgl{font:600 10px var(--sans);letter-spacing:.07em;text-transform:uppercase;color:var(--dim)}
+.lh.tgl:hover,.kh.tgl:hover{color:var(--fg)}
+.tgl em{font-style:normal;margin-left:auto;opacity:.8}
+.tgl svg{flex:none;transition:transform .15s;transform:rotate(-90deg)}
+.tgl[aria-expanded=true] svg{transform:none}
+.lh.tgl{padding:12px 18px 4px}
 .k-lines{max-height:none}
 .kchips{display:flex;flex-wrap:wrap;align-items:center;gap:5px;padding:2px 2px 6px;border-bottom:1px solid var(--line)}
 .kchips[hidden]{display:none}
@@ -548,11 +555,27 @@ function focColor(){return svc?col(svc).bg:lineSel?lineSel.c:tab!=='all'?TABC[ta
 function focSeries(s){const k=fkey;if(s._fk===k)return s._fs;const a=new Int32Array(1441);let mx=1;
   foc.forEach(r=>{const p=s.per[r];if(p)for(let i=0;i<1441;i++)a[i]+=p[i]});for(let i=0;i<1441;i++)if(a[i]>mx)mx=a[i];a.mx=mx;s._fk=k;s._fs=a;return a}
 function runOf(l){if(l.spans&&l.spans.length)return RUNC[l.k]||0;let n=0;l.s.forEach(r=>n+=RUN[r]||0);return n}
+let corrOpen=false;
+const CHV='<svg viewBox="0 0 10 10" width="9" height="9"><path d="M2 3.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const selTrunkish=()=>!!lineSel&&(lineSel.sec==='trunk'||lineSel.sec==='corr');
+const relatedTo=l=>l===lineSel||l.s.some(r=>lineSel.s.indexOf(r)>-1);
+function shownLines(){return LINES.filter(l=>(tab==='all'||l.tab===tab)&&(l.sec!=='corr'||(selTrunkish()?relatedTo(l):corrOpen)))}
+function shownWithHead(){const a=shownLines();
+  if(!LINES.some(l=>l.sec==='corr'&&(tab==='all'||l.tab===tab))||a.some(l=>l.sec==='corr'))return a;
+  let i=a.findIndex(l=>l.sec==='path'||l.sec==='air');if(i<0)i=a.length;a.splice(i,0,{sec:'corr',_ph:1});return a}
+function secHead(cls,sec){
+  const h=document.createElement(sec==='corr'&&!selTrunkish()?'button':'div');h.className=cls;
+  if(sec!=='corr'){h.textContent=SECN[sec];return h}
+  const tot=LINES.filter(l=>l.sec==='corr'&&(tab==='all'||l.tab===tab)).length,rel=selTrunkish();
+  h.innerHTML='<span></span><em></em>'+(rel?'':CHV);h.firstChild.textContent=SECN[sec]+(rel?' \u00b7 related':'');h.querySelector('em').textContent=rel?'':tot;
+  if(!rel){h.type='button';h.classList.add('tgl');h.setAttribute('aria-expanded',String(corrOpen));h.onclick=()=>{corrOpen=!corrOpen;buildList();renderKey()}}
+  return h}
 const listEl=$('list');
 function buildList(){
   listEl.textContent='';let lastSec='';
-  LINES.filter(l=>tab==='all'||l.tab===tab).forEach(l=>{
-    if((tab==='all'||tab==='sub')&&l.sec!==lastSec){lastSec=l.sec;const h=document.createElement('div');h.className='lh';h.textContent=SECN[l.sec];listEl.appendChild(h)}
+  shownWithHead().forEach(l=>{
+    if((tab==='all'||tab==='sub')&&l.sec!==lastSec){lastSec=l.sec;listEl.appendChild(secHead('lh',l.sec))}
+    if(l._ph)return;
     const b=document.createElement('button');b.className='row'+(lineSel===l?' sel':'');b.style.setProperty('--c',l.c);
     b.innerHTML='<span class="no m"></span><span class="to"></span>'+(l.sec==='trunk'||l.sec==='corr'?'<span class="ln"></span>':'');
     b.querySelector('.to').textContent=l.n;
@@ -575,10 +598,10 @@ function renderDetail(){
   updateList();
 }
 function renderKey(){
-  const box=$('klines'),ls=LINES.filter(l=>tab==='all'||l.tab===tab);
+  const box=$('klines'),ls=shownWithHead();
   box.className='k-lines'+(tab==='path'||tab==='air'?' one':'');box.textContent='';let lastSec='';
-  ls.forEach(l=>{if((tab==='all'||tab==='sub')&&l.sec!==lastSec){lastSec=l.sec;const h=document.createElement('div');h.className='kh';h.textContent=SECN[l.sec];box.appendChild(h)}
-    const b=document.createElement('button');b.type='button';b.dataset.k=l.k;b.title=l.n;
+  ls.forEach(l=>{if((tab==='all'||tab==='sub')&&l.sec!==lastSec){lastSec=l.sec;box.appendChild(secHead('kh',l.sec))}
+    if(l._ph)return;const b=document.createElement('button');b.type='button';b.dataset.k=l.k;b.title=l.n;
     const i=document.createElement('i');i.style.setProperty('--c',l.c);b.append(i,document.createTextNode(l.n));
     b.classList.toggle('act',lineSel===l);b.classList.toggle('off',!!lineSel&&lineSel!==l);
     b.onclick=()=>pickLine(lineSel===l?null:l);box.appendChild(b)});
@@ -589,7 +612,7 @@ function renderKey(){
     kc.classList.toggle('has-on',!!svc)}else kc.hidden=true;
 }
 function refocus(fitTo){
-  applyFocus();lastSample=0;
+  applyFocus();lastSample=0;buildList();
   listEl.querySelectorAll('.row').forEach(r=>r.classList.toggle('sel',!!lineSel&&lineSel._row===r));
   renderDetail();renderKey();
   document.querySelectorAll('.emph button').forEach(b=>{const on=b.dataset.t===tab;b.classList.toggle('on',on)});

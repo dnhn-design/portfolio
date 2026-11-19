@@ -159,7 +159,7 @@ const DATES={};
   try{
     const parts=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'numeric',hour12:false,weekday:'short'}).formatToParts(new Date());
     const g=k=>parts.find(p=>p.type===k).value;
-    S.t=(+g('hour')%24)*60+(+g('minute'));y=+g('year');m=+g('month');d=+g('day');wd=g('weekday');
+    S.t=__nowSec()/60;y=+g('year');m=+g('month');d=+g('day');wd=g('weekday');
   }catch(e){const n=new Date();y=n.getFullYear();m=n.getMonth()+1;d=n.getDate();S.t=7*60+41;}
   const today=Date.UTC(y,m-1,d)/864e5;
   // each day type points at the next real date of that kind, starting today

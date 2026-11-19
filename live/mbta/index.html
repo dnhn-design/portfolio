@@ -204,7 +204,7 @@ const view={cx:0,cy:0,k:6};
 const st={view:'sys',focus:null,tab:'all',day:'wkd',t:0,playing:true,sp:2,vis:[true,true,true,true,true],zones:true,sel:null,follow:false,hover:null};
 let trains=[],hits=[],dirty=true;
 const now=new Date();const et=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour:'numeric',minute:'numeric',hour12:false,weekday:'short'}).formatToParts(now);
-{const g=n=>et.find(p=>p.type===n).value;let h=+g('hour')%24,m=+g('minute');let t=h*3600+m*60;if(t<T0)t+=86400;st.t=t;
+{const g=n=>et.find(p=>p.type===n).value;let h=+g('hour')%24,m=+g('minute');let t=__nowSec();if(t<T0)t+=86400;st.t=t;
  const w=g('weekday');st.day=w==='Sat'?'sat':w==='Sun'?'sun':'wkd'}
 const DAYNAME={wkd:'Wed 18 Nov',sat:'Sat 21 Nov',sun:'Sun 22 Nov'};
 

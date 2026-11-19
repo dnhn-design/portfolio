@@ -142,6 +142,7 @@ for(const id in P){
 
 // ---- time + schedule helpers (New York wall clock carried as a UTC-labelled timestamp)
 const fmt=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hourCycle:'h23',year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'numeric',second:'numeric'});
+function localNow(){const d=new Date();return Date.UTC(d.getFullYear(),d.getMonth(),d.getDate(),d.getHours(),d.getMinutes(),d.getSeconds())+d.getMilliseconds()}
 function nycNow(){const o={};for(const x of fmt.formatToParts(new Date()))o[x.type]=+x.value;return Date.UTC(o.year,o.month-1,o.day,o.hour,o.minute,o.second)+Date.now()%1000}
 function nthDow(y,m,dow,n){const f=new Date(Date.UTC(y,m,1)).getUTCDay();return 1+((dow-f+7)%7)+7*(n-1)}
 function lastMon(y,m){const l=new Date(Date.UTC(y,m+1,0));return l.getUTCDate()-((l.getUTCDay()+6)%7)}
@@ -164,7 +165,7 @@ function hm(min,sec){min=((min%1440)+1440)%1440;let h=Math.floor(min/60),m=Math.
   return h+':'+String(m).padStart(2,'0')+(sec!==undefined?':'+String(Math.floor((min%1)*60)).padStart(2,'0'):'')+' '+ap}
 
 // ---- state
-const S={live:false,paused:false,speed:100,day:'auto',t:nycNow(),routes:{M23:true,M34:true,M34A:true},sel:null,dayEff:null};
+const S={live:false,paused:false,speed:100,day:'auto',t:localNow(),routes:{M23:true,M34:true,M34A:true},sel:null,dayEff:null};
 const $=id=>document.getElementById(id);
 const busLayer=$('buses'),stage=$('stage'),tip=$('tip');
 const active=new Map();
@@ -254,7 +255,7 @@ function syncUI(){
   $('playBtn').innerHTML=(S.paused&&!S.live)?PLAY:PAUSE;$('playBtn').setAttribute('aria-label',(S.paused&&!S.live)?'Play':'Pause');
   $('clkBtn').classList.toggle('live',S.live);$('spdBtn').textContent=S.speed+'×';
 }
-function goLive(){S.live=false;S.t=nycNow();S.paused=false;S.speed=100;S.day='auto';syncUI()}
+function goLive(){S.live=false;S.t=localNow();S.paused=false;S.speed=100;S.day='auto';syncUI()}
 function leaveLive(){S.live=false}
 $('clkBtn').onclick=goLive;
 $('playBtn').onclick=()=>{if(S.live){leaveLive();S.paused=true}else S.paused=!S.paused;syncUI()};

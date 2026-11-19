@@ -622,7 +622,7 @@ function refocus(fitTo){
   listEl.querySelectorAll('.row').forEach(r=>r.classList.toggle('sel',!!lineSel&&lineSel._row===r));
   renderDetail();renderKey();
   document.querySelectorAll('.emph button').forEach(b=>{const on=b.dataset.t===tab;b.classList.toggle('on',on)});
-  if(fitTo!==false){fit(lineSel&&lineSel.box?lineSel.box:foc?box(r=>foc.has(r)):fitBox)}
+  /* selecting a line or tab only highlights: the view stays where it is */
   computeHeart();renderEcg();renderKpi();
 }
 function pickLine(l){lineSel=l;svc=null;refocus()}

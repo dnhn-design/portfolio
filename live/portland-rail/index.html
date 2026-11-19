@@ -121,6 +121,7 @@ canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block
 @media (max-width: 400px) { .emph-l { display: none; } #legend .emph button { padding: 4px 5px; } }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
 </style>
+<script src="../shared/embed.js"></script>
 <script src="../shared/theme.js" data-canvas="1"></script>
 <link rel="stylesheet" href="../shared/map-theme.css">
 
@@ -266,8 +267,8 @@ const hist = $('hist'), hc = hist.querySelector('canvas'), hctx = hc.getContext(
 let W = 0, H = 0, dpr = 1;
 const view = { cx: 0.2, cy: 0.3, s: 1e5 };
 let s0 = 1e5, baseDirty = true;
-let day = 'wkd', t = (8 * 60 + 20) * 60, playing = true, speedIdx = 2;
-const SPEEDS = [30, 60, 120, 300, 900];
+let day = 'wkd', t = __nowSec('America/Los_Angeles'), playing = true, speedIdx = 0;
+const SPEEDS = [1, 10, 100, 300, 600];
 let emph = 'all', lineSel = null, selected = -1, hover = -1, hoverStation = null;
 let vehicles = [];
 function pickDay() {
@@ -474,11 +475,8 @@ function drawLive() {
     const x = SX(v.x), y = SY(v.y); v.sx = x; v.sy = y; if (x < -20 || x > W + 20 || y < -20 || y > H + 20) continue;
     const c = v.g === 0 ? '#ffffff' : r_(v).c, on = vis(v);
     g.globalAlpha = on ? v.a : v.a * 0.2;
-    if (on) {
-      g.beginPath(); g.arc(x, y, rr * 3.1, 0, 7); g.fillStyle = hexA(c, v.g ? 0.2 : 0.17); g.fill();
-      g.beginPath(); g.arc(x, y, rr * 1.9, 0, 7); g.fillStyle = hexA(c, v.g ? 0.4 : 0.3); g.fill();
-    }
-    g.beginPath(); g.arc(x, y, rr, 0, 7); g.fillStyle = on ? '#ffffff' : (v.g === 0 ? '#aab4c2' : c); g.fill();
+    if (on) { g.beginPath(); g.arc(x, y, rr + 2, 0, 7); g.fillStyle = BG; g.fill(); }   // a gap around the dot
+    g.beginPath(); g.arc(x, y, rr, 0, 7); g.fillStyle = (v.g === 0 ? '#aab4c2' : c); g.fill();
     g.globalAlpha = 1;
     if (v.k === selected || v.k === hover) { g.beginPath(); g.arc(x, y, rr + 6, 0, 7); g.strokeStyle = '#fff'; g.lineWidth = 1.4; g.stroke(); }
   }
@@ -554,7 +552,8 @@ hist.addEventListener('pointerdown', (e) => { seeking = true; hist.setPointerCap
 hist.addEventListener('pointermove', (e) => { if (seeking) seekFrom(e); });
 hist.addEventListener('pointerup', () => { seeking = false; });
 hist.addEventListener('pointercancel', () => { seeking = false; });
-function drawClock() { const m = clk(t).match(/^(\d+:\d\d) (AM|PM)$/); $('clock').innerHTML = m[1] + '<small>' + m[2] + '</small><em>PT</em>'; }
+function drawClock() { $('clock').innerHTML = __clk.html(t, 'America/Los_Angeles'); } window.addEventListener('clkmode', () => { lastClock = ''; drawClock(); });
+__clk.live({tz:'America/Los_Angeles',get:()=>t,set:v=>{t=v;speedIdx=0;$('speed').innerHTML=SPEEDS[0]+'&times;'},on:()=>playing,spd:()=>speedIdx===0});
 
 /* ---------- key ---------- */
 function renderKey() {

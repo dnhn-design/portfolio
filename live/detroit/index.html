@@ -153,6 +153,7 @@ canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block
 }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
 </style>
+<script src="../shared/embed.js"></script>
 <script src="../shared/native-theme.js" data-key="dtm-theme"></script>
 
 <div id="app">
@@ -311,8 +312,8 @@ const hist = $('hist'), hc = hist.querySelector('canvas'), hctx = hc.getContext(
 let W = 0, H = 0, dpr = 1;
 const view = { cx: 0.2, cy: 0.3, s: 1e5 };
 let s0 = 1e5, baseDirty = true, userMoved = false;
-let day = 'wkd', t = 8.25 * 3600, playing = true, speedIdx = 2;
-const SPEEDS = [30, 60, 120, 300, 900];
+let day = 'wkd', t = __nowSec('America/Detroit'), playing = true, speedIdx = 0;
+const SPEEDS = [1, 10, 100, 300, 600];
 let emph = 'all', lineSel = null, selected = -1, hover = -1, hoverStation = null, anim = null;
 let vehicles = [], trips = [];
 const MAIN_DAYS = ['wkd', 'sat', 'sun'];
@@ -553,11 +554,8 @@ function drawLive(now) {
     v.sx = x; v.sy = y;
     const c = gc(v.g), on = vis(v), rail = isRailG(v.g);
     g.globalAlpha = on ? v.a : v.a * 0.2;
-    if (on) {
-      g.beginPath(); g.arc(x, y, rr * (rail ? 3.4 : 3.1), 0, 7); g.fillStyle = hexA(c, 0.16); g.fill();
-      g.beginPath(); g.arc(x, y, rr * 1.9, 0, 7); g.fillStyle = hexA(c, 0.38); g.fill();
-    }
-    g.beginPath(); g.arc(x, y, rr * (rail ? 1.15 : 1), 0, 7); g.fillStyle = on ? pal.core : c; g.fill();
+    if (on) { g.beginPath(); g.arc(x, y, rr * (rail ? 1.15 : 1) + 2, 0, 7); g.fillStyle = pal.bg; g.fill(); }   // a gap around the dot
+    g.beginPath(); g.arc(x, y, rr * (rail ? 1.15 : 1), 0, 7); g.fillStyle = c; g.fill();
     g.globalAlpha = 1;
     if (v.k === selected || v.k === hover) { g.beginPath(); g.arc(x, y, rr + 6, 0, 7); g.strokeStyle = pal.core; g.lineWidth = 1.4; g.stroke(); }
   }
@@ -654,7 +652,8 @@ let seeking = false;
 hist.addEventListener('pointerdown', (e) => { seeking = true; hist.setPointerCapture(e.pointerId); seekFrom(e); });
 hist.addEventListener('pointermove', (e) => { if (seeking) seekFrom(e); });
 hist.addEventListener('pointerup', () => { seeking = false; }); hist.addEventListener('pointercancel', () => { seeking = false; });
-function drawClock() { const m = clk(t).match(/^(\d+:\d\d) (AM|PM)$/); $('clock').innerHTML = m[1] + '<small>' + m[2] + '</small><em>ET</em>'; }
+function drawClock() { $('clock').innerHTML = __clk.html(t, 'America/Detroit'); } window.addEventListener('clkmode', () => { lastClock = ''; drawClock(); });
+__clk.live({tz:'America/Detroit',get:()=>t,set:v=>{t=v;speedIdx=0;$('speed').innerHTML=SPEEDS[0]+'&times;'},on:()=>playing,spd:()=>speedIdx===0});
 
 /* ---------- legend ---------- */
 function renderKey() {

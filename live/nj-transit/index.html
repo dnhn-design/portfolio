@@ -132,6 +132,7 @@ canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block
 }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
 </style>
+<script src="../shared/embed.js"></script>
 <script src="../shared/native-theme.js"></script>
 <div id="app">
   <div id="mapwrap">
@@ -275,8 +276,8 @@ const hist = $('hist'), hc = hist.querySelector('canvas'), hctx = hc.getContext(
 let W = 0, H = 0, dpr = 1;
 const view = { cx: 0.2, cy: 0.3, s: 1e5 };
 let s0 = 1e5, baseDirty = true;
-let day = 'wkd', t = 8.25 * 3600, playing = true, speedIdx = 2;
-const SPEEDS = [30, 60, 120, 300, 900];
+let day = 'wkd', t = __nowSec('America/New_York'), playing = true, speedIdx = 0;
+const SPEEDS = [1, 10, 100, 300, 600];
 let emph = 'all', lineSel = null, selected = -1, hover = -1, hoverStation = null;
 let vehicles = [];
 function pickDay() {
@@ -496,11 +497,8 @@ function drawLive() {
     v.sx = x; v.sy = y;
     const c = vcol(v), on = vis(v);
     g.globalAlpha = on ? v.a : v.a * 0.2;
-    if (on) {
-      g.beginPath(); g.arc(x, y, rr * 3.1, 0, 7); g.fillStyle = hexA(c, v.g ? 0.18 : 0.2); g.fill();
-      g.beginPath(); g.arc(x, y, rr * 1.9, 0, 7); g.fillStyle = hexA(c, v.g ? 0.4 : 0.32); g.fill();
-    }
-    g.beginPath(); g.arc(x, y, rr, 0, 7); g.fillStyle = on ? T.core : c; g.fill();
+    if (on) { g.beginPath(); g.arc(x, y, rr + 2, 0, 7); g.fillStyle = T.bg; g.fill(); }   // a gap around the dot
+    g.beginPath(); g.arc(x, y, rr, 0, 7); g.fillStyle = c; g.fill();
     g.globalAlpha = 1;
     if (v.k === selected || v.k === hover) { g.beginPath(); g.arc(x, y, rr + 6, 0, 7); g.strokeStyle = T.core; g.lineWidth = 1.4; g.stroke(); }
   }
@@ -576,7 +574,8 @@ hist.addEventListener('pointerdown', (e) => { seeking = true; hist.setPointerCap
 hist.addEventListener('pointermove', (e) => { if (seeking) seekFrom(e); });
 hist.addEventListener('pointerup', () => { seeking = false; });
 hist.addEventListener('pointercancel', () => { seeking = false; });
-function drawClock() { const m = clk(t).match(/^(\d+:\d\d) (AM|PM)$/); $('clock').innerHTML = m[1] + '<small>' + m[2] + '</small><em>ET</em>'; }
+function drawClock() { $('clock').innerHTML = __clk.html(t, 'America/New_York'); } window.addEventListener('clkmode', () => { lastClock = ''; drawClock(); });
+__clk.live({tz:'America/New_York',get:()=>t,set:v=>{t=v;speedIdx=0;$('speed').innerHTML=SPEEDS[0]+'&times;'},on:()=>playing,spd:()=>speedIdx===0});
 
 /* ---------- key ---------- */
 function renderKey() {

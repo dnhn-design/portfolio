@@ -58,6 +58,7 @@
 .next b{font-variant-numeric:tabular-nums;flex:none;min-width:58px}
 .next span{color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 </style>
+<script src="../shared/embed.js"></script>
 <script src="../shared/theme.js"></script>
 <link rel="stylesheet" href="../shared/map-theme.css">
 
@@ -119,8 +120,8 @@ stops.forEach(s=>{s.rs=[...s.rs].sort((a,b)=>a-b);s.hub=s.rs.length>=4;});
 
 /* ---------- state ---------- */
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-const SPEEDS=[60,120,300,600];
-let day=0, t=450, playing=!reduce, spd=1, focus=new Set(), hover=-1, sel=-1, selRoute=-1, panelOpen=true, selTrain=-1, panelDirty=true, lastPanel=0, lastOpen=false, hits=[];
+const SPEEDS=[1, 10, 100, 300, 600];
+let day=0, t=__nowSec('America/New_York')/60, playing=!reduce, spd=0, focus=new Set(), hover=-1, sel=-1, selRoute=-1, panelOpen=true, selTrain=-1, panelDirty=true, lastPanel=0, lastOpen=false, hits=[];
 let W=0,H=0,dpr=1, view={vx:0,vy:0,s:1}, fit=1, dirty=true, counts=new Array(routes.length).fill(0);
 let C={};
 function readTheme(){
@@ -144,12 +145,14 @@ function syncChips(){$('fall').classList.toggle('on',selRoute<0);chipEls.forEach
 const ico={play:'<svg viewBox="0 0 14 14"><path d="M3 1.5v11l9-5.5z"/></svg>',pause:'<svg viewBox="0 0 14 14"><path d="M2.5 1.5h3.2v11H2.5zM8.3 1.5h3.2v11H8.3z"/></svg>'};
 function syncPlay(){$('play').innerHTML=playing?ico.pause:ico.play;$('play').setAttribute('aria-label',playing?'Pause':'Play');}
 $('play').onclick=()=>{playing=!playing;syncPlay();last=0;dirty=true;frame();};
+window.addEventListener('clkmode',()=>setClock());
 function syncSpeed(){$('speed').textContent=SPEEDS[spd]+String.fromCharCode(215);}
+__clk.live({tz:'America/New_York',get:()=>t*60,set:v=>{t=v/60;spd=0;syncSpeed();dirty=true},on:()=>playing,spd:()=>spd===0});
 $('speed').onclick=()=>{spd=(spd+1)%SPEEDS.length;syncSpeed();};
 function syncDays(){document.querySelectorAll('#days button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.d===day)));}
 document.querySelectorAll('#days button').forEach(b=>b.onclick=()=>{day=+b.dataset.d;syncDays();sel=-1;hideTip();selTrain=-1;clearRows();panelDirty=true;drawTrack();dirty=true;frame();});
 function fmt(m){m=Math.floor(m);const h=Math.floor(m/60)%24,mm=m%60,ap=h<12?'AM':'PM',h12=h%12||12;return [h12+':'+String(mm).padStart(2,'0'),ap];}
-function setClock(){const [a,b]=fmt(t);$('clock').innerHTML=a+'<small>'+b+'</small><em>ET</em>';trk.setAttribute('aria-valuenow',Math.round(t));trk.setAttribute('aria-valuemin','0');trk.setAttribute('aria-valuemax',TMAX);trk.setAttribute('aria-valuetext',a+' '+b);}
+function setClock(){const _p=__clk.parts(t*60,'America/New_York'),a=_p.t,b=_p.ap;$('clock').innerHTML=a+'<small>'+b+'</small><em>'+_p.tz+'</em>';trk.setAttribute('aria-valuenow',Math.round(t));trk.setAttribute('aria-valuemin','0');trk.setAttribute('aria-valuemax',TMAX);trk.setAttribute('aria-valuetext',a+' '+b);}
 
 /* ---------- timeline ---------- */
 let tw=0,th=36;

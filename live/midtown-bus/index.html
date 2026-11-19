@@ -3,13 +3,13 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 /* Layout: the user's diagram fills the width as the stage; one slim dark control bar underneath (play, clock, speed, day-load timeline, day type). */
 :root{
   --paper:#eef0f6; --stage:#ffffff; --pink:#cd3cec; --blue:#676df8; --focus:#8fa6ff;
   --bar:#0e1117; --bar-ink:#f2f4f8; --bar-mute:#7d8494; --bar-dim:#4a5060; --bar-hi:#d6dae4; --bar-seg:#1a1e27; --bar-line:#232834;
-  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --sans:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--paper:#07090d;color-scheme:dark}}
 :root[data-theme="dark"]{--paper:#07090d;color-scheme:dark}
@@ -57,6 +57,7 @@ button:focus-visible,.hist:focus-visible{outline:2px solid var(--focus);outline-
 @media (max-width:640px){.bar{flex-wrap:wrap}.hist{order:5;flex-basis:100%}}
 @media (prefers-reduced-motion:reduce){.busin{transition:none}}
 </style>
+<script src="../shared/embed.js"></script>
 <script src="../shared/theme.js"></script>
 
 <div class="wrap">
@@ -141,6 +142,7 @@ for(const id in P){
 
 // ---- time + schedule helpers (New York wall clock carried as a UTC-labelled timestamp)
 const fmt=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hourCycle:'h23',year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'numeric',second:'numeric'});
+function localNow(){const d=new Date(),p=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hourCycle:'h23',year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'numeric',second:'numeric'}).formatToParts(d),g=n=>+p.find(x=>x.type===n).value;return Date.UTC(g('year'),g('month')-1,g('day'),g('hour')%24,g('minute'),g('second'))+d.getMilliseconds()}
 function nycNow(){const o={};for(const x of fmt.formatToParts(new Date()))o[x.type]=+x.value;return Date.UTC(o.year,o.month-1,o.day,o.hour,o.minute,o.second)+Date.now()%1000}
 function nthDow(y,m,dow,n){const f=new Date(Date.UTC(y,m,1)).getUTCDay();return 1+((dow-f+7)%7)+7*(n-1)}
 function lastMon(y,m){const l=new Date(Date.UTC(y,m+1,0));return l.getUTCDate()-((l.getUTCDay()+6)%7)}
@@ -163,7 +165,7 @@ function hm(min,sec){min=((min%1440)+1440)%1440;let h=Math.floor(min/60),m=Math.
   return h+':'+String(m).padStart(2,'0')+(sec!==undefined?':'+String(Math.floor((min%1)*60)).padStart(2,'0'):'')+' '+ap}
 
 // ---- state
-const S={live:true,paused:false,speed:1,day:'auto',t:nycNow(),routes:{M23:true,M34:true,M34A:true},sel:null,dayEff:null};
+const S={live:false,paused:false,speed:1,day:'auto',t:localNow(),routes:{M23:true,M34:true,M34A:true},sel:null,dayEff:null};
 const $=id=>document.getElementById(id);
 const busLayer=$('buses'),stage=$('stage'),tip=$('tip');
 const active=new Map();
@@ -234,7 +236,7 @@ function frame(){
     if(S.sel===g){tip.innerHTML=tipHTML(w,w.mm);placeTip(g)}
   }
   // readouts
-  const ct=hm(m).split(' ');if($('clkT').textContent!==ct[0]){$('clkT').textContent=ct[0];$('clkA').textContent=ct[1]}
+  {const _p=__clk.parts(m*60,'America/New_York'),_a=_p.ap+' '+_p.tz;if($('clkT').textContent!==_p.t||$('clkA').textContent!==_a){$('clkT').textContent=_p.t;$('clkA').textContent=_a}}
   if(S.dayEff!==today){S.dayEff=today;for(const b of $('daySeg').children)b.setAttribute('aria-pressed',String(b.dataset.v===today));drawHist(today)}
   const px=(m/1440*100).toFixed(2);
   if(S.px!==px){S.px=px;$('ph').style.left=px+'%';$('hiSvg').style.clipPath='inset(0 '+(100-px)+'% 0 0)';$('hist').setAttribute('aria-valuenow',Math.floor(m))}
@@ -248,16 +250,17 @@ function loop(now){
 
 // ---- controls
 const PLAY='<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>',PAUSE='<svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
-const SPEEDS=[1,10,60,120,300];
+const SPEEDS=[1, 10, 100, 300, 600];
 function syncUI(){
   $('playBtn').innerHTML=(S.paused&&!S.live)?PLAY:PAUSE;$('playBtn').setAttribute('aria-label',(S.paused&&!S.live)?'Play':'Pause');
   $('clkBtn').classList.toggle('live',S.live);$('spdBtn').textContent=S.speed+'×';
 }
-function goLive(){S.live=true;S.paused=false;S.speed=1;S.day='auto';syncUI()}
+function goLive(){S.live=false;S.t=localNow();S.paused=false;S.speed=1;S.day='auto';syncUI()}
 function leaveLive(){S.live=false}
-$('clkBtn').onclick=goLive;
+
 $('playBtn').onclick=()=>{if(S.live){leaveLive();S.paused=true}else S.paused=!S.paused;syncUI()};
 $('spdBtn').onclick=()=>{const i=SPEEDS.indexOf(S.speed);S.speed=SPEEDS[(i+1)%SPEEDS.length];if(S.live){leaveLive()}S.paused=false;syncUI()};
+__clk.live({tz:'America/New_York',get:()=>S.t/1000,set:v=>{S.t=localNow();S.speed=1;S.paused=false;S.live=false;syncUI()},on:()=>!S.paused,spd:()=>S.speed===1});
 $('daySeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;S.day=b.dataset.v};
 // load histogram: buses on the road per 4 minutes for the chosen schedule
 function drawHist(day){

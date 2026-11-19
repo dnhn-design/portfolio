@@ -60,9 +60,9 @@
 @keyframes pulse{0%{transform:scale(1);opacity:.6}100%{transform:scale(4);opacity:0}}
 .tr{transition:opacity .25s;pointer-events:none}
 .tr.o{stroke:var(--bg);stroke-width:1.5}
-.tr.i{fill:var(--bg);stroke-width:2.5}
+.tr.i{stroke:var(--bg);stroke-width:1.5}
 .tr.r1.o{fill:var(--c1)}.tr.r2.o{fill:var(--c2)}.tr.r3.o{fill:var(--c3)}.tr.r4.o{fill:var(--c4)}.tr.r5.o{fill:var(--c5)}.tr.r6.o{fill:var(--c6)}.tr.r7.o{fill:var(--c7)}.tr.r8.o{fill:var(--c8)}
-.tr.r1.i{stroke:var(--c1)}.tr.r2.i{stroke:var(--c2)}.tr.r3.i{stroke:var(--c3)}.tr.r4.i{stroke:var(--c4)}.tr.r5.i{stroke:var(--c5)}.tr.r6.i{stroke:var(--c6)}.tr.r7.i{stroke:var(--c7)}.tr.r8.i{stroke:var(--c8)}
+.tr.r1.i{fill:var(--c1)}.tr.r2.i{fill:var(--c2)}.tr.r3.i{fill:var(--c3)}.tr.r4.i{fill:var(--c4)}.tr.r5.i{fill:var(--c5)}.tr.r6.i{fill:var(--c6)}.tr.r7.i{fill:var(--c7)}.tr.r8.i{fill:var(--c8)}
 #trains.focus .tr:not(.sel){opacity:.28}
 .tr.sel{r:6.5px}
 #halo{fill:none;stroke:var(--ink);stroke-width:2;pointer-events:none;display:none}
@@ -120,6 +120,7 @@
 .row .n{font-size:13px;font-weight:500}.row .n b{font-weight:500;color:var(--mute);margin-right:4px;font-variant-numeric:tabular-nums}
 .row .m{grid-column:2;max-width:none;font-size:11.5px;color:var(--mute)}
 </style>
+<script src="../shared/embed.js"></script>
 <script src="../shared/theme.js"></script>
 <link rel="stylesheet" href="../shared/map-theme.css">
 
@@ -151,7 +152,7 @@
   <div id="bar">
     <button id="play" aria-label="Play or pause"><svg class="pl" viewBox="0 0 12 12"><path d="M2 .8v10.4L11 6z"/></svg><svg class="pa" viewBox="0 0 12 12"><path d="M1.8.8h3v10.4h-3zM7.2.8h3v10.4h-3z"/></svg></button>
     <div id="clock" title="Now"><span id="hm">--:--</span><span id="ap"></span><em>ET</em></div>
-    <button id="spd" aria-label="Playback speed">600×</button>
+    <button id="spd" aria-label="Playback speed">1×</button>
     <div id="trk" role="slider" tabindex="0" aria-label="Time of day">
       <svg id="bars" viewBox="0 0 100 40" preserveAspectRatio="none"><defs><linearGradient id="gr" x1="0" x2="1" y1="0" y2="0"><stop id="g0" offset="0" style="stop-color:var(--baron)"/><stop id="g1" offset="0" style="stop-color:var(--baron)"/><stop id="g2" offset="0" style="stop-color:var(--bar)"/><stop offset="1" style="stop-color:var(--bar)"/></linearGradient></defs><path d="" fill="url(#gr)"/></svg>
       <div id="ph"></div>
@@ -180,8 +181,8 @@ for(const k in D.g){const a=D.g[k],pts=[],cum=[0];
 const GCT=S.find(s=>s.name==='Grand Central'), H125=S.find(s=>s.name==='Harlem-125 St');
 
 /* ---------- state ---------- */
-const SPD=[60,120,300,600,1200];
-let spdI=3,fitS=1,manual=false,sel=null,br=null,menuShown=false,vis=0x1FE,t=0,T0=0,T1=1560,day='wkd',TR=[],selTr=null,
+const SPD=[1, 10, 100, 300, 600];
+let spdI=0,fitS=1,manual=false,sel=null,br=null,menuShown=false,vis=0x1FE,t=__nowSec('America/New_York')/60,T0=0,T1=1560,day='wkd',TR=[],selTr=null,
     playing=!matchMedia('(prefers-reduced-motion:reduce)').matches,drag=false,viewDirty=true,hover=null,lastMin=-1,lastPn=-1;
 const SP=m=>m; 
 const V={s:1,x:0,y:0}, Vt={s:1,x:0,y:0};
@@ -273,8 +274,8 @@ trk.addEventListener('keydown',e=>{const k={ArrowRight:5,ArrowLeft:-5,ArrowUp:30
 $('#play').onclick=()=>{playing=!playing;$('#play').classList.toggle('on',playing)};
 $('#spd').onclick=()=>{spdI=(spdI+1)%SPD.length;$('#spd').textContent=SPD[spdI]+'×'};
 $('#fit').onclick=()=>computeFit();
-const nowMin=()=>{const n=new Date();let m=n.getHours()*60+n.getMinutes();return m<T0?m+1440:m};
-$('#clock').onclick=()=>setT(nowMin());
+const nowMin=()=>{const m=__nowSec('America/New_York')/60;return m<T0?m+1440:m};
+
 
 /* ---------- positions ---------- */
 function ptAt(g,f){const d=f*g.len,c=g.cum;let i=1;while(i<c.length-1&&c[i]<d)i++;
@@ -408,7 +409,7 @@ map.addEventListener('wheel',e=>{e.preventDefault();const [x,y]=rp(e);zoomAt(x,y
 map.addEventListener('dblclick',e=>{const [x,y]=rp(e);zoomAt(x,y,e.shiftKey?.5:2,false)});
 
 /* ---------- frame loop ---------- */
-let last=performance.now(),cHM='',cAP='';
+let last=performance.now(),cHM='',cAP='';window.addEventListener('clkmode',()=>{cHM='';cAP=''});
 function frame(now){
   const dt=Math.min(0.1,(now-last)/1000);last=now;
   if(playing&&!drag){t+=dt*SPD[spdI]/60;if(t>T1)t=T0}
@@ -427,18 +428,19 @@ function frame(now){
     tr.e.setAttribute('cx',tr.sx.toFixed(1));tr.e.setAttribute('cy',tr.sy.toFixed(1))}
   if(selTr&&selTr.vis){const h=$('#halo');h.setAttribute('cx',selTr.sx.toFixed(1));h.setAttribute('cy',selTr.sy.toFixed(1));
     const f=$('#pgf');if(f)f.style.width=Math.min(100,Math.max(0,(t-selTr.t0)/(selTr.t1-selTr.t0)*100)).toFixed(1)+'%'}
-  const pc=pct(t),a=hm(t),b=ap(t);
+  const pc=pct(t),_p=__clk.parts(t*60,'America/New_York'),a=_p.t,b=_p.ap,_z=_p.tz;
   $('#ph').style.left=pc+'%';
   const gs=[$('#g0'),$('#g1'),$('#g2')];gs[1].setAttribute('offset',pc/100);gs[2].setAttribute('offset',pc/100);
-  if(a!==cHM){cHM=a;$('#hm').textContent=a;trk.setAttribute('aria-valuetext',a+' '+b)}if(b!==cAP){cAP=b;$('#ap').textContent=b}
+  if(a!==cHM){cHM=a;$('#hm').textContent=a;trk.setAttribute('aria-valuetext',a+' '+b)}if(b+_z!==cAP){cAP=b+_z;$('#ap').textContent=b;$('#clock em').textContent=_z}
   if(hover)refreshTip(false);
   renderPanel(false);
   requestAnimationFrame(frame)}
 
 /* ---------- init ---------- */
-(()=>{const n=new Date(),w=n.getDay();t=n.getHours()*60+n.getMinutes();loadDay(w===6?'sat':w===0?'sun':'wkd');setT(nowMin())})();
+(()=>{const n=new Date(),w=n.getDay();t=__nowSec('America/New_York')/60;loadDay(w===6?'sat':w===0?'sun':'wkd');setT(nowMin())})();
 $('#play').classList.toggle('on',playing);
 $('#spd').textContent=SPD[spdI]+'×';
+__clk.live({tz:'America/New_York',get:()=>t*60,set:v=>{const m=v/60;setT(m<T0?m+1440:m);spdI=0;$('#spd').textContent=SPD[0]+'×'},on:()=>playing,spd:()=>spdI===0});
 V.s=Vt.s;V.x=Vt.x;V.y=Vt.y;
 lastPn=-1;
 addEventListener('resize',()=>{if(!manual)computeFit();clampBr()});

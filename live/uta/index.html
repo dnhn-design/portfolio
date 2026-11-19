@@ -148,6 +148,7 @@ canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block
 }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
 </style>
+<script src="../shared/embed.js"></script>
 <script src="../shared/native-theme.js" data-key="uta-theme"></script>
 
 <div id="app">
@@ -187,7 +188,7 @@ const $ = (id) => document.getElementById(id);
 /* ---------- constants ---------- */
 const KM = 111195; // metres per degree; same equirectangular constant the preprocessor used
 const FIPS = { 49035: 'SALT LAKE', 49011: 'DAVIS', 49057: 'WEBER', 49049: 'UTAH', 49043: 'SUMMIT', 49045: 'TOOELE', 49003: 'BOX ELDER', 49029: 'MORGAN', 49051: 'WASATCH', 49005: 'CACHE', 49023: 'JUAB' };
-const SPEEDS = [30, 60, 120, 300, 900];
+const SPEEDS = [1, 10, 100, 300, 600];
 const GROUPS = D.groups, routes = D.routes;
 const FOCUS = { all: null, rail: 'rail', metro: 'metro', bus: 'bus' };
 
@@ -274,7 +275,7 @@ const hist = $('hist'), hc = hist.querySelector('canvas'), hctx = hc.getContext(
 let W = 0, H = 0, dpr = 1;
 const view = { cx: 0.2, cy: 0.3, s: 1e5 };
 let s0 = 1e5, baseDirty = true, userMoved = false;
-let day = 'wkd', t = 8.25 * 3600, playing = true, speedIdx = 2;
+let day = 'wkd', t = __nowSec('America/Denver'), playing = true, speedIdx = 0;
 let emph = 'all', lineSel = null, selected = -1, hover = -1, hoverStation = null;
 let vehicles = [], trips = [];
 function pickDay() {
@@ -459,11 +460,8 @@ function drawLive() {
     const G = GROUPS[v.p.g], c = G.white ? P.whiteHalo : gcol(v.p.g), on = vis(v);
     const small = G.m === 'bus' ? 0.8 : 1;
     g.globalAlpha = on ? v.a : v.a * 0.18;
-    if (on) {
-      g.beginPath(); g.arc(x, y, rr * 3.1 * small, 0, 7); g.fillStyle = hexA(c, 0.16); g.fill();
-      g.beginPath(); g.arc(x, y, rr * 1.9 * small, 0, 7); g.fillStyle = hexA(c, G.white ? 0.34 : 0.4); g.fill();
-    }
-    g.beginPath(); g.arc(x, y, rr * small, 0, 7); g.fillStyle = on ? P.core : c; g.fill();
+    if (on) { g.beginPath(); g.arc(x, y, rr * small + 2, 0, 7); g.fillStyle = P.bg; g.fill(); }   // a gap around the dot
+    g.beginPath(); g.arc(x, y, rr * small, 0, 7); g.fillStyle = c; g.fill();
     g.globalAlpha = 1;
     if (v.k === selected || v.k === hover) { g.beginPath(); g.arc(x, y, rr + 6, 0, 7); g.strokeStyle = P.ring; g.lineWidth = 1.4; g.stroke(); }
   }
@@ -536,7 +534,8 @@ hist.addEventListener('pointerdown', (e) => { seeking = true; hist.setPointerCap
 hist.addEventListener('pointermove', (e) => { if (seeking) seekFrom(e); });
 hist.addEventListener('pointerup', () => { seeking = false; });
 hist.addEventListener('pointercancel', () => { seeking = false; });
-function drawClock() { const m = clk(t).match(/^(\d+:\d\d) (AM|PM)$/); $('clock').innerHTML = m[1] + '<small>' + m[2] + '</small><em>MT</em>'; }
+function drawClock() { $('clock').innerHTML = __clk.html(t, 'America/Denver'); } window.addEventListener('clkmode', () => { lastClock = ''; drawClock(); });
+__clk.live({tz:'America/Denver',get:()=>t,set:v=>{t=v;speedIdx=0;$('speed').innerHTML=SPEEDS[0]+'&times;'},on:()=>playing,spd:()=>speedIdx===0});
 
 /* ---------- key ---------- */
 function renderKey() {

@@ -139,6 +139,7 @@ canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block
 }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
 </style>
+<script src="../shared/embed.js"></script>
 <script src="../shared/native-theme.js" data-default="dark"></script>
 
 <div id="app">
@@ -177,7 +178,7 @@ const D = JSON.parse($('data').textContent);
 const KX = 111320 * Math.cos(39.1 * Math.PI / 180), KY = 110540;
 const RE = 6378137, DEG = Math.PI / 180;
 const mxf = lon => lon * DEG * RE, myf = lat => Math.log(Math.tan(Math.PI / 4 + lat * DEG / 2)) * RE;
-const SPEEDS = [30, 60, 120, 300, 900];
+const SPEEDS = [1, 10, 100, 300, 600];
 const FONT = "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif";
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const clampn = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -269,7 +270,7 @@ const HOME = { x0: mxf(BB[2]), x1: mxf(BB[3]), y0: myf(BB[0]), y1: myf(BB[1]) };
 const wrap = $('mapwrap'), bc = $('base'), lc = $('live'), bx = bc.getContext('2d'), lx = lc.getContext('2d');
 const hist = $('hist'), hc = hist.querySelector('canvas'), hx = hc.getContext('2d');
 let dpr = 1, W = 0, H = 0, view = { x: 0, y: 0, s: 0.01 }, userView = false, baseDirty = true;
-let day = 'wkd', t = 8 * 3600 + 15 * 60, playing = true, speedIdx = 2, seeking = false;
+let day = 'wkd', t = __nowSec('America/Chicago'), playing = true, speedIdx = 0, seeking = false;
 let focus = 'all', selGroup = null, selRoute = null, selVeh = null;
 let vehicles = [], lastKey = '';
 const sprites = new Map();
@@ -408,10 +409,9 @@ function drawLive() {
   const order = vehicles.slice().sort((a, b) => (vVis(a) ? 1 : 0) - (vVis(b) ? 1 : 0));
   for (const v of order) {
     v.px = sx(v.x); v.py = sy(v.y); if (v.px < -20 || v.py < -20 || v.px > W + 20 || v.py > H + 20) continue;
-    const vis = vVis(v), al = v.a * (vis ? 1 : 0.13), sp = sprite(RT[v.r].col, halo), isSel = v.id === selVeh;
-    c.globalAlpha = al; c.drawImage(sp.cv, v.px - sp.sz / 2, v.py - sp.sz / 2, sp.sz, sp.sz);
-    c.beginPath(); c.arc(v.px, v.py, core, 0, 6.2832); c.fillStyle = T.core; c.fill();
-    if (T.coreEdge !== 'rgba(0,0,0,0)') { c.lineWidth = 1; c.strokeStyle = T.coreEdge; c.stroke(); }
+    const vis = vVis(v), al = v.a * (vis ? 1 : 0.13), isSel = v.id === selVeh;
+    c.globalAlpha = al; c.beginPath(); c.arc(v.px, v.py, core + 2, 0, 6.2832); c.fillStyle = T.bg; c.fill();   // a gap around the dot, then the line colour
+    c.beginPath(); c.arc(v.px, v.py, core, 0, 6.2832); c.fillStyle = RT[v.r].col; c.fill();
     if (isSel) { c.globalAlpha = 1; c.beginPath(); c.arc(v.px, v.py, core + 4, 0, 6.2832); c.lineWidth = 1.6; c.strokeStyle = RT[v.r].col; c.stroke(); }
   }
   c.globalAlpha = 1;
@@ -487,7 +487,8 @@ $('play').onclick = () => setPlay(!playing);
 $('speed').onclick = () => { speedIdx = (speedIdx + 1) % SPEEDS.length; $('speed').innerHTML = SPEEDS[speedIdx] + '&times;'; };
 function markDay() { document.querySelectorAll('#days button').forEach(b => b.classList.toggle('on', b.dataset.d === day)); }
 $('days').onclick = e => { const b = e.target.closest('button'); if (!b) return; day = b.dataset.d; selVeh = null; markDay(); baseDirty = true; lastKey = ''; drawHist(); updateDetail(); };
-function drawClock() { const c = clk(t); $('clock').innerHTML = c[0] + '<small>' + c[1] + '</small><em>CT</em>'; }
+function drawClock() { $('clock').innerHTML = __clk.html(t, 'America/Chicago'); } window.addEventListener('clkmode', () => { lastClock = ''; drawClock(); });
+__clk.live({tz:'America/Chicago',get:()=>t,set:v=>{t=v;speedIdx=0;$('speed').innerHTML=SPEEDS[0]+'&times;'},on:()=>playing,spd:()=>speedIdx===0});
 function drawHist() {
   const w = hc.width / dpr, h = hc.height / dpr; if (w < 4) return; hx.setTransform(dpr, 0, 0, dpr, 0, 0); hx.clearRect(0, 0, w, h);
   const a = HIST[day], mx = Math.max(...a, 1), bw = 3, gap = 1, n = Math.floor(w / (bw + gap)), pos = t / 86400 * w;

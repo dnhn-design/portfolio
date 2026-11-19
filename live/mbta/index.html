@@ -107,6 +107,7 @@ button:focus-visible{outline:2px solid #fff;outline-offset:2px}
 }
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 </style>
+<script src="../shared/embed.js"></script>
 <script src="../shared/theme.js" data-canvas="1"></script>
 <link rel="stylesheet" href="../shared/map-theme.css">
 
@@ -142,7 +143,7 @@ const D=JSON.parse(txt);
 
 /* ---------- constants ---------- */
 const T0=3*3600,SPAN=86400;
-const SPEEDS=[10,30,60,120,300];
+const SPEEDS=[1, 10, 100, 300, 600];
 const GROUPS=[
  {id:'CR',name:'Commuter Rail',c:'#c660d4',track:'#7a3a86',tag:''},
  {id:'Green',name:'Green Line',c:'#2fc46b',track:'#1f6b43',tag:'GL'},
@@ -203,7 +204,7 @@ const view={cx:0,cy:0,k:6};
 const st={view:'sys',focus:null,tab:'all',day:'wkd',t:0,playing:true,sp:2,vis:[true,true,true,true,true],zones:true,sel:null,follow:false,hover:null};
 let trains=[],hits=[],dirty=true;
 const now=new Date();const et=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour:'numeric',minute:'numeric',hour12:false,weekday:'short'}).formatToParts(now);
-{const g=n=>et.find(p=>p.type===n).value;let h=+g('hour')%24,m=+g('minute');let t=h*3600+m*60;if(t<T0)t+=86400;st.t=t;
+{const g=n=>et.find(p=>p.type===n).value;let h=+g('hour')%24,m=+g('minute');let t=__nowSec('America/New_York');if(t<T0)t+=86400;st.t=t;
  const w=g('weekday');st.day=w==='Sat'?'sat':w==='Sun'?'sun':'wkd'}
 const DAYNAME={wkd:'Wed 18 Nov',sat:'Sat 21 Nov',sun:'Sun 22 Nov'};
 
@@ -296,9 +297,8 @@ function draw(ts){
     const col=gi===0&&q.z?zcol(q.z):GROUPS[gi].c;
     if(!q.f){g.globalAlpha=.3;g.fillStyle=col;g.beginPath();g.arc(x,y,r0*.6,0,7);g.fill();g.globalAlpha=1;continue}
     const r=gi===0?r0*1.25:r0,isSel=st.sel&&st.sel.tr===q.tr||st.hover&&st.hover.tr===q.tr;
-    const rw=r*(.65+.35*q.w);g.globalAlpha=.26*q.w;g.fillStyle=col;g.beginPath();g.arc(x,y,rw*2.1,0,7);g.fill();g.globalAlpha=q.w;
-    g.fillStyle='#f4f6fa';g.beginPath();g.arc(x,y,rw,0,7);g.fill();
-    g.fillStyle=col;g.beginPath();g.arc(x,y,rw*.58,0,7);g.fill();g.globalAlpha=1;
+    const rw=r*(.65+.35*q.w);g.globalAlpha=q.w;g.fillStyle='#0a0d13';g.beginPath();g.arc(x,y,rw+2,0,7);g.fill();   /* a gap around the dot, then the line colour */
+    g.fillStyle=col;g.beginPath();g.arc(x,y,rw,0,7);g.fill();g.globalAlpha=1;
     if(isSel){g.strokeStyle='#fff';g.lineWidth=1.6;g.beginPath();g.arc(x,y,r*2.6,0,7);g.stroke()}
     q.sx=x;q.sy=y;hits.push(q)}
 }
@@ -378,7 +378,8 @@ const ICON={pause:'<svg viewBox="0 0 24 24"><rect x="5" y="4" width="5" height="
 function setPlay(p){st.playing=p;playEl.innerHTML=p?ICON.pause:ICON.play;playEl.setAttribute('aria-label',p?'Pause':'Play')}
 playEl.onclick=()=>setPlay(!st.playing);setPlay(true);
 const spdEl=$('spd');function setSp(i){st.sp=i;spdEl.textContent=SPEEDS[i]+'×'}
-spdEl.onclick=()=>setSp((st.sp+1)%SPEEDS.length);setSp(2);
+spdEl.onclick=()=>setSp((st.sp+1)%SPEEDS.length);setSp(0);
+__clk.live({tz:'America/New_York',get:()=>st.t,set:v=>{st.t=v<T0?v+86400:v;setSp(0)},on:()=>st.playing,spd:()=>st.sp===0});
 document.querySelectorAll('#days button').forEach(b=>b.onclick=()=>setDay(b.dataset.d));
 function setDay(d){st.day=d;document.querySelectorAll('#days button').forEach(b=>b.classList.toggle('on',b.dataset.d===d));st.sel=null;cardEl.hidden=true;lastKey='';$('note').textContent='Scheduled service · sample '+DAYNAME[d];buildTL()}
 addEventListener('keydown',e=>{if(e.code==='Space'&&!/BUTTON/.test(document.activeElement.tagName)){e.preventDefault();setPlay(!st.playing)}if(e.key==='Escape'){if(st.sel)select(null);else if(st.focus)setFocus(null,[])}});
@@ -413,9 +414,9 @@ function hoverAt(px,py,e){const q=nearest(px,py,11);st.hover=q;
 
 /* ---------- clock ---------- */
 const clockEl=$('clock');let lastClock='';
-function drawClock(){const s=((st.t%86400)+86400)%86400,h=Math.floor(s/3600),m=Math.floor(s%3600/60);const h12=h%12===0?12:h%12;
-  const k=h12+':'+String(m).padStart(2,'0')+(h>=12?'PM':'AM');if(k===lastClock)return;lastClock=k;
-  clockEl.innerHTML=`<b>${h12}:${String(m).padStart(2,'0')}</b><em>${h>=12?'PM':'AM'}</em><small>ET</small>`}
+function drawClock(){const p=__clk.parts(((st.t%86400)+86400)%86400,'America/New_York');const k=p.t+p.ap+p.tz;if(k===lastClock)return;lastClock=k;
+  clockEl.innerHTML=`<b>${p.t}</b><em>${p.ap}</em><small>${p.tz}</small>`}
+window.addEventListener('clkmode',()=>{lastClock='';drawClock()});
 
 /* ---------- loop ---------- */
 let prev=performance.now();

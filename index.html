@@ -19,7 +19,7 @@ if(sp)H.classList.add('splash');
 window.__splash=new Promise(function(res){window.__splashGo=function(){res();if(!rm)setTimeout(function(){H.classList.remove('intro')},9000)};if(!sp)window.__splashGo()});})();
 </script>
 <style>
-#splash{position:fixed;inset:0;z-index:9999;background:#000;color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:24px;cursor:pointer;font-family:Inter,system-ui,sans-serif;transition:opacity 1.4s ease}
+#splash{position:fixed;inset:0;z-index:9999;background:radial-gradient(ellipse 75% 75% at 50% 50%,rgba(0,0,0,.97) 0%,rgba(0,0,0,.93) 40%,rgba(0,0,0,.78) 100%);color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:24px;cursor:pointer;font-family:Inter,system-ui,sans-serif;transition:opacity 1.4s ease}
 html.splash #splash{display:flex}
 #splash.out{opacity:0;pointer-events:none}
 #splash p{margin:0;opacity:0;animation:spIn 1.6s ease forwards}

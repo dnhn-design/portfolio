@@ -108,6 +108,7 @@ button:focus-visible{outline:2px solid #fff;outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 </style>
 <script src="../shared/embed.js"></script>
+<script src="../shared/labels.js"></script>
 <script src="../shared/theme.js" data-canvas="1"></script>
 <link rel="stylesheet" href="../shared/map-theme.css">
 
@@ -255,12 +256,20 @@ function drawStatic(){
     if(st.focus)lab.push({s,x,y,cr,pr:(s.g.size>1?2:0)+(cr?1:0)})}
   // labels only for the highlighted line
   g.textBaseline='middle';const boxes=[];lab.sort((a,b)=>b.pr-a.pr);
-  for(const L of lab){g.font='500 10.5px '+FONT;const text=L.s.n,tw=g.measureText(text).width,zt=L.cr&&L.s.z&&[...L.s.r].some(r=>r.startsWith('CR')||r==='CapeFlyer'?inF(r):false)?'Z'+L.s.z:'';
+  const kf=Math.min(W/(bbSys[2]-bbSys[0]),H/(bbSys[3]-bbSys[1]))*.9,zz=Labels.lvl(Math.log2(view.k/kf),true),fs=Labels.px(zz)-.5;   // progressive: terminals/transfers first, all stops when zoomed in
+  const dots=lab.map(L=>[L.x,L.y]);
+  for(const L of lab.slice(0,Math.ceil(lab.length*Labels.frac(zz)))){g.font='500 '+fs+'px '+FONT;const text=L.s.n,tw=g.measureText(text).width,zt=L.cr&&L.s.z&&[...L.s.r].some(r=>r.startsWith('CR')||r==='CapeFlyer'?inF(r):false)?'Z'+L.s.z:'';
     g.font='600 9.5px '+FONT;const zw=zt?g.measureText(zt).width+5:0;
-    const bx=L.x+7,by=L.y-7,bw=tw+zw+4,bh=14;
-    if(boxes.some(b=>bx<b[0]+b[2]&&bx+bw>b[0]&&by<b[1]+b[3]&&by+bh>b[1]))continue;boxes.push([bx,by,bw,bh]);
-    g.font='500 10.5px '+FONT;g.fillStyle='rgba(232,236,244,.8)';g.fillText(text,bx,L.y);
-    if(zt){g.font='600 9.5px '+FONT;g.fillStyle=zcol(L.s.z,.95);g.fillText(zt,bx+tw+5,L.y+.5)}}
+    const bw=tw+zw+4,bh=14,gap=7;let pick=null;
+    for(const [ux,uy] of [[1,0],[-1,0],[1,-1],[1,1],[-1,-1],[-1,1],[0,-1],[0,1]]){
+      const bx=ux>0?L.x+gap:ux<0?L.x-gap-bw:L.x-bw/2,cy=L.y+uy*(gap+3),by=cy-7;
+      if(bx<2||bx+bw>W-2||by<2||by+bh>H-2)continue;
+      if(boxes.some(b=>bx<b[0]+b[2]&&bx+bw>b[0]&&by<b[1]+b[3]&&by+bh>b[1]))continue;
+      if(dots.some(d=>d[0]>bx-3&&d[0]<bx+bw+3&&d[1]>by-3&&d[1]<by+bh+3&&!(d[0]===L.x&&d[1]===L.y)))continue;
+      pick=[bx,by,bw,bh,cy];break}
+    if(!pick)continue;boxes.push(pick);
+    g.font='500 '+fs+'px '+FONT;g.fillStyle='rgba(232,236,244,.8)';g.fillText(text,pick[0],pick[4]);
+    if(zt){g.font='600 9.5px '+FONT;g.fillStyle=zcol(L.s.z,.95);g.fillText(zt,pick[0]+tw+5,pick[4]+.5)}}
   // Green branch tags
   if(view.k>7&&(!st.focus||[...st.focus.routes].some(r=>r.startsWith('Green')))){g.font='600 10px '+FONT;g.fillStyle=GROUPS[1].c;g.textAlign='center';
     for(const p of greenTerm)if(inF('Green-'+p.l))g.fillText(p.l,X(p.x)-12,Y(p.y)-10);g.textAlign='left'}

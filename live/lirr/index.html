@@ -59,6 +59,7 @@
 .next span{color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 </style>
 <script src="../shared/embed.js"></script>
+<script src="../shared/labels.js"></script>
 <script src="../shared/theme.js"></script>
 <link rel="stylesheet" href="../shared/map-theme.css">
 
@@ -265,6 +266,7 @@ function draw(){
   ctx.globalAlpha=1;
   // stations
   ctx.font='400 10.5px '+getComputedStyle(document.body).fontFamily;ctx.textBaseline='middle';
+  const labQ=[];
   stops.forEach((s,i)=>{
     const x=sx(s.wx),y=sy(s.wy);
     if(x<-20||x>W+20||y<-20||y>H+20)return;
@@ -273,11 +275,27 @@ function draw(){
     ctx.globalAlpha=on?1:.25;
     ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fillStyle=C.bg;ctx.fill();
     ctx.lineWidth=i===hover||i===sel?2.4:1.4;ctx.strokeStyle=i===hover||i===sel?C.fg:C.muted;ctx.stroke();
-    if(on&&((s.hub&&z>=2.2)||z>=7||i===hover||i===sel)){
-      ctx.fillStyle=C.fg;ctx.strokeStyle=C.bg;ctx.lineWidth=3;ctx.lineJoin='round';
-      ctx.strokeText(s.name,x+r+5,y);ctx.fillText(s.name,x+r+5,y);
-    }
+    if(on)labQ.push({s,i,x,y,r,force:i===hover||i===sel,rank:(s.hub?20:0)+(s.rs?s.rs.length:1)});
   });
+  { /* names: progressive by zoom (hubs first, every stop when zoomed in), size grows with zoom, positions avoid other names and dots */
+    const zz=Labels.lvl(Math.log2(Math.max(.01,z)),!!focus.size),px=Labels.px(zz);
+    labQ.sort((a,b)=>(b.force-a.force)||(b.rank-a.rank));
+    const keepN=Math.ceil(labQ.length*Labels.frac(zz)),boxes=[];
+    ctx.font='400 '+px+'px '+getComputedStyle(document.body).fontFamily;ctx.lineJoin='round';
+    labQ.forEach((q,k)=>{
+      if(!q.force&&k>=keepN)return;
+      const w=ctx.measureText(q.s.name).width,h=px+3,gp=q.r+4;let pick=null;
+      for(const [ux,uy] of [[1,0],[-1,0],[0.8,-0.8],[0.8,0.8],[-0.8,-0.8],[-0.8,0.8],[0,-1],[0,1]]){
+        const bx=ux>0.3?q.x+ux*gp:ux<-0.3?q.x+ux*gp-w:q.x-w/2,by=uy>0.3?q.y+uy*gp:uy<-0.3?q.y+uy*gp-h:q.y-h/2;
+        if(bx<2||bx+w>W-2||by<2||by+h>H-2)continue;
+        if(boxes.some(b=>bx<b[2]+2&&bx+w>b[0]-2&&by<b[3]&&by+h>b[1]))continue;
+        if(labQ.some(o=>o!==q&&o.x>bx-4&&o.x<bx+w+4&&o.y>by-4&&o.y<by+h+4))continue;
+        pick=[bx,by,bx+w,by+h];break}
+      if(!pick)return;boxes.push(pick);
+      ctx.fillStyle=C.fg;ctx.strokeStyle=C.bg;ctx.lineWidth=3;
+      ctx.strokeText(q.s.name,pick[0],pick[1]+h/2);ctx.fillText(q.s.name,pick[0],pick[1]+h/2);
+    });
+  }
   ctx.globalAlpha=1;
   // trains
   counts.fill(0);hits=[];

@@ -133,6 +133,7 @@ canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
 </style>
 <script src="../shared/embed.js"></script>
+<script src="../shared/labels.js"></script>
 <script src="../shared/native-theme.js"></script>
 <div id="app">
   <div id="mapwrap">
@@ -229,7 +230,7 @@ pats.forEach((p) => { if (!shapeRoutes.has(p.s)) shapeRoutes.set(p.s, new Set())
 const spans = []; { const m = new Map();
   pats.forEach((p) => { const k = p.s + ':' + p.r, lo = Math.min.apply(null, p.x), hi = Math.max.apply(null, p.x); const o = m.get(k); if (!o) m.set(k, { si: p.s, r: p.r, lo, hi }); else { o.lo = Math.min(o.lo, lo); o.hi = Math.max(o.hi, hi); } });
   m.forEach((o) => spans.push(o)); }
-const selPaths = () => { const out = []; spans.forEach((o) => { if (lineSel.set.has(o.r) && o.hi - o.lo > 1) out.push({ P: subPath(shapes[o.si], o.lo, o.hi), r: o.r }); }); return out; };
+const selPaths = () => { const out = []; spans.forEach((o) => { if ((!lineSel || lineSel.set.has(o.r)) && o.hi - o.lo > 1) out.push({ P: subPath(shapes[o.si], o.lo, o.hi), r: o.r }); }); return out; };
 const ghost = D.ghost.map((a) => decode(a, 1e4));
 const counties = D.counties.map((c) => Object.assign({ id: c[0] }, decode(c[1], 1e4)));
 const rivers = D.rivers.map((c) => Object.assign({ n: c[0] }, decode(c[1], 1e4)));
@@ -399,7 +400,7 @@ function drawBase() {
       g.beginPath(); g.arc(x, y, dim && s.on ? 2.2 : 1.3, 0, 7); g.fillStyle = hexA(s.rc, 0.75 * a); g.fill(); s.vis = true;
     }
   });
-  if (dim) drawLabels(g);
+  drawLabels(g);
   baseDirty = false;
 }
 function drawLabels(g) {
@@ -407,12 +408,13 @@ function drawLabels(g) {
   const addSegs = (P) => { for (let i = 1; i < P.X.length; i++) { const ax = SX(P.X[i - 1]), ay = SY(P.Y[i - 1]), bx = SX(P.X[i]), by = SY(P.Y[i]); if (Math.max(ax, bx) < -30 || Math.min(ax, bx) > W + 30 || Math.max(ay, by) < -30 || Math.min(ay, by) > H + 30) continue; segs.push(ax, ay, bx, by); } };
   selPaths().forEach((o) => addSegs(o.P));
   g.textAlign = 'left'; g.textBaseline = 'middle'; g.lineJoin = 'round';
+  const zz = Labels.lvl(zf(), !!lineSel); Labels.begin(stations);
   const boxes = [], wr = wrap.getBoundingClientRect();
   document.querySelectorAll('#keybody,#keytog,#zoomc,#sublegend:not([hidden]) button,#theme').forEach((el) => { if (el.offsetParent === null) return; const r = el.getBoundingClientRect(); boxes.push([r.left - wr.left - 3, r.top - wr.top - 3, r.right - wr.left + 3, r.bottom - wr.top + 3]); });
   [...stations].sort((a, b) => ((b.term ? 6 : 0) + b.rank) - ((a.term ? 6 : 0) + a.rank)).forEach((s) => {
-    if (!s.vis || !s.on) return;
+    if (!s.vis || !s.on) return; if (!Labels.keep(s, stations, zz)) return;
     if (s.dense && !s.keep) return;
-    const name = s.n; g.font = (s.g === 0 ? '500 ' : '400 ') + '11.5px Inter, sans-serif';
+    const name = s.n; g.font = (s.g === 0 ? '500 ' : '400 ') + Labels.px(zz) + 'px Inter, sans-serif';
     const w = g.measureText(name).width, h = 14;
     let bd = 1e9, ang = 0;
     for (let i = 0; i < segs.length; i += 4) {
@@ -420,7 +422,7 @@ function drawLabels(g) {
       const f = Math.max(0, Math.min(1, ((s.sx - ax) * dx + (s.sy - ay) * dy) / l2)), d = (ax + dx * f - s.sx) ** 2 + (ay + dy * f - s.sy) ** 2;
       if (d < bd) { bd = d; ang = Math.atan2(dy, dx); }
     }
-    const nx = -Math.sin(ang), ny = Math.cos(ang), G = 9;
+    const nx = -Math.sin(ang), ny = Math.cos(ang), G = Labels.gap(zz);
     const place = (ux, uy) => {
       let bx, by;
       if (ux > 0.5) bx = s.sx + ux * G; else if (ux < -0.5) bx = s.sx + ux * G - w; else bx = s.sx - w / 2;
@@ -428,13 +430,13 @@ function drawLabels(g) {
       return [bx, by, bx + w, by + h];
     };
     const sgn = nx >= 0 ? 1 : -1;
-    const cands = [[nx * sgn, ny * sgn], [-nx * sgn, -ny * sgn], [1, 0], [-1, 0], [0, -1], [0, 1]];
+    const cands = Labels.cands(nx, ny);
     let pick = null;
     for (const c of cands) {
       const b = place(c[0], c[1]);
       if (b[0] < 4 || b[2] > W - 4 || b[1] < 4 || b[3] > H - 4) continue;
       let ok = true; for (const o of boxes) if (b[0] < o[2] + 2 && b[2] > o[0] - 2 && b[1] < o[3] && b[3] > o[1]) { ok = false; break; }
-      if (ok) { pick = b; break; }
+      if (ok && !Labels.dotHit(b, s)) { pick = b; break; }
     }
     if (!pick) return;
     boxes.push(pick); const ty = pick[1] + h / 2;

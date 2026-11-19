@@ -98,6 +98,7 @@ summary{cursor:pointer}
 details p{margin:6px 0 0}
 </style>
 <script src="../shared/embed.js"></script>
+<script src="../shared/labels.js"></script>
 <script src="../shared/theme.js"></script>
 <link rel="stylesheet" href="../shared/map-theme.css">
 
@@ -326,10 +327,10 @@ ecg.addEventListener('pointerup',()=>sdrag=false);
 // ---- map
 const cv=$('map'),ctx=cv.getContext('2d');let W=0,H=0,DPR=1;
 const V={cx:0,cy:0,s:0.02};
-let fitBox=null,allBox=null;
+let fitBox=null,allBox=null,fitV=0;
 function box(ids){let a=1e9,b=1e9,c=-1e9,d=-1e9;drawSet.forEach(([r,g])=>{if(ids&&!ids(r))return;const G_=G[g];for(let i=0;i<G_.n;i++){a=Math.min(a,G_.x[i]);c=Math.max(c,G_.x[i]);b=Math.min(b,G_.y[i]);d=Math.max(d,G_.y[i])}});return [a,b,c,d]}
 function fit(bx){V.cx=(bx[0]+bx[2])/2;V.cy=(bx[1]+bx[3])/2;V.s=Math.min((W-130)/(bx[2]-bx[0]),(H-64)/(bx[3]-bx[1]))}
-function resize(){const r=cv.getBoundingClientRect();DPR=Math.min(2,devicePixelRatio||1);W=r.width;H=r.height;DH=0;OY=0;cv.width=W*DPR;cv.height=H*DPR;if(!resize.done){fit(fitBox);resize.done=1}}
+function resize(){const r=cv.getBoundingClientRect();DPR=Math.min(2,devicePixelRatio||1);W=r.width;H=r.height;DH=0;OY=0;cv.width=W*DPR;cv.height=H*DPR;if(!resize.done){fit(fitBox);fitV=V.s;resize.done=1}}
 let OY=0,DH=0;const sx=x=>W/2+(x-V.cx)*V.s, sy=y=>H/2-OY-(y-V.cy)*V.s;
 function centerOn(c){V.cx=c.x;V.cy=c.y;if(V.s<0.05)V.s=Math.min(0.08,V.s*3)}
 function zoom(f,px,py){const hy=H/2-OY;px=px??W/2;py=py??hy;const wx=(px-W/2)/V.s+V.cx,wy=-(py-hy)/V.s+V.cy;V.s=Math.max(0.004,Math.min(0.5,V.s*f));V.cx=wx-(px-W/2)/V.s;V.cy=wy+(py-hy)/V.s}
@@ -413,19 +414,24 @@ function draw(now){
     place.push([X,Y,heart]);
   }
   // labels
-  ctx.font='600 11px '+css('--f-body');ctx.textBaseline='middle';
-  const lab=[];if(heart)lab.push(heart);if(sel)lab.push(sel);if(hover)lab.push(hover);
-  const topn=CX.slice().sort((a,b)=>b.p[day]-a.p[day]).slice(0,V.s>0.05?30:V.s>0.025?10:4);
-  topn.forEach(c=>lab.push(c));
-  const boxes=[];
-  new Set(lab).forEach(c=>{
-    if(c._X==null)return;
-    const w=ctx.measureText(c.name).width,x=c._X+c._r+5,y=c._Y;
-    const bx=[x-2,y-8,x+w+2,y+8];
-    const force=c===sel||c===hover||c===heart;
-    if(!force&&boxes.some(b=>!(bx[2]<b[0]||bx[0]>b[2]||bx[3]<b[1]||bx[1]>b[3])))return;
-    boxes.push(bx);
-    ctx.lineWidth=3;ctx.strokeStyle=bg;ctx.strokeText(c.name,x,y);ctx.fillStyle=force?ink:ink2;ctx.fillText(c.name,x,y);
+  /* names: progressive by zoom (busiest stations first, every station when zoomed right in), size grows with zoom, positions avoid names and dots */
+  const zz=Labels.lvl(Math.log2(V.s/(fitV||V.s)),!!foc);
+  ctx.font='600 '+Labels.px(zz)+'px '+css('--f-body');ctx.textBaseline='middle';
+  const srt=CX.filter(c=>c._X!=null).sort((a,b)=>b.p[day]-a.p[day]),keepN=Math.ceil(srt.length*Labels.frac(zz));
+  const want=[];[heart,sel,hover].forEach(c=>{if(c&&c._X!=null&&want.indexOf(c)<0)want.push(c)});
+  const forced=new Set(want);srt.slice(0,keepN).forEach(c=>{if(!forced.has(c))want.push(c)});
+  const boxes=[],dots=srt;
+  want.forEach(c=>{
+    const force=forced.has(c),w=ctx.measureText(c.name).width,h=Labels.px(zz)+3,gp=c._r+4;let pick=null;
+    for(const [ux,uy] of [[1,0],[-1,0],[0.8,-0.8],[0.8,0.8],[-0.8,-0.8],[-0.8,0.8],[0,-1],[0,1]]){
+      const bx=ux>0.3?c._X+ux*gp:ux<-0.3?c._X+ux*gp-w:c._X-w/2,by=uy>0.3?c._Y+uy*gp:uy<-0.3?c._Y+uy*gp-h:c._Y-h/2;
+      if(bx<2||bx+w>W-2||by<2||by+h>H-2)continue;
+      if(boxes.some(o=>bx<o[2]+2&&bx+w>o[0]-2&&by<o[3]&&by+h>o[1]))continue;
+      if(!force&&dots.some(o=>o!==c&&o._X>bx-3&&o._X<bx+w+3&&o._Y>by-3&&o._Y<by+h+3))continue;
+      pick=[bx,by,bx+w,by+h];break}
+    if(!pick){if(!force)return;pick=[c._X+c._r+5,c._Y-h/2,c._X+c._r+5+w,c._Y+h/2]}
+    boxes.push(pick);
+    ctx.lineWidth=3;ctx.strokeStyle=bg;ctx.strokeText(c.name,pick[0],pick[1]+h/2);ctx.fillStyle=force?ink:ink2;ctx.fillText(c.name,pick[0],pick[1]+h/2);
   });
   if(sel&&sel._X!=null){ctx.strokeStyle=acc;ctx.lineWidth=2;ctx.beginPath();ctx.arc(sel._X,sel._Y,sel._r+4,0,6.2832);ctx.stroke()}
   {const _p=__clk.parts(t*60,'America/New_York');$('clk').textContent=_p.t+' '+_p.ap;$('clock').querySelector('em').textContent=_p.tz}

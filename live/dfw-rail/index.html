@@ -119,6 +119,7 @@ canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
 </style>
 <script src="../shared/embed.js"></script>
+<script src="../shared/labels.js"></script>
 <script src="../shared/theme.js" data-canvas="1"></script>
 <link rel="stylesheet" href="../shared/map-theme.css">
 <div id="app">
@@ -339,16 +340,16 @@ function drawBase() {
       g.beginPath(); g.arc(x, y, 2.2, 0, 7); g.fillStyle = hexA(s.col, 0.85); g.fill(); s.vis = true;
     }
   });
-  if (dim) {
+  {
     const segs = [];
     const addSegs = (P) => { for (let i = 1; i < P.n; i++) { const ax = SX(P.X[i - 1]), ay = SY(P.Y[i - 1]), bx = SX(P.X[i]), by = SY(P.Y[i]); if (Math.max(ax, bx) < -30 || Math.min(ax, bx) > W + 30 || Math.max(ay, by) < -30 || Math.min(ay, by) > H + 30) continue; segs.push(ax, ay, bx, by); } };
-    lineSel.set.forEach((ri) => routeShapes[ri].forEach((si) => addSegs(shapes[si])));
+    (lineSel ? [...lineSel.set] : routes.map((_, ri) => ri)).forEach((ri) => (routeShapes[ri] || []).forEach((si) => addSegs(shapes[si])));
     g.textAlign = 'left'; g.textBaseline = 'middle';
-    const boxes = [];
+    const boxes = []; const zz = Labels.lvl(zf(), !!lineSel); Labels.begin(stations);
     stationList.forEach((s) => {
-      if (!s.vis || !s.on) return;
+      if (!s.vis || !s.on) return; if (!Labels.keep(s, stations, zz)) return;
       if (s.trol && !s.keep) return;
-      const name = shortName(s.n); g.font = (s.rail ? '500 ' : '400 ') + '11.5px Inter, sans-serif';
+      const name = shortName(s.n); g.font = (s.rail ? '500 ' : '400 ') + Labels.px(zz) + 'px Inter, sans-serif';
       const w = g.measureText(name).width, h = 14;
       let bd = 1e9, ang = 0;
       for (let i = 0; i < segs.length; i += 4) {
@@ -356,7 +357,7 @@ function drawBase() {
         const f = Math.max(0, Math.min(1, ((s.sx - ax) * dx + (s.sy - ay) * dy) / l2)), d = (ax + dx * f - s.sx) ** 2 + (ay + dy * f - s.sy) ** 2;
         if (d < bd) { bd = d; ang = Math.atan2(dy, dx); }
       }
-      const nx = -Math.sin(ang), ny = Math.cos(ang), G = 9;
+      const nx = -Math.sin(ang), ny = Math.cos(ang), G = Labels.gap(zz);
       const place = (ux, uy) => {
         let bx, by;
         if (ux > 0.5) bx = s.sx + ux * G; else if (ux < -0.5) bx = s.sx + ux * G - w; else bx = s.sx - w / 2;
@@ -364,13 +365,13 @@ function drawBase() {
         return [bx, by, bx + w, by + h];
       };
       const sgn = nx >= 0 ? 1 : -1;
-      const cands = [[nx * sgn, ny * sgn], [-nx * sgn, -ny * sgn], [1, 0], [-1, 0], [0, -1], [0, 1]];
+      const cands = Labels.cands(nx, ny);
       let pick = null;
       for (const c of cands) {
         const b = place(c[0], c[1]);
         if (b[0] < 4 || b[2] > W - 4 || b[1] < 4 || b[3] > H - 4) continue;
         let ok = true; for (const o of boxes) if (b[0] < o[2] + 2 && b[2] > o[0] - 2 && b[1] < o[3] && b[3] > o[1]) { ok = false; break; }
-        if (ok) { pick = b; break; }
+        if (ok && !Labels.dotHit(b, s)) { pick = b; break; }
       }
       if (!pick) return;
       boxes.push(pick);

@@ -301,6 +301,7 @@ function draw(){
   counts.fill(0);hits=[];
   const tr=days[day].trips, rad=3.6+Math.min(2.4,Math.log2(Math.max(1,z))*.6), dim=selTrain>=0?.3:1;
   const trail=(T,x,y,steps,step,al,w)=>{
+    if(/AirTrain/.test(routes[T.r].name)){step*=0.04;steps=Math.min(steps,4);}   // AirTrain runs two or three cars: a short tail, not a commuter-train one
     ctx.beginPath();
     for(let j=steps;j>=1;j--){const q=trainPos(T,Math.max(T.t0,t-j*step));if(!q)continue;const qx=sx(q[0]),qy=sy(q[1]);j===steps?ctx.moveTo(qx,qy):ctx.lineTo(qx,qy);}
     ctx.lineTo(x,y);ctx.strokeStyle=routes[T.r].col;ctx.globalAlpha=al;ctx.lineWidth=w;ctx.stroke();ctx.globalAlpha=1;
@@ -408,6 +409,8 @@ map.addEventListener('pointerup',e=>{
     const k=pickTrain(e.clientX,e.clientY);
     if(k>=0){clickTrain(k);return;}
     if(selTrain>=0){selectTrain(-1);return;}
+    const lr=pickLine(e.clientX,e.clientY);
+    if(lr>=0){setSelRoute(selRoute===lr?-1:lr);return;}   // click a line to highlight it, click it again to clear
     if(selRoute>=0&&e.pointerType!=='touch'){setSelRoute(-1);return;}   // empty map click: clear the train, then the line
   }
   if(d&&!d.moved&&e.pointerType==='touch'){
@@ -428,6 +431,20 @@ map.addEventListener('dblclick',()=>{fitView();hideTip();dirty=true;frame();});
 /* ---------- route panel ---------- */
 const panel=$('panel'), plist=$('plist'), rowEls=new Map();
 const f12=m=>fmt(m).join(' ');
+function pickLine(px,py){
+  const r=map.getBoundingClientRect(),x=px-r.left,y=py-r.top,best=new Map();
+  shapes.forEach(s=>{
+    for(let i=1;i<s.n;i++){
+      const ax=sx(s.wx[i-1]),ay=sy(s.wy[i-1]),dx=sx(s.wx[i])-ax,dy=sy(s.wy[i])-ay,L=dx*dx+dy*dy||1e-9;
+      const u=Math.max(0,Math.min(1,((x-ax)*dx+(y-ay)*dy)/L)),d=Math.hypot(x-ax-u*dx,y-ay-u*dy);
+      if(d<8&&(!best.has(s.r)||d<best.get(s.r)))best.set(s.r,d);
+    }
+  });
+  if(!best.size)return -1;
+  const c=[...best.entries()].sort((a,b)=>a[1]-b[1]);                // overlapping lines (the trunk): clicking again steps to the next one
+  const top=c.filter(e=>e[1]<=c[0][1]+1.5).map(e=>e[0]);
+  return top.length>1&&top.indexOf(selRoute)>-1?top[(top.indexOf(selRoute)+1)%top.length]:top[0];
+}
 function pickTrain(x,y){
   let b=-1,bd=13*13;
   for(const h of hits){const dx=h[0]-x,dy=h[1]-y,d=dx*dx+dy*dy;if(d<bd){bd=d;b=h[2];}}

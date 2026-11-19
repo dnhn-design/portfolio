@@ -515,7 +515,8 @@ const CORRS=[
 const LINES=[];
 TRUNKS.forEach(t=>LINES.push({k:t[0],n:t[1],s:sv(t[2]).filter(x=>R[x]),pairs:t[3],c:t[4],tab:'sub',sec:'trunk'}));
 CORRS.forEach(t=>{const sa=sv(t[2]).filter(x=>R[x]);LINES.push({k:t[0],n:t[1],s:sa,pairs:t[3],c:R[sa[0]].bg,tab:'sub',sec:'corr'})});
-pathIds.forEach(id=>LINES.push({k:id,n:R[id].name||'PATH',s:[id],c:R[id].bg,tab:'path',sec:'path'}));
+const PATHN={'PATH-d93a30':'NWK-WTC','PATH-ff9900':'33-JSQ','PATH-4d92fb':'33-HOB','PATH-65c100':'WTC-HOB'};
+pathIds.forEach(id=>LINES.push({k:id,n:PATHN[id]||R[id].name||'PATH',s:[id],c:R[id].bg,tab:'path',sec:'path'}));
 airIds.forEach(id=>LINES.push({k:id,n:R[id].name||'AirTrain JFK',s:[id],c:R[id].bg,tab:'air',sec:'air'}));
 const SECN={trunk:'Manhattan trunks',corr:'Other corridors',path:'PATH',air:'AirTrain JFK'};
 /* resolve each corridor to stretches of track: for every service and shape that serves both end stations, the part between them */

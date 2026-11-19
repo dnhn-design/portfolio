@@ -642,16 +642,18 @@ REGIONS.forEach(r=>{
   head.insertAdjacentHTML('beforeend','<svg viewBox="0 0 12 12"><path d="M2.5 4.5l3.5 3.5 3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>');
   head.addEventListener('click',()=>toggle(nyc));
   head.addEventListener('mouseenter',()=>hl('nyc',true)); head.addEventListener('mouseleave',()=>hl('nyc',false));
-  rowOf.nyc=head; list.append(head);
+  rowOf.nyc=head;
   const NYC_ROWS={'nyc-subway':['New York City','MTA Subway & PATH'],'midtown-bus':['Midtown Manhattan','MTA Bus'],'nj-transit':['New Jersey','NJ Transit'],'metro-north':['Hudson Valley','MTA Metro-North Railroad'],'lirr':['Long Island','MTA Long Island Rail Road'],'nice-bus':['Nassau County','NICE Bus'],'ct-rail':['Connecticut','CTrail & CTtransit']};
   const sub=el('div',{class:'sbsub',hidden:''});
   Object.keys(NYC_ROWS).forEach(sl=>sub.append(row(sl,NYC_ROWS[sl][0],NYC_ROWS[sl][1],'nyc',true)));
-  list.append(sub);
   onSel=()=>{ const o=current==='nyc'; head.setAttribute('aria-expanded',String(o)); sub.hidden=!o; };   // the list opens while the NYC dot is split
-  list.append(el('div',{class:'sbg',style:'pointer-events:none;margin-top:6px',text:'Cities'}));
-  REGIONS.filter(r=>r.id!=='nyc').sort((a,b)=>a.name.localeCompare(b.name)).forEach(r=>{
-    const sys=r.live[0].t; list.append(row(r.live[0].s,r.name,r.ag||sys,r.id,false,!!r.ca));
-  });
+  const grp=t=>list.append(el('div',{class:'sbg',style:'pointer-events:none;margin-top:6px',text:t}));
+  const byName=(a,b)=>a.name.localeCompare(b.name);
+  const crow=r=>row(r.live[0].s,r.name,r.ag||r.live[0].t,r.id,false,!!r.ca);
+  grp('Canada');
+  REGIONS.filter(r=>r.ca).sort(byName).forEach(r=>list.append(crow(r)));
+  grp('Cities');
+  REGIONS.filter(r=>!r.ca).sort(byName).forEach(r=>{ if(r.id==='nyc'){ list.append(head); list.append(sub); } else list.append(crow(r)); });
   function setSb(open){
     root.classList.toggle('sb-open',open); btn.setAttribute('aria-expanded',String(open));
     try{ localStorage.setItem('sb',open?'1':'0'); }catch(e){}

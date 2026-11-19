@@ -147,6 +147,7 @@ function syncPlay(){$('play').innerHTML=playing?ico.pause:ico.play;$('play').set
 $('play').onclick=()=>{playing=!playing;syncPlay();last=0;dirty=true;frame();};
 window.addEventListener('clkmode',()=>setClock());
 function syncSpeed(){$('speed').textContent=SPEEDS[spd]+String.fromCharCode(215);}
+__clk.live({tz:'America/New_York',get:()=>t*60,set:v=>{t=v/60;spd=0;syncSpeed();dirty=true},on:()=>playing,spd:()=>spd===0});
 $('speed').onclick=()=>{spd=(spd+1)%SPEEDS.length;syncSpeed();};
 function syncDays(){document.querySelectorAll('#days button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.d===day)));}
 document.querySelectorAll('#days button').forEach(b=>b.onclick=()=>{day=+b.dataset.d;syncDays();sel=-1;hideTip();selTrain=-1;clearRows();panelDirty=true;drawTrack();dirty=true;frame();});

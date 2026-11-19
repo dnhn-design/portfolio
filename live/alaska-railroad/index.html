@@ -363,6 +363,7 @@ function syncControls() {
   document.querySelectorAll('#seasons button').forEach(b => b.classList.toggle('on', b.dataset.s === st.season));
 }
 let clockKey = ''; window.addEventListener('clkmode', () => { clockKey = ''; });
+__clk.live({tz:'America/Anchorage',get:()=>st.t,set:v=>{st.t=v;st.speed=0;syncControls()},on:()=>st.playing,spd:()=>st.speed===0});
 function updateClock() {
   const s = Math.floor(st.t), h = Math.floor(s / 3600) % 24, m = Math.floor(s % 3600 / 60), k = h * 60 + m; if (k === clockKey) return; clockKey = k;
   $('clock').innerHTML = __clk.html(s, 'America/Anchorage'); drawHist();

@@ -97,8 +97,24 @@
     html(tSec, tz) { const p = C.parts(tSec, tz); return p.t + '<small>' + p.ap + '</small><em>' + p.tz + '</em>'; },
     toggle() { agency = !agency; try { localStorage.setItem('clkAgency', agency ? '1' : '0'); } catch (e) {} window.dispatchEvent(new Event('clkmode')); }
   };
+  /* Live dot: green when the sim is at the real current time at 1x, grey otherwise; clicking it jumps back to now. */
+  C.live = function (cfg) {
+    const mk = () => {
+      const el = document.getElementById('clock') || document.getElementById('clkBtn'); if (!el) return;
+      const b = document.createElement('button'); b.id = 'livedot'; b.type = 'button'; b.innerHTML = '<i></i>';
+      el.parentNode.insertBefore(b, el);
+      const upd = () => {
+        let d = Math.abs(cfg.get() - wall(cfg.tz, new Date())) % 86400; d = Math.min(d, 86400 - d);
+        const on = cfg.on() && cfg.spd() && d < 4; b.classList.toggle('on', on);
+        b.title = on ? 'Live: running at the current time' : 'Go to current time'; b.setAttribute('aria-label', b.title);
+      };
+      b.onclick = () => { cfg.set(wall(cfg.tz, new Date())); if (!cfg.on()) { const pl = document.getElementById('play'); if (pl) pl.click(); } upd(); };
+      setInterval(upd, 400); upd();
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mk); else mk();
+  };
   const st = document.createElement('style');
-  st.textContent = '#clock,#clkBtn{cursor:pointer}#clock em{display:inline!important}';
+  st.textContent = '#clock,#clkBtn{cursor:pointer}#clock em{display:inline!important}#livedot{flex:none;width:18px;height:22px;padding:0;margin-right:2px;background:none;border:0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}#livedot i{width:8px;height:8px;border-radius:50%;background:#7b8696;opacity:.6;transition:background .2s,box-shadow .2s}#livedot.on i{background:#2fbf71;opacity:1;box-shadow:0 0 0 3px rgba(47,191,113,.2)}#clkBtn .dot{display:none}';
   document.head.appendChild(st);
   function bind() {
     const el = document.getElementById('clock') || document.getElementById('clkBtn'); if (!el) return;

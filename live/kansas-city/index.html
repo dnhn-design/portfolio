@@ -488,6 +488,7 @@ $('speed').onclick = () => { speedIdx = (speedIdx + 1) % SPEEDS.length; $('speed
 function markDay() { document.querySelectorAll('#days button').forEach(b => b.classList.toggle('on', b.dataset.d === day)); }
 $('days').onclick = e => { const b = e.target.closest('button'); if (!b) return; day = b.dataset.d; selVeh = null; markDay(); baseDirty = true; lastKey = ''; drawHist(); updateDetail(); };
 function drawClock() { $('clock').innerHTML = __clk.html(t, 'America/Chicago'); } window.addEventListener('clkmode', () => { lastClock = ''; drawClock(); });
+__clk.live({tz:'America/Chicago',get:()=>t,set:v=>{t=v;speedIdx=0;$('speed').innerHTML=SPEEDS[0]+'&times;'},on:()=>playing,spd:()=>speedIdx===0});
 function drawHist() {
   const w = hc.width / dpr, h = hc.height / dpr; if (w < 4) return; hx.setTransform(dpr, 0, 0, dpr, 0, 0); hx.clearRect(0, 0, w, h);
   const a = HIST[day], mx = Math.max(...a, 1), bw = 3, gap = 1, n = Math.floor(w / (bw + gap)), pos = t / 86400 * w;

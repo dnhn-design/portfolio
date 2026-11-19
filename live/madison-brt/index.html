@@ -508,6 +508,7 @@ hist.addEventListener('pointerdown', (e) => { seeking = true; hist.setPointerCap
 hist.addEventListener('pointermove', (e) => { if (seeking) seekFrom(e); });
 hist.addEventListener('pointerup', () => { seeking = false; }); hist.addEventListener('pointercancel', () => { seeking = false; });
 function drawClock() { $('clock').innerHTML = __clk.html(t, 'America/Chicago'); } window.addEventListener('clkmode', () => { lastClock = ''; drawClock(); });
+__clk.live({tz:'America/Chicago',get:()=>t,set:v=>{t=v;speedIdx=0;$('speed').innerHTML=SPEEDS[0]+'&times;'},on:()=>playing,spd:()=>speedIdx===0});
 
 /* ---------- key ---------- */
 const KEY_NOTE = { all: 'Rapid Route A is the BRT. Routes B, C and D run every 15 min or better in the daytime.', brt: 'Rapid Route A runs every 15 min Mon–Sat daytime, every 30 min evenings and Sundays.', freq: 'Routes B, C and D run every 15 min or better in the daytime.' };

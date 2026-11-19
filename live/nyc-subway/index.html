@@ -421,6 +421,7 @@ function setPlay(p){playing=p;const b=$('play');b.setAttribute('aria-label',p?'P
   b.innerHTML=p?'<svg viewBox="0 0 14 14"><rect x="2" y="1" width="3.6" height="12"/><rect x="8.4" y="1" width="3.6" height="12"/></svg>':'<svg viewBox="0 0 14 14"><path d="M3 1l9 6-9 6z"/></svg>'}
 $('play').onclick=()=>setPlay(!playing);
 $('spd').onclick=()=>{spdI=(spdI+1)%SPEEDS.length;spd=SPEEDS[spdI]/60;$('spd').innerHTML=SPEEDS[spdI]+'&times;'};
+__clk.live({tz:'America/New_York',get:()=>t*60,set:v=>{t=v/60;spdI=0;spd=SPEEDS[0]/60;$('spd').innerHTML='1&times;'},on:()=>playing,spd:()=>spdI===0});
 $('days').onclick=e=>{lastSample=0;const b=e.target.closest('button');if(!b)return;day=+b.dataset.d;[...$('days').children].forEach(x=>x.setAttribute('aria-pressed',x===b));$('dayl').textContent=DAYS[day];all()};
 $('metric').onclick=e=>{const b=e.target.closest('button');if(!b)return;metric=b.dataset.m;[...$('metric').children].forEach(x=>x.setAttribute('aria-pressed',x===b));renderRank()};
 const chips=$('chips');

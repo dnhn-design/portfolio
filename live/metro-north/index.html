@@ -440,6 +440,7 @@ function frame(now){
 (()=>{const n=new Date(),w=n.getDay();t=__nowSec('America/New_York')/60;loadDay(w===6?'sat':w===0?'sun':'wkd');setT(nowMin())})();
 $('#play').classList.toggle('on',playing);
 $('#spd').textContent=SPD[spdI]+'×';
+__clk.live({tz:'America/New_York',get:()=>t*60,set:v=>{const m=v/60;setT(m<T0?m+1440:m);spdI=0;$('#spd').textContent=SPD[0]+'×'},on:()=>playing,spd:()=>spdI===0});
 V.s=Vt.s;V.x=Vt.x;V.y=Vt.y;
 lastPn=-1;
 addEventListener('resize',()=>{if(!manual)computeFit();clampBr()});

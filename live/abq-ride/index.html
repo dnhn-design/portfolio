@@ -354,6 +354,7 @@ function buildKey(){const L=$('legend');if(!L)return;
 /* clock / bar */
 const PLAY='<svg width="14" height="14" viewBox="0 0 14 14"><path d="M3 1.5v11l9-5.5z" fill="currentColor"/></svg>',PAUSE='<svg width="14" height="14" viewBox="0 0 14 14"><path d="M3 2h2.8v10H3zM8.2 2H11v10H8.2z" fill="currentColor"/></svg>';
 let lastMin=-1;window.addEventListener('clkmode',()=>{lastMin=-1});
+__clk.live({tz:'America/Denver',get:()=>state.T,set:v=>{state.T=v;state.speed=1;$('speed').innerHTML='1&times;'},on:()=>state.play,spd:()=>state.speed===1});
 function updateClock(){const m=Math.floor(state.T/60);if(m===lastMin)return;lastMin=m;$('clock').innerHTML=__clk.html(state.T,'America/Denver');drawHist();}
 const hc=document.querySelector('#hist canvas'),hx=hc.getContext('2d');let HW=0,HH=0;
 function drawHist(force){const box=$('hist'),r=box.getBoundingClientRect();if(force||r.width!==HW||r.height!==HH){HW=Math.round(r.width);HH=Math.round(r.height);hc.width=HW*dpr;hc.height=HH*dpr;hc.style.width=HW+'px';hc.style.height=HH+'px';}

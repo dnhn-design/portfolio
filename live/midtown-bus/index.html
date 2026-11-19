@@ -260,6 +260,7 @@ function leaveLive(){S.live=false}
 
 $('playBtn').onclick=()=>{if(S.live){leaveLive();S.paused=true}else S.paused=!S.paused;syncUI()};
 $('spdBtn').onclick=()=>{const i=SPEEDS.indexOf(S.speed);S.speed=SPEEDS[(i+1)%SPEEDS.length];if(S.live){leaveLive()}S.paused=false;syncUI()};
+__clk.live({tz:'America/New_York',get:()=>S.t/1000,set:v=>{S.t=localNow();S.speed=1;S.paused=false;S.live=false;syncUI()},on:()=>!S.paused,spd:()=>S.speed===1});
 $('daySeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;S.day=b.dataset.v};
 // load histogram: buses on the road per 4 minutes for the chosen schedule
 function drawHist(day){

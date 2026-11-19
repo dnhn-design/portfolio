@@ -603,6 +603,7 @@ hist.addEventListener('pointermove', (e) => { if (seeking) seekFrom(e); });
 hist.addEventListener('pointerup', () => { seeking = false; });
 hist.addEventListener('pointercancel', () => { seeking = false; });
 function drawClock() { $('clock').innerHTML = __clk.html(t, 'Pacific/Honolulu'); } window.addEventListener('clkmode', () => { lastClock = ''; drawClock(); });
+__clk.live({tz:'Pacific/Honolulu',get:()=>t,set:v=>{t=v;speedIdx=0;$('speed').innerHTML=SPEEDS[0]+'&times;'},on:()=>playing,spd:()=>speedIdx===0});
 
 /* ---------- key ---------- */
 const SWATCH = (c, dash) => '<svg width="22" height="6" viewBox="0 0 22 6"><line x1="1" y1="3" x2="21" y2="3" stroke="' + c + '" stroke-width="3" stroke-linecap="round"' + (dash ? ' stroke-dasharray="4 3.4"' : '') + '/></svg>';

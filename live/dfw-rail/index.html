@@ -517,6 +517,7 @@ hist.addEventListener('pointermove', (e) => { if (seeking) seekFrom(e); });
 hist.addEventListener('pointerup', () => { seeking = false; });
 hist.addEventListener('pointercancel', () => { seeking = false; });
 function drawClock() { $('clock').innerHTML = __clk.html(t, 'America/Chicago'); } window.addEventListener('clkmode', () => { lastClock = ''; drawClock(); });
+__clk.live({tz:'America/Chicago',get:()=>t,set:v=>{t=v;speedIdx=0;$('speed').innerHTML=SPEEDS[0]+'&times;'},on:()=>playing,spd:()=>speedIdx===0});
 
 /* ---------- key ---------- */
 const dotStyle = (g) => g === 1 ? 'background:conic-gradient(' + routes.filter((r) => r.g === 1).map((r, i, a) => r.col + ' ' + (i * 100 / a.length) + '% ' + ((i + 1) * 100 / a.length) + '%').join(',') + ')' : '';

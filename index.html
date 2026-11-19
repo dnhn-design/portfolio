@@ -13,9 +13,20 @@
 if(t!=='light'&&t!=='dark'){t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}
 document.documentElement.dataset.theme=t;
 try{var sbs=localStorage.getItem('sb');if(sbs!=='0'&&innerWidth>900)document.documentElement.classList.add('sb-open')}catch(e){if(innerWidth>900)document.documentElement.classList.add('sb-open')}
-if(!matchMedia('(prefers-reduced-motion: reduce)').matches){document.documentElement.classList.add('intro');setTimeout(function(){document.documentElement.classList.remove('intro')},9000)}})();
+var H=document.documentElement,rm=matchMedia('(prefers-reduced-motion: reduce)').matches,sp=!location.hash.slice(1);
+if(!rm)H.classList.add('intro');
+if(sp)H.classList.add('splash');
+window.__splash=new Promise(function(res){window.__splashGo=function(){res();if(!rm)setTimeout(function(){H.classList.remove('intro')},9000)};if(!sp)window.__splashGo()});})();
 </script>
 <style>
+#splash{position:fixed;inset:0;z-index:9999;background:#000;color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:24px;cursor:pointer;font-family:Inter,system-ui,sans-serif;transition:opacity 1.4s ease}
+html.splash #splash{display:flex}
+#splash.out{opacity:0;pointer-events:none}
+#splash p{margin:0;opacity:0;animation:spIn 1.6s ease forwards}
+#splash .s1{font-size:clamp(22px,3.4vw,40px);font-weight:500;letter-spacing:-.01em}
+#splash .s2{font-size:clamp(13px,1.3vw,16px);color:rgba(255,255,255,.55);animation-delay:1.9s}
+@keyframes spIn{to{opacity:1}}
+@media (prefers-reduced-motion:reduce){#splash p{animation:none;opacity:1}#splash{transition:none}}
 [data-theme=light]{color-scheme:light;--bg:#f7f6f2;--ink:#15171a;--muted:#5b616a;--hover:#ebe9e2;--state:#d3d0c5;--accent:#0a58ca;--live:#0a6b3d;--pop:#ffffff;--panel:#fbfaf7;--line:#e3e0d6}
 [data-theme=dark]{color-scheme:dark;--bg:#0d1015;--ink:#eceff4;--muted:#9aa4b2;--hover:#1d242d;--state:#2b3440;--accent:#6cb6ff;--live:#5fd394;--pop:#171c23;--panel:#0f141b;--line:#1a212b}
 *{box-sizing:border-box}
@@ -208,6 +219,8 @@ body.live #fc{opacity:0;visibility:hidden;pointer-events:none}
 </style>
 </head>
 <body>
+<div id="splash" role="button" tabindex="0" aria-label="Explore the Transit systems of the US. Click anywhere to dive in."><p class="s1">Explore the Transit systems of the US</p><p class="s2">Click anywhere to dive in</p></div>
+<script>(function(){var sp=document.getElementById('splash'),done=false;function go(){if(done)return;done=true;sp.classList.add('out');window.__splashGo&&window.__splashGo();setTimeout(function(){document.documentElement.classList.remove('splash')},1500)}sp.addEventListener('click',go);sp.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}});sp.focus&&sp.focus()})();</script>
 <header>
   <a class="brand" href="./"><span class="b-home">Transit-pedia</span><span class="b-back">&larr; Back to Main</span></a>
   <div class="tools">
@@ -546,7 +559,7 @@ REGIONS.forEach(r=>{
     order.forEach((p,i)=>p.style.setProperty('--pd',(i*.07).toFixed(2)+'s'));
     const loaded=new Promise(r=>document.readyState==='complete'?r():addEventListener('load',r));
     const fonts=document.fonts?document.fonts.ready:Promise.resolve();
-    Promise.all([loaded,fonts,new Promise(r=>setTimeout(r,1700))]).then(()=>{tRel=performance.now();wake();});
+    Promise.all([loaded,fonts,window.__splash,new Promise(r=>setTimeout(r,1700))]).then(()=>{tRel=performance.now();wake();});
   }
 
   /* cursor + label state */

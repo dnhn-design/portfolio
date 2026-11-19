@@ -7,32 +7,12 @@
 <script src="../shared/base-ne.js"></script><script src="../shared/basemap.js"></script>
 <style>
 /* NYC Subway adapter: the heartbeat-flow engine inside the shared UI (shared/family.css).
-   Focus legend uses round service bullets (subway + PATH). The right-hand panel (stats, top hubs, selected station) is the sidebar. */
-:root{--panel:#0c1017;--ink:var(--fg);--ink2:#a7b0b4;--ink3:var(--dim);--accent:#ff4fa3;--grid:#1b2327;--halo:rgba(255,79,163,.28);--shade:rgba(12,16,23,.9);--f-display:var(--sans);--f-body:var(--sans);--f-mono:var(--sans)}
+   Sidebar = lines (grouped services), station-circle toggle, selected line + service pills; stats live in a slide-over. */
+:root{--ink:var(--fg);--ink2:#a7b0b4;--ink3:var(--dim);--accent:#ff4fa3;--grid:#1b2327;--halo:rgba(255,79,163,.28);--shade:rgba(12,16,23,.9);--f-display:var(--sans);--f-body:var(--sans);--f-mono:var(--sans);--hov:color-mix(in srgb,var(--fg) 7%,transparent)}
 #mapbox{position:absolute;inset:0}
 #map{cursor:grab}#map.drag{cursor:grabbing}
 .tip{position:absolute;pointer-events:none;background:#0f141cf2;color:var(--fg);border:1px solid var(--line-2);padding:6px 9px;border-radius:7px;font-size:12px;line-height:1.35;max-width:240px;opacity:0;z-index:3}
 #keybody{width:auto}
-#legend .chip{pointer-events:auto;border-radius:50%;padding:0}
-#chips{--c:27px}
-.chips{display:flex;flex-direction:column;gap:calc(var(--c)*.08)}
-.crow{display:flex;gap:calc(var(--c)*.08);height:var(--c)}
-.crow.off{margin-left:calc(var(--c)*.54)}
-.chip{flex:0 0 var(--c);width:var(--c);height:var(--c);border-radius:50%;border:calc(var(--c)*.05) solid transparent;font:700 calc(var(--c)*.5)/1 var(--f-display);display:grid;place-items:center;cursor:pointer;padding:0;transition:opacity .15s,transform .12s}
-.chip.sir{font-size:calc(var(--c)*.28)}
-.chip:hover{transform:scale(1.06)}
-.pgrp{margin-top:calc(var(--c)*.4);padding-top:calc(var(--c)*.3);border-top:1px solid var(--line);display:flex;flex-direction:column;gap:calc(var(--c)*.12)}
-.pgrp .lbl{text-align:left}
-.chips.has-sel .chip:not(.on){opacity:.25}
-.chip.on{border-color:var(--ink);box-shadow:0 0 0 2px var(--bg)}
-
-#panel{grid-area:side;position:static;transform:none;width:auto;background:var(--panel);border-left:1px solid var(--line);overflow-y:auto;padding:0 0 22px;display:flex;flex-direction:column;gap:16px;min-height:0;scrollbar-width:thin;scrollbar-color:var(--line-2) transparent}
-#panel .kpis,#panel section,#panel details{margin-left:18px;margin-right:18px}
-#head{padding:14px 18px 0}
-#head #mv{font:500 28px/1 var(--sans);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-#head .lbl{text-transform:none;letter-spacing:0;font-weight:400;font-size:12.5px;color:var(--mute)}
-#head .tag{margin-left:auto}
-#bpm{flex-basis:100%;font-size:12px;color:var(--accent);margin-top:2px;font-variant-numeric:tabular-nums}
 #clock{display:flex;align-items:baseline;gap:6px;flex:none;font-variant-numeric:tabular-nums;white-space:nowrap}
 #clk{font:500 26px/1 var(--sans);letter-spacing:-.02em}
 #clock em{font:400 11px var(--sans);color:var(--dim);font-style:normal}
@@ -44,36 +24,62 @@
 #days button{border:0;background:none;color:var(--mute);font:500 12.5px var(--sans);padding:6px 13px;border-radius:7px;cursor:pointer}
 #days button[aria-pressed="true"]{background:var(--chip);color:var(--chip-fg)}
 #days button[aria-pressed="false"]:hover{color:var(--fg)}
-#fall.on{background:var(--chip);color:var(--chip-fg)}
-.kpis{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:30px}
-.kpi .l{font:600 10px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)}
-.kpi .v{font:700 26px/1.1 var(--f-display);font-variant-numeric:tabular-nums;margin-top:2px}
-.kpi .n,.hid{display:none}
-.head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
-h2{font:700 16px var(--f-display);margin:0}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:16px;padding:1px}
-.rank{display:flex;flex-direction:column}
-.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 10px;align-items:center;padding:7px 6px;border-radius:6px;cursor:pointer;border:0;background:none;text-align:left;font:inherit;width:100%}
-.row:hover,.row[aria-pressed="true"]{background:var(--grid)}
-.row .n{display:none}
-.row .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.row .v{font:500 13px var(--f-mono);font-variant-numeric:tabular-nums}
-.row .bar{display:none}
-.row .bl{grid-column:1/3;display:flex;flex-wrap:wrap;gap:2px}
+.hid{display:none}
+/* sidebar */
+#side{position:relative;overflow:hidden}
+#bpm{flex-basis:100%;font-size:12px;color:var(--accent);margin-top:2px;font-variant-numeric:tabular-nums}
+#ctl{display:flex;gap:6px;padding:2px 18px 10px}
+.tg{flex:1;display:flex;align-items:center;gap:8px;min-width:0;padding:7px 10px;border:1px solid var(--line-2);border-radius:8px;background:none;color:var(--mute);font:500 12px var(--sans);cursor:pointer;text-align:left;white-space:nowrap}
+.tg:hover{color:var(--fg);background:var(--hov)}
+.tg .sw{width:22px;height:13px;border-radius:7px;background:var(--line-2);position:relative;flex:none;transition:background .15s}
+.tg .sw::after{content:"";position:absolute;top:2px;left:2px;width:9px;height:9px;border-radius:50%;background:var(--bg);transition:transform .15s}
+.tg[aria-pressed="true"]{color:var(--fg)}
+.tg[aria-pressed="true"] .sw{background:#2fbf71}
+.tg[aria-pressed="true"] .sw::after{transform:translateX(9px)}
+.tg.ins{flex:none;gap:5px}
+.tg svg{width:10px;height:10px}
+.row.idle .no,.row.idle .to{opacity:.45}
+.row .ln .bul{margin-right:3px}
+.lh{padding:12px 18px 4px;font:600 10px var(--sans);letter-spacing:.07em;text-transform:uppercase;color:var(--dim)}
+#detail .pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.pill{border:0;background:none;padding:2px;border-radius:50%;cursor:pointer;opacity:.9;line-height:0}
+.pill:hover{opacity:1}
+.pill.on{box-shadow:0 0 0 2px var(--panel),0 0 0 3.5px var(--fg);opacity:1}
+.pills.has-on .pill:not(.on){opacity:.4}
+.pill .bul{width:22px;height:22px;font-size:11px}
 .bul{width:15px;height:15px;border-radius:50%;font:700 9px/1 var(--f-display);display:inline-grid;place-items:center;flex:none}
+/* slide-over: stats unique to this map */
+#slide{position:absolute;inset:0;z-index:5;background:var(--panel);display:flex;flex-direction:column;min-height:0;transform:translateX(100%);visibility:hidden;transition:transform .26s ease,visibility 0s .26s}
+#slide.open{transform:none;visibility:visible;transition:transform .26s ease}
+.sh{display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid var(--line);flex:none}
+.sh b{font-weight:600;font-size:13.5px}
+#sback{background:none;border:0;color:var(--mute);cursor:pointer;display:flex;align-items:center;gap:4px;font:500 12px var(--sans);padding:4px 6px;border-radius:6px}
+#sback:hover{color:var(--fg);background:var(--hov)}
+#sback svg{width:10px;height:10px}
+#sbody{overflow-y:auto;flex:1;min-height:0;padding:16px 18px 22px;display:flex;flex-direction:column;gap:16px;scrollbar-width:thin;scrollbar-color:var(--line-2) transparent}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.kpi .l,.lbl2{font:600 10px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)}
+.kpi .v{font:700 26px/1.1 var(--f-display);font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi .n{display:none}
+.head2{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+h2{font:700 16px var(--f-display);margin:0}
+.rank{display:flex;flex-direction:column}
+.hub{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 10px;align-items:center;padding:7px 6px;border-radius:6px;cursor:pointer;border:0;background:none;text-align:left;font:inherit;color:inherit;width:100%}
+.hub:hover,.hub[aria-pressed="true"]{background:var(--hov)}
+.hub .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hub .v{font:500 13px var(--f-mono);font-variant-numeric:tabular-nums}
+.hub .bl{grid-column:1/3;display:flex;flex-wrap:wrap;gap:2px}
 .sel h3{font:700 22px/1.1 var(--f-display);margin:0 0 6px}
 .sel .bl{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:10px}
 .sel .bul{width:20px;height:20px;font-size:11px}
 .sel .stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
 .sel .stats div{font-size:12px;color:var(--ink2)}
 .sel .stats b{display:block;font:700 20px var(--f-display);color:var(--ink);font-variant-numeric:tabular-nums}
-.lbl{font:600 10px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)}
 svg text{font-family:var(--f-body);font-size:10px;fill:var(--ink3)}
 details{font-size:11px;color:var(--ink3)}
 summary{cursor:pointer}
 details p{margin:6px 0 0}
-
-.row{padding:7px 6px;border-left:0}
 </style>
 <script src="../shared/embed.js"></script>
 <script src="../shared/theme.js"></script>
@@ -88,13 +94,16 @@ details p{margin:6px 0 0}
     <div id="zoomc"><button id="zi" aria-label="Zoom in">+</button><button id="zo" aria-label="Zoom out">&minus;</button><button id="zf" aria-label="Fit city">&#8962;</button><button id="za" class="tx" aria-label="Show Staten Island">All</button></div>
     <div id="legend">
       <button id="keytog" aria-label="Show or hide the legend"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 8l4-4 4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-      <div id="keybody"><div class="k-row"><span class="emph-l">Focus</span><div class="emph"><button id="fall" class="on">All services</button></div></div>
-        <div class="chips" id="chips" role="group" aria-label="Filter by service"></div></div>
+      <div id="keybody"><div class="k-row"><span class="emph-l">Focus</span><span class="emph" role="group" aria-label="Focus"><button data-t="all" class="on">All</button><button data-t="sub">Subway</button><button data-t="path">PATH</button><button data-t="air">AirTrain</button></span></div></div>
     </div>
   </div>
-  <aside class="panel" id="panel" aria-label="Stats">
-    <div id="head"><span id="mv">0</span><span class="lbl">trains moving</span><span class="tag">Estimated</span><div id="bpm"></div></div>
-    <button class="x" id="close" hidden aria-label="Close stats">&times;</button><button id="open" hidden aria-label="Open stats">Stats</button>
+  <aside id="side" aria-label="Lines">
+    <div id="head"><span id="count">0</span><span class="lbl">trains moving</span><span class="tag">Estimated</span><div id="bpm"></div></div>
+    <div id="ctl"><button class="tg" id="circ" aria-pressed="false" title="Show a circle on every station sized by the trains passing it"><i class="sw"></i><span>Station circles</span></button><button class="tg ins" id="insb">Insights <svg viewBox="0 0 10 10"><path d="M3.5 2l3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+    <div id="detail" hidden></div>
+    <div id="list" role="list" data-nogroup></div>
+    <div id="slide" aria-label="Insights"><div class="sh"><button id="sback"><svg viewBox="0 0 10 10"><path d="M6.5 2l-3 3 3 3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Back</button><b>Insights</b></div>
+    <div id="sbody">
     <div class="kpis">
       <div class="kpi"><div class="l">Trips</div><div class="v" id="k1">-</div><div class="n" id="k1n"></div></div>
       <div class="kpi"><div class="l">Peak moving</div><div class="v" id="k2">-</div><div class="n" id="k2n"></div></div>
@@ -103,17 +112,19 @@ details p{margin:6px 0 0}
     </div>
     <span id="ecgn" class="hid"></span>
     <section>
-      <div class="head"><h2>Top hubs</h2>
+      <div class="head2"><h2>Top hubs</h2>
         <div class="seg" id="metric" role="group" aria-label="Rank by"><button data-m="p" aria-pressed="true">Trains</button><button data-m="l" aria-pressed="false">Services</button></div>
       </div>
       <div class="rank" id="rank"></div>
     </section>
     <section class="sel" id="sel"></section>
     <details><summary>Method</summary>
-      <p>Line thickness grows with trains running on that track; circles grow with trains passing in the last 30 minutes. Both refresh every 1.5 seconds and ease between values.</p>
+      <p>Line thickness grows with trains running on that track; circles (when switched on) grow with trains passing in the last 30 minutes. Both refresh every 1.5 seconds and ease between values.</p>
+      <p>Lines group the services that share track (for example the 8 Av line carries the A, C and E). Select a line to pick one service.</p>
       <p>PATH trains use the PATH GTFS feed: real stop times for each trip, and its three service days (weekday, Saturday, Sunday).</p>
       <p>AirTrain JFK uses the AirTrain GTFS feed: its three loops (Jamaica, Howard Beach, Terminal Circulator) run at the feed's headways. That feed is from 2016&ndash;2021, so treat the frequencies as indicative.</p>
       <p>Built from the MTA GTFS trips, shapes, routes and stops files. No stop times, so trains are assumed to run at 28 km/h from their scheduled start, and a train passes a station when its track is within 30 m.</p></details>
+    </div></div>
   </aside>
   <div id="bar">
     <button class="play" id="play" aria-label="Pause"></button>
@@ -151,7 +162,8 @@ const drawSet=[];{const seen=new Set();SEG.forEach(s=>{const k=s.r+'|'+s.g;if(!s
 // stations
 const CX=D.cx.map((c,i)=>({i,name:c[0],x:c[1],y:c[2],p:c[3],lines:c[4].slice().sort((a,b)=>rorder.indexOf(a)-rorder.indexOf(b)),g:c[5],off:c[6]}));
 
-const SPEEDS=[1, 10, 100, 300, 600];let spdI=0;let day=0,t=__nowSec('America/New_York')/60,playing=!matchMedia('(prefers-reduced-motion: reduce)').matches,spd=SPEEDS[0]/60,sel=null,only=null,metric='p',hover=null;
+const SPEEDS=[1, 10, 100, 300, 600];let spdI=0;let day=0,t=__nowSec('America/New_York')/60,playing=!matchMedia('(prefers-reduced-motion: reduce)').matches,spd=SPEEDS[0]/60,sel=null,metric='p',hover=null;
+let tab='all',lineSel=null,svc=null,foc=null,fkey='',circles=false,RUN={};
 let active={},peak=1,heart=null,pulseCache={},heartCache={};
 const WIN=30;
 // station -> offset (minutes from trip start) per geometry
@@ -166,13 +178,13 @@ const SRt=new Float32Array(CX.length),SR=new Float32Array(CX.length),CNT=new Flo
 const LT=new Float32Array(drawSet.length).fill(1),LW=new Float32Array(drawSet.length).fill(1);
 const REF={};let lastSample=0,sampled=false;
 function upperB(a,v){let lo=0,hi=a.length;while(lo<hi){const m=(lo+hi)>>1;if(a[m]<=v)lo=m+1;else hi=m}return lo}
-function stationCounts(tt,r){const cnt=new Float64Array(CX.length);SEG.forEach(sg=>{if(r&&sg.r!==r)return;const a=sg.t[day],L=GS[sg.g];if(!L)return;
+function stationCounts(tt,r){const cnt=new Float64Array(CX.length);SEG.forEach(sg=>{if(foc&&!foc.has(sg.r))return;const a=sg.t[day],L=GS[sg.g];if(!L)return;
   for(let q=0;q<L.length;q++){const ci=L[q][0],off=L[q][1];for(const w of [0,1440]){const hi=tt-off+w;cnt[ci]+=upperB(a,hi)-upperB(a,hi-WIN)}}});return cnt}
-function pairCounts(tt,r){const out=new Float64Array(drawSet.length);SEG.forEach(sg=>{if(r&&sg.r!==r)return;const a=sg.t[day],dur=G[sg.g].dur;
+function pairCounts(tt,r){const out=new Float64Array(drawSet.length);SEG.forEach(sg=>{if(foc&&!foc.has(sg.r))return;const a=sg.t[day],dur=G[sg.g].dur;
   for(const w of [0,1440]){const hi=tt+w;out[sg.k]+=upperB(a,hi)-upperB(a,hi-dur)}});return out}
-function refs(){const key=day+'|'+(only||'');if(!REF[key]){let ms=1,mp=1;for(let m=0;m<1440;m+=30){const a=stationCounts(m,only),b=pairCounts(m,only);for(const v of a)if(v>ms)ms=v;for(const v of b)if(v>mp)mp=v}REF[key]={ms,mp}}return REF[key]}
+function refs(){const key=day+'|'+fkey;if(!REF[key]){let ms=1,mp=1;for(let m=0;m<1440;m+=30){const a=stationCounts(m),b=pairCounts(m);for(const v of a)if(v>ms)ms=v;for(const v of b)if(v>mp)mp=v}REF[key]={ms,mp}}return REF[key]}
 function sample(){
-  const rf=refs(),a=stationCounts(t,only),b=pairCounts(t,only);
+  const rf=refs(),a=stationCounts(t),b=pairCounts(t);
   const pos=[];for(let i=0;i<a.length;i++)if(a[i]>0)pos.push(a[i]);pos.sort((x,y)=>x-y);
   const pct=v=>{let lo=0,hi=pos.length;while(lo<hi){const m=(lo+hi)>>1;if(pos[m]<v)lo=m+1;else hi=m}const lo2=lo;hi=pos.length;lo=lo2;while(lo<hi){const m=(lo+hi)>>1;if(pos[m]<=v)lo=m+1;else hi=m}return ((lo2+lo)/2)/Math.max(1,pos.length)};
   for(let i=0;i<a.length;i++){CNT[i]=a[i];SRt[i]=a[i]>0?1.5+14*(.7*pct(a[i])+.3*Math.min(1,Math.sqrt(a[i]/rf.ms))):0}
@@ -182,10 +194,11 @@ function sample(){
 function stationPass(c,r){let n=0;SEG.forEach(q=>{if(q.r===r&&c.g.indexOf(q.g)>-1)n+=q.t[day].length});return n}
 function computeHeart(){
   let best=null,bv=-1;
-  if(!only){CX.forEach(c=>{if(c.p[day]>bv){bv=c.p[day];best=c}})}
-  else CX.forEach(c=>{if(c.lines.indexOf(only)<0)return;const v=stationPass(c,only);if(v>bv){bv=v;best=c}});
+  if(!foc){CX.forEach(c=>{if(c.p[day]>bv){bv=c.p[day];best=c}})}
+  else CX.forEach(c=>{let v=0;foc.forEach(r=>{if(c.lines.indexOf(r)>-1)v+=stationPass(c,r)});if(v>bv){bv=v;best=c}});
+  if(!best){CX.forEach(c=>{if(c.p[day]>bv){bv=c.p[day];best=c}})}
   heart=best;heart._hv=bv;
-  const r=only?col(only).name:'all services';
+  const r=focName();
   $('k4').textContent=best.name;$('k4n').textContent=fmt(bv)+' trains, '+r;
 }
 
@@ -216,14 +229,12 @@ function renderRank(){
   const L=ranked().slice(0,10),mx=metric==='p'?L[0].p[day]:L[0].lines.length;
   const el=$('rank');el.textContent='';
   L.forEach((c,k)=>{
-    const b=document.createElement('button');b.className='row';b.setAttribute('aria-pressed',sel&&sel.i===c.i);
+    const b=document.createElement('button');b.className='hub';b.setAttribute('aria-pressed',sel&&sel.i===c.i);
     const v=metric==='p'?c.p[day]:c.lines.length;
-    const n=document.createElement('span');n.className='n';n.textContent=k+1;
-    const nm=document.createElement('span');nm.className='nm';nm.textContent=c.name;
+        const nm=document.createElement('span');nm.className='nm';nm.textContent=c.name;
     const vv=document.createElement('span');vv.className='v';vv.textContent=fmt(v)+(metric==='p'?'':' services');
-    const bar=document.createElement('span');bar.className='bar';bar.innerHTML='<i style="width:'+(100*v/mx)+'%"></i>';
-    const bl=document.createElement('span');bl.className='bl';c.lines.forEach(l=>bl.appendChild(bullet(l)));
-    b.append(n,nm,vv,bar,bl);b.onclick=()=>{select(c);centerOn(c)};el.appendChild(b);
+        const bl=document.createElement('span');bl.className='bl';c.lines.forEach(l=>bl.appendChild(bullet(l)));
+    b.append(nm,vv,bl);b.onclick=()=>{select(c);centerOn(c)};el.appendChild(b);
   });
 }
 function renderSel(){
@@ -278,7 +289,7 @@ function renderEcg(){
   const area=line(s.tot)+'L'+ex(1438)+' '+ey(0)+'L'+ex(0)+' '+ey(0)+'Z';
   h+='<path d="'+area+'" fill="var(--ink)" opacity=".08"/>';
   h+='<path d="'+line(s.tot)+'" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linejoin="round"/>';
-  if(only&&s.per[only]){const r=col(only);let pp=s.per[only];h+='<path d="'+line(pp)+'" fill="none" stroke="'+r.bg+'" stroke-width="2.4"/>'}
+  if(foc){h+='<path d="'+line(focSeries(s))+'" fill="none" stroke="'+focColor()+'" stroke-width="2.4"/>'}
   h+='<line id="ph" y1="'+PT+'" y2="'+(EH-PB)+'" stroke="var(--accent)" stroke-width="1.5"/><circle id="pd" r="4" fill="var(--accent)"/>';
   ecg.innerHTML=h;
   // pulse peak marker
@@ -327,9 +338,9 @@ function draw(now){
   const s=series(day);
   // services
   ctx.lineCap='round';ctx.lineJoin='round';
-  const faded=only!=null;
+  const faded=!!foc;
   drawSet.forEach(([r,g],k)=>{
-    const on=!faded||r===only;const G_=G[g];
+    const on=!foc||foc.has(r);const G_=G[g];
     ctx.strokeStyle=col(r).bg;ctx.globalAlpha=on?(faded?1:.62):(dark?.12:.16);ctx.lineWidth=LW[k]*(on?1:.6);
     ctx.beginPath();for(let i=0;i<G_.n;i++){const X=sx(G_.x[i]),Y=sy(G_.y[i]);i?ctx.lineTo(X,Y):ctx.moveTo(X,Y)}ctx.stroke();
   });
@@ -338,21 +349,22 @@ function draw(now){
   const zf=Math.min(1.8,Math.max(.7,V.s*60));
   CX.forEach(c=>{
     c._X=null;
-    if(faded&&c.lines.indexOf(only)<0)return;
+    if(foc&&!c.lines.some(l=>foc.has(BASE[l]||l)))return;
     const X=sx(c.x),Y=sy(c.y);if(X<-40||Y<-40||X>W+40||Y>H+40)return;
-    const r=SR[c.i]*zf;
-    c._X=X;c._Y=Y;c._r=Math.max(r,2);
-    if(r>.5){ctx.globalAlpha=1;ctx.beginPath();ctx.arc(X,Y,r,0,6.2832);ctx.fillStyle=ink;ctx.globalAlpha=dark?.12:.08;ctx.fill();ctx.globalAlpha=.4;ctx.strokeStyle=ink2;ctx.lineWidth=1;ctx.stroke();ctx.globalAlpha=1}
+    const r=circles?SR[c.i]*zf:0;
+    c._X=X;c._Y=Y;c._r=circles?Math.max(r,2):3;
+    if(circles&&r>.5){ctx.globalAlpha=1;ctx.beginPath();ctx.arc(X,Y,r,0,6.2832);ctx.fillStyle=ink;ctx.globalAlpha=dark?.12:.08;ctx.fill();ctx.globalAlpha=.4;ctx.strokeStyle=ink2;ctx.lineWidth=1;ctx.stroke();ctx.globalAlpha=1;
+      if(r>9&&CNT[c.i]>0){ctx.fillStyle=ink;ctx.font='600 '+Math.min(12,r*.7)+'px '+css('--f-body');ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(Math.round(CNT[c.i]),X,Y+.5);ctx.textAlign='start'}}
   });
   // trains
-  let moving=0;const tr=Math.max(1.6,Math.min(4.5,V.s*190));
+  let moving=0;RUN={};const tr=Math.max(1.6,Math.min(4.5,V.s*190));
   SEG.forEach(sg=>{
-    if(faded&&sg.r!==only)return;
+    const inF=!foc||foc.has(sg.r);
     const a=sg.t[day],dur=G[sg.g].dur;
     for(const off of [0,1440]){
       const tt=t+off;let i=upper(a,tt)-1;
       for(;i>=0&&tt-a[i]<dur;i--){
-        moving++;
+        moving++;RUN[sg.r]=(RUN[sg.r]||0)+1;if(!inF)continue;
         const p=pos(sg.g,(tt-a[i])/dur),X=sx(p[0]),Y=sy(p[1]);
         if(X<-6||Y<-6||X>W+6||Y>H+6)continue;
         ctx.fillStyle=col(sg.r).bg;ctx.beginPath();ctx.arc(X,Y,tr,0,6.2832);ctx.fill();
@@ -364,7 +376,7 @@ function draw(now){
   const place=[];
   // heart pulse
   if(heart){
-    const X=sx(heart.x),Y=sy(heart.y),ser=(only&&s.per[only])||s.tot,spk=only?Math.max(1,...ser):s.pk,act=ser[Math.floor(t)%1440]||0,bpm=Math.round(34+72*act/(spk||1));
+    const X=sx(heart.x),Y=sy(heart.y),ser=foc?focSeries(s):s.tot,spk=foc?focSeries(s).mx:s.pk,act=ser[Math.floor(t)%1440]||0,bpm=Math.round(34+72*act/(spk||1));
     const ph=(now/1000*bpm/60)%1;
     const env=gauss(ph,.06,.035)+.7*gauss(ph,.26,.035);
     const rip=ph<.6?ph/.6:1;
@@ -374,7 +386,7 @@ function draw(now){
     ctx.fillStyle=gr;ctx.beginPath();ctx.arc(X,Y,34+env*34,0,6.2832);ctx.fill();
     ctx.fillStyle=acc;ctx.beginPath();ctx.arc(X,Y,5+env*4,0,6.2832);ctx.fill();
     ctx.strokeStyle=bg;ctx.lineWidth=1.5;ctx.stroke();
-    $('bpm').innerHTML='<b>'+bpm+' bpm</b> &middot; the system\'s pulse';$('mv').textContent=fmt(act);
+    $('bpm').innerHTML='<b>'+bpm+' bpm</b> &middot; the system\'s pulse';$('count').textContent=fmt(act);
     place.push([X,Y,heart]);
   }
   // labels
@@ -413,7 +425,7 @@ cv.addEventListener('wheel',e=>{e.preventDefault();const r=cv.getBoundingClientR
   zoom(Math.exp(-dy*(e.ctrlKey?.012:.0016)),e.clientX-r.left,e.clientY-r.top)},{passive:false});   // same feel as the other maps: scales with how far the wheel / trackpad moved
 cv.addEventListener('keydown',e=>{const k=e.key,st=60/V.s;if(k==='+'||k==='=')zoom(1.25);else if(k==='-')zoom(.8);else if(k==='ArrowLeft')V.cx-=st;else if(k==='ArrowRight')V.cx+=st;else if(k==='ArrowUp')V.cy+=st;else if(k==='ArrowDown')V.cy-=st;else return;e.preventDefault()});
 function nearest(px,py){let b=null,bd=14*14;CX.forEach(c=>{if(c._X==null)return;const d=(c._X-px)**2+(c._Y-py)**2;if(d<bd){bd=d;b=c}});return b}
-function select(c){sel=c;renderSel();renderRank();$('panel').classList.add('open')}
+function select(c){sel=c;renderSel();renderRank();openSlide(true)}
 $('zi').onclick=()=>zoom(1.4);$('zo').onclick=()=>zoom(1/1.4);$('zf').onclick=()=>fit(fitBox);$('za').onclick=()=>fit(allBox);
 
 // controls
@@ -424,32 +436,86 @@ $('spd').onclick=()=>{spdI=(spdI+1)%SPEEDS.length;spd=SPEEDS[spdI]/60;$('spd').i
 __clk.live({tz:'America/New_York',get:()=>t*60,set:v=>{t=v/60;spdI=0;spd=SPEEDS[0]/60;$('spd').innerHTML='1&times;'},on:()=>playing,spd:()=>spdI===0});
 $('days').onclick=e=>{lastSample=0;const b=e.target.closest('button');if(!b)return;day=+b.dataset.d;[...$('days').children].forEach(x=>x.setAttribute('aria-pressed',x===b));$('dayl').textContent=DAYS[day];all()};
 $('metric').onclick=e=>{const b=e.target.closest('button');if(!b)return;metric=b.dataset.m;[...$('metric').children].forEach(x=>x.setAttribute('aria-pressed',x===b));renderRank()};
-const chips=$('chips');
-const nyct=rorder.filter(i=>i.indexOf('PATH-')!==0&&i.indexOf('AIR-')!==0),pathIds=rorder.filter(i=>i.indexOf('PATH-')===0),airIds=rorder.filter(i=>i.indexOf('AIR-')===0);
-const cuts=[5,9,14,18,23,26];
-[5,4,5,4,5,3].forEach((n,ri)=>{const row=document.createElement('div');row.className='crow'+(ri%2?' off':'');chips.appendChild(row)});
-function mkChip(id){const r=R[id],b=document.createElement('button');b.className='chip'+(r.short.length>2?' sir':'');b.style.background=r.bg;b.style.color=r.fg;b.textContent=r.short;b.title=r.name;b.setAttribute('aria-label',r.name);b.dataset.r=id;return b}
-nyct.forEach((id,k)=>{chips.children[cuts.findIndex(c=>k<c)].appendChild(mkChip(id))});
-if(pathIds.length){const grp=document.createElement('div');grp.className='pgrp';const prow=document.createElement('div');prow.className='crow';pathIds.forEach(id=>prow.appendChild(mkChip(id)));grp.append(prow);chips.appendChild(grp)}
-if(airIds.length){const grp=document.createElement('div');grp.className='pgrp';const arow=document.createElement('div');arow.className='crow';airIds.forEach(id=>arow.appendChild(mkChip(id)));grp.append(arow);chips.appendChild(grp)}
-chips.onclick=e=>{lastSample=0;const b=e.target.closest('.chip');if(!b)return;only=only===b.dataset.r?null:b.dataset.r;
-  chips.classList.toggle('has-sel',only!=null);chips.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x.dataset.r===only));
-  if(only){const bx=box(r=>r===only);fit(bx)}computeHeart();renderEcg()};
 
-function all(){renderKpi();renderRank();renderSel();renderEcg()}
+// ---- lines: services that share track, grouped the way riders talk about them
+const isSub=i=>i.indexOf('PATH-')!==0&&i.indexOf('AIR-')!==0;
+const pathIds=rorder.filter(i=>i.indexOf('PATH-')===0),airIds=rorder.filter(i=>i.indexOf('AIR-')===0);
+const LINES=[
+  {k:'7av',n:'7 Av',s:['1','2','3'],c:'#D82233'},{k:'lex',n:'Lexington Av',s:['4','5','6'],c:'#009952'},{k:'flu',n:'Flushing',s:['7'],c:'#9A38A1'},
+  {k:'8av',n:'8 Av',s:['A','C','E'],c:'#0062CF'},{k:'6av',n:'6 Av',s:['B','D','F','M'],c:'#EB6800'},{k:'bwy',n:'Broadway',s:['N','Q','R','W'],c:'#F6BC26'},
+  {k:'xt',n:'Crosstown',s:['G'],c:'#799534'},{k:'nas',n:'Nassau St',s:['J','Z'],c:'#8E5C33'},{k:'can',n:'Canarsie',s:['L'],c:'#7C858C'},
+  {k:'shu',n:'Shuttles',s:['GS','FS','H'],c:'#7C858C'},{k:'sir',n:'Staten Island Railway',s:['SI'],c:'#08179C'}
+].map(l=>({...l,tab:'sub',s:l.s.filter(x=>R[x])})).filter(l=>l.s.length);
+pathIds.forEach(id=>LINES.push({k:id,n:R[id].name||'PATH',s:[id],c:R[id].bg,tab:'path'}));
+airIds.forEach(id=>LINES.push({k:id,n:R[id].name||'AirTrain JFK',s:[id],c:R[id].bg,tab:'air'}));
+const TABN={sub:'Subway',path:'PATH',air:'AirTrain JFK'},TABC={sub:'#0062CF',path:'#4d92fb',air:'#E4002B'};
+function applyFocus(){
+  let ids=rorder.filter(i=>tab==='all'||(tab==='sub'?isSub(i):tab==='path'?i.indexOf('PATH-')===0:i.indexOf('AIR-')===0));
+  if(lineSel)ids=ids.filter(i=>lineSel.s.indexOf(i)>-1);
+  if(svc)ids=[svc];
+  foc=(tab==='all'&&!lineSel&&!svc)?null:new Set(ids);fkey=foc?[...foc].join(','):'';
+}
+function focName(){return svc?col(svc).name:lineSel?lineSel.n+' line':tab!=='all'?TABN[tab]:'all services'}
+function focColor(){return svc?col(svc).bg:lineSel?lineSel.c:tab!=='all'?TABC[tab]:'var(--ink)'}
+function focSeries(s){const k=fkey;if(s._fk===k)return s._fs;const a=new Int32Array(1441);let mx=1;
+  foc.forEach(r=>{const p=s.per[r];if(p)for(let i=0;i<1441;i++)a[i]+=p[i]});for(let i=0;i<1441;i++)if(a[i]>mx)mx=a[i];a.mx=mx;s._fk=k;s._fs=a;return a}
+function runOf(l){let n=0;l.s.forEach(r=>n+=RUN[r]||0);return n}
+const listEl=$('list');
+function buildList(){
+  listEl.textContent='';let lastTab='';
+  LINES.filter(l=>tab==='all'||l.tab===tab).forEach(l=>{
+    if(tab==='all'&&l.tab!==lastTab){lastTab=l.tab;const h=document.createElement('div');h.className='lh';h.textContent=TABN[l.tab];listEl.appendChild(h)}
+    const b=document.createElement('button');b.className='row'+(lineSel===l?' sel':'');b.style.setProperty('--c',l.c);
+    b.innerHTML='<span class="no m"></span><span class="to"></span>'+(l.tab==='sub'?'<span class="ln"></span>':'');
+    b.querySelector('.to').textContent=l.n;
+    const ln=b.querySelector('.ln');if(ln)l.s.forEach(id=>ln.appendChild(bullet(id)));
+    l._no=b.querySelector('.no');l._row=b;l._n=-1;
+    b.onclick=()=>pickLine(lineSel===l?null:l);
+    listEl.appendChild(b);
+  });
+  updateList();
+}
+function updateList(){
+  LINES.forEach(l=>{if(!l._row||!l._row.isConnected)return;const n=runOf(l);if(l._n!==n){l._n=n;l._no.textContent=n;l._row.classList.toggle('idle',!n)}});
+  if(lineSel){const sp=$('detail').querySelector('.t span');if(sp)sp.textContent=runOf(lineSel)+' running'}
+}
+setInterval(updateList,500);
+function renderDetail(){
+  const d=$('detail');if(!lineSel){d.hidden=true;d.textContent='';return}
+  d.hidden=false;d.innerHTML='<div class="t"><b></b><span></span><button class="x" aria-label="Clear line">&times;</button></div>';
+  d.querySelector('b').textContent=lineSel.n;d.querySelector('.x').onclick=()=>pickLine(null);
+  if(lineSel.s.length>1){const p=document.createElement('div');p.className='pills'+(svc?' has-on':'');
+    lineSel.s.forEach(id=>{const b=document.createElement('button');b.className='pill'+(svc===id?' on':'');b.title=col(id).name;b.setAttribute('aria-label',col(id).name);b.appendChild(bullet(id));b.firstChild.style.fontSize='11px';b.onclick=()=>pickSvc(svc===id?null:id);p.appendChild(b)});
+    d.appendChild(p)}
+  updateList();
+}
+function refocus(fitTo){
+  applyFocus();lastSample=0;
+  listEl.querySelectorAll('.row').forEach(r=>r.classList.toggle('sel',!!lineSel&&lineSel._row===r));
+  renderDetail();
+  document.querySelectorAll('.emph button').forEach(b=>{const on=b.dataset.t===tab;b.classList.toggle('on',on)});
+  if(fitTo!==false){fit(foc?box(r=>foc.has(r)):fitBox)}
+  computeHeart();renderEcg();renderKpi();
+}
+function pickLine(l){lineSel=l;svc=null;refocus()}
+function pickSvc(id){svc=id;refocus()}
+function setTab(k){tab=k;lineSel=null;svc=null;buildList();refocus()}
+document.querySelectorAll('.emph button').forEach(b=>b.onclick=()=>setTab(b.dataset.t));
+$('circ').onclick=()=>{circles=!circles;$('circ').setAttribute('aria-pressed',circles)};
+function openSlide(o){$('slide').classList.toggle('open',o);$('slide').setAttribute('aria-hidden',!o)}
+$('insb').onclick=()=>openSlide(true);$('sback').onclick=()=>openSlide(false);
+$('keytog').onclick=()=>$('legend').classList.toggle('min');
+if(matchMedia('(max-width:820px)').matches)$('legend').classList.add('min');
+
+
+function all(){renderKpi();renderRank();renderSel();renderEcg();updateList()}
 const mb=(p,q)=>[Math.min(p[0],q[0]),Math.min(p[1],q[1]),Math.max(p[2],q[2]),Math.max(p[3],q[3])];
 function boxX(ids,xmin){let a=1e9,b=1e9,c=-1e9,d=-1e9;drawSet.forEach(([r,g])=>{if(!ids(r))return;const G_=G[g];for(let i=0;i<G_.n;i++){if(G_.x[i]<xmin)continue;a=Math.min(a,G_.x[i]);c=Math.max(c,G_.x[i]);b=Math.min(b,G_.y[i]);d=Math.max(d,G_.y[i])}});return [a,b,c,d]}
 fitBox=mb(box(r=>r!=='SI'&&r.indexOf('PATH-')!==0&&r.indexOf('AIR-')!==0),boxX(r=>r.indexOf('PATH-')===0,-5500));allBox=box();
 sel=CX.slice().sort((a,b)=>b.p[0]-a.p[0])[0];
 new ResizeObserver(()=>{resize()}).observe($('mapbox'));
-$('open').onclick=()=>{};$('close').onclick=()=>$('panel').classList.remove('open');
-const clearOnly=()=>{const on=chips.querySelector('.chip.on');if(on)on.click()};
-$('fall').onclick=clearOnly;
-$('keytog').onclick=()=>$('legend').classList.toggle('min');
-if(matchMedia('(max-width:820px)').matches)$('legend').classList.add('min');
-chips.addEventListener('click',()=>$('fall').classList.toggle('on',only==null));
-addEventListener('keydown',e=>{if(e.key==='Escape'&&only!=null){clearOnly();e.preventDefault()}});   // handled here, so the page does not also close the map
-setPlay(playing);resize();all();requestAnimationFrame(frame);
+addEventListener('keydown',e=>{if(e.key!=='Escape')return;if($('slide').classList.contains('open')){openSlide(false);e.preventDefault()}else if(svc||lineSel||tab!=='all'){if(svc)pickSvc(null);else if(lineSel)pickLine(null);else setTab('all');e.preventDefault()}});   // handled here, so the page does not also close the map
+setPlay(playing);resize();applyFocus();buildList();renderDetail();all();requestAnimationFrame(frame);
 })();
 </script>
 

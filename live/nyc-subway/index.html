@@ -119,7 +119,7 @@ details p{margin:6px 0 0}
     <button class="play" id="play" aria-label="Pause"></button>
     <div id="clock"><span id="clk">0:00</span><em>ET</em></div>
     <svg id="ecg" viewBox="0 0 900 70" preserveAspectRatio="none" role="img" aria-label="Trains in motion over the day. Drag to scrub."></svg>
-    <button id="spd" aria-label="Playback speed">100&times;</button>
+    <button id="spd" aria-label="Playback speed">1&times;</button>
     <div class="seg" id="days" role="group" aria-label="Service day"><button data-d="0" aria-pressed="true">Weekday</button><button data-d="1" aria-pressed="false">Sat</button><button data-d="2" aria-pressed="false">Sun</button></div>
     <span id="dayl" class="hid">Weekday</span>
   </div>
@@ -151,7 +151,7 @@ const drawSet=[];{const seen=new Set();SEG.forEach(s=>{const k=s.r+'|'+s.g;if(!s
 // stations
 const CX=D.cx.map((c,i)=>({i,name:c[0],x:c[1],y:c[2],p:c[3],lines:c[4].slice().sort((a,b)=>rorder.indexOf(a)-rorder.indexOf(b)),g:c[5],off:c[6]}));
 
-const SPEEDS=[100,200,400,600];let spdI=0;let day=0,t=__nowSec('America/New_York')/60,playing=!matchMedia('(prefers-reduced-motion: reduce)').matches,spd=SPEEDS[0]/60,sel=null,only=null,metric='p',hover=null;
+const SPEEDS=[1, 10, 100, 300, 600];let spdI=0;let day=0,t=__nowSec('America/New_York')/60,playing=!matchMedia('(prefers-reduced-motion: reduce)').matches,spd=SPEEDS[0]/60,sel=null,only=null,metric='p',hover=null;
 let active={},peak=1,heart=null,pulseCache={},heartCache={};
 const WIN=30;
 // station -> offset (minutes from trip start) per geometry
@@ -393,7 +393,7 @@ function draw(now){
     ctx.lineWidth=3;ctx.strokeStyle=bg;ctx.strokeText(c.name,x,y);ctx.fillStyle=force?ink:ink2;ctx.fillText(c.name,x,y);
   });
   if(sel&&sel._X!=null){ctx.strokeStyle=acc;ctx.lineWidth=2;ctx.beginPath();ctx.arc(sel._X,sel._Y,sel._r+4,0,6.2832);ctx.stroke()}
-  $('clk').textContent=hm(t);
+  {const _p=__clk.parts(t*60,'America/New_York');$('clk').textContent=_p.t+' '+_p.ap;$('clock').querySelector('em').textContent=_p.tz}
   placeHead();
 }
 

@@ -79,7 +79,7 @@ button:focus-visible,.hist:focus-visible{outline:2px solid var(--focus);outline-
   <div class="bar" role="group" aria-label="Playback">
     <button class="play" id="playBtn" aria-label="Pause"></button>
     <button class="clk live" id="clkBtn" aria-label="Back to live time"><i class="dot"></i><span class="t" id="clkT">--:--</span><span class="ap" id="clkA"></span></button>
-    <button class="spd" id="spdBtn" aria-label="Playback speed">100×</button>
+    <button class="spd" id="spdBtn" aria-label="Playback speed">1×</button>
     <div class="hist" id="hist" role="slider" tabindex="0" aria-label="Time of day" aria-valuemin="0" aria-valuemax="1439" aria-valuenow="0">
       <svg viewBox="0 0 360 44" preserveAspectRatio="none" aria-hidden="true"><g id="barsDim" fill="var(--bar-dim)"></g></svg>
       <svg class="hi" id="hiSvg" viewBox="0 0 360 44" preserveAspectRatio="none" aria-hidden="true"><g id="barsHi" fill="var(--bar-hi)"></g></svg>
@@ -142,7 +142,7 @@ for(const id in P){
 
 // ---- time + schedule helpers (New York wall clock carried as a UTC-labelled timestamp)
 const fmt=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hourCycle:'h23',year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'numeric',second:'numeric'});
-function localNow(){const d=new Date();return Date.UTC(d.getFullYear(),d.getMonth(),d.getDate(),d.getHours(),d.getMinutes(),d.getSeconds())+d.getMilliseconds()}
+function localNow(){const d=new Date(),p=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hourCycle:'h23',year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'numeric',second:'numeric'}).formatToParts(d),g=n=>+p.find(x=>x.type===n).value;return Date.UTC(g('year'),g('month')-1,g('day'),g('hour')%24,g('minute'),g('second'))+d.getMilliseconds()}
 function nycNow(){const o={};for(const x of fmt.formatToParts(new Date()))o[x.type]=+x.value;return Date.UTC(o.year,o.month-1,o.day,o.hour,o.minute,o.second)+Date.now()%1000}
 function nthDow(y,m,dow,n){const f=new Date(Date.UTC(y,m,1)).getUTCDay();return 1+((dow-f+7)%7)+7*(n-1)}
 function lastMon(y,m){const l=new Date(Date.UTC(y,m+1,0));return l.getUTCDate()-((l.getUTCDay()+6)%7)}
@@ -165,7 +165,7 @@ function hm(min,sec){min=((min%1440)+1440)%1440;let h=Math.floor(min/60),m=Math.
   return h+':'+String(m).padStart(2,'0')+(sec!==undefined?':'+String(Math.floor((min%1)*60)).padStart(2,'0'):'')+' '+ap}
 
 // ---- state
-const S={live:false,paused:false,speed:100,day:'auto',t:localNow(),routes:{M23:true,M34:true,M34A:true},sel:null,dayEff:null};
+const S={live:false,paused:false,speed:1,day:'auto',t:localNow(),routes:{M23:true,M34:true,M34A:true},sel:null,dayEff:null};
 const $=id=>document.getElementById(id);
 const busLayer=$('buses'),stage=$('stage'),tip=$('tip');
 const active=new Map();
@@ -236,7 +236,7 @@ function frame(){
     if(S.sel===g){tip.innerHTML=tipHTML(w,w.mm);placeTip(g)}
   }
   // readouts
-  const ct=hm(m).split(' ');if($('clkT').textContent!==ct[0]){$('clkT').textContent=ct[0];$('clkA').textContent=ct[1]}
+  {const _p=__clk.parts(m*60,'America/New_York'),_a=_p.ap+' '+_p.tz;if($('clkT').textContent!==_p.t||$('clkA').textContent!==_a){$('clkT').textContent=_p.t;$('clkA').textContent=_a}}
   if(S.dayEff!==today){S.dayEff=today;for(const b of $('daySeg').children)b.setAttribute('aria-pressed',String(b.dataset.v===today));drawHist(today)}
   const px=(m/1440*100).toFixed(2);
   if(S.px!==px){S.px=px;$('ph').style.left=px+'%';$('hiSvg').style.clipPath='inset(0 '+(100-px)+'% 0 0)';$('hist').setAttribute('aria-valuenow',Math.floor(m))}
@@ -250,14 +250,14 @@ function loop(now){
 
 // ---- controls
 const PLAY='<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>',PAUSE='<svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
-const SPEEDS=[100,200,400,600];
+const SPEEDS=[1, 10, 100, 300, 600];
 function syncUI(){
   $('playBtn').innerHTML=(S.paused&&!S.live)?PLAY:PAUSE;$('playBtn').setAttribute('aria-label',(S.paused&&!S.live)?'Play':'Pause');
   $('clkBtn').classList.toggle('live',S.live);$('spdBtn').textContent=S.speed+'×';
 }
-function goLive(){S.live=false;S.t=localNow();S.paused=false;S.speed=100;S.day='auto';syncUI()}
+function goLive(){S.live=false;S.t=localNow();S.paused=false;S.speed=1;S.day='auto';syncUI()}
 function leaveLive(){S.live=false}
-$('clkBtn').onclick=goLive;
+
 $('playBtn').onclick=()=>{if(S.live){leaveLive();S.paused=true}else S.paused=!S.paused;syncUI()};
 $('spdBtn').onclick=()=>{const i=SPEEDS.indexOf(S.speed);S.speed=SPEEDS[(i+1)%SPEEDS.length];if(S.live){leaveLive()}S.paused=false;syncUI()};
 $('daySeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;S.day=b.dataset.v};

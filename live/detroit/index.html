@@ -313,7 +313,7 @@ let W = 0, H = 0, dpr = 1;
 const view = { cx: 0.2, cy: 0.3, s: 1e5 };
 let s0 = 1e5, baseDirty = true, userMoved = false;
 let day = 'wkd', t = __nowSec('America/Detroit'), playing = true, speedIdx = 0;
-const SPEEDS = [100, 200, 400, 600];
+const SPEEDS = [1, 10, 100, 300, 600];
 let emph = 'all', lineSel = null, selected = -1, hover = -1, hoverStation = null, anim = null;
 let vehicles = [], trips = [];
 const MAIN_DAYS = ['wkd', 'sat', 'sun'];
@@ -652,7 +652,7 @@ let seeking = false;
 hist.addEventListener('pointerdown', (e) => { seeking = true; hist.setPointerCapture(e.pointerId); seekFrom(e); });
 hist.addEventListener('pointermove', (e) => { if (seeking) seekFrom(e); });
 hist.addEventListener('pointerup', () => { seeking = false; }); hist.addEventListener('pointercancel', () => { seeking = false; });
-function drawClock() { const m = clk(t).match(/^(\d+:\d\d) (AM|PM)$/); $('clock').innerHTML = m[1] + '<small>' + m[2] + '</small><em>ET</em>'; }
+function drawClock() { $('clock').innerHTML = __clk.html(t, 'America/Detroit'); } window.addEventListener('clkmode', () => { lastClock = ''; drawClock(); });
 
 /* ---------- legend ---------- */
 function renderKey() {

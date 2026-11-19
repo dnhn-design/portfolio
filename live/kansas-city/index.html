@@ -178,7 +178,7 @@ const D = JSON.parse($('data').textContent);
 const KX = 111320 * Math.cos(39.1 * Math.PI / 180), KY = 110540;
 const RE = 6378137, DEG = Math.PI / 180;
 const mxf = lon => lon * DEG * RE, myf = lat => Math.log(Math.tan(Math.PI / 4 + lat * DEG / 2)) * RE;
-const SPEEDS = [100, 200, 400, 600];
+const SPEEDS = [1, 10, 100, 300, 600];
 const FONT = "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif";
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const clampn = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -487,7 +487,7 @@ $('play').onclick = () => setPlay(!playing);
 $('speed').onclick = () => { speedIdx = (speedIdx + 1) % SPEEDS.length; $('speed').innerHTML = SPEEDS[speedIdx] + '&times;'; };
 function markDay() { document.querySelectorAll('#days button').forEach(b => b.classList.toggle('on', b.dataset.d === day)); }
 $('days').onclick = e => { const b = e.target.closest('button'); if (!b) return; day = b.dataset.d; selVeh = null; markDay(); baseDirty = true; lastKey = ''; drawHist(); updateDetail(); };
-function drawClock() { const c = clk(t); $('clock').innerHTML = c[0] + '<small>' + c[1] + '</small><em>CT</em>'; }
+function drawClock() { $('clock').innerHTML = __clk.html(t, 'America/Chicago'); } window.addEventListener('clkmode', () => { lastClock = ''; drawClock(); });
 function drawHist() {
   const w = hc.width / dpr, h = hc.height / dpr; if (w < 4) return; hx.setTransform(dpr, 0, 0, dpr, 0, 0); hx.clearRect(0, 0, w, h);
   const a = HIST[day], mx = Math.max(...a, 1), bw = 3, gap = 1, n = Math.floor(w / (bw + gap)), pos = t / 86400 * w;

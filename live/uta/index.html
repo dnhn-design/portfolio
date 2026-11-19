@@ -188,7 +188,7 @@ const $ = (id) => document.getElementById(id);
 /* ---------- constants ---------- */
 const KM = 111195; // metres per degree; same equirectangular constant the preprocessor used
 const FIPS = { 49035: 'SALT LAKE', 49011: 'DAVIS', 49057: 'WEBER', 49049: 'UTAH', 49043: 'SUMMIT', 49045: 'TOOELE', 49003: 'BOX ELDER', 49029: 'MORGAN', 49051: 'WASATCH', 49005: 'CACHE', 49023: 'JUAB' };
-const SPEEDS = [100, 200, 400, 600];
+const SPEEDS = [1, 10, 100, 300, 600];
 const GROUPS = D.groups, routes = D.routes;
 const FOCUS = { all: null, rail: 'rail', metro: 'metro', bus: 'bus' };
 
@@ -534,7 +534,7 @@ hist.addEventListener('pointerdown', (e) => { seeking = true; hist.setPointerCap
 hist.addEventListener('pointermove', (e) => { if (seeking) seekFrom(e); });
 hist.addEventListener('pointerup', () => { seeking = false; });
 hist.addEventListener('pointercancel', () => { seeking = false; });
-function drawClock() { const m = clk(t).match(/^(\d+:\d\d) (AM|PM)$/); $('clock').innerHTML = m[1] + '<small>' + m[2] + '</small><em>MT</em>'; }
+function drawClock() { $('clock').innerHTML = __clk.html(t, 'America/Denver'); } window.addEventListener('clkmode', () => { lastClock = ''; drawClock(); });
 
 /* ---------- key ---------- */
 function renderKey() {

@@ -70,6 +70,40 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setup); else setup();
 })();
 
-/* Seconds since midnight on the viewer's own clock: the starting time of every map's simulated clock.
-   (The argument is the agency's time zone; it is accepted so a map could use it, but the viewer's own time is what is shown.) */
-window.__nowSec = function () { const d = new Date(); return d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds(); };
+/* Clock model. Every map simulates in the AGENCY's local time (so its schedule is valid), starting from "now" there.
+   The clock shows the VIEWER's own time + zone by default; clicking it flips to the agency's time + zone (and back). */
+(function () {
+  const dtf = {};
+  function fmtr(tz, o) { const k = tz + '|' + Object.keys(o).join(); return dtf[k] || (dtf[k] = new Intl.DateTimeFormat('en-US', Object.assign({ timeZone: tz, hourCycle: 'h23' }, o))); }
+  function wall(tz, d) {
+    if (!tz) return d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds();
+    const p = fmtr(tz, { hour: 'numeric', minute: 'numeric', second: 'numeric' }).formatToParts(d), g = n => +p.find(x => x.type === n).value;
+    return (g('hour') % 24) * 3600 + g('minute') * 60 + g('second');
+  }
+  function abbr(tz, d) {
+    try { return fmtr(tz || undefined, { timeZoneName: 'short' }).formatToParts(d).find(x => x.type === 'timeZoneName').value; } catch (e) { return ''; }
+  }
+  window.__nowSec = function (tz) { return wall(tz, new Date()); };
+  let agency = false; try { agency = localStorage.getItem('clkAgency') === '1'; } catch (e) {}
+  const C = window.__clk = {
+    get agency() { return agency; },
+    parts(tSec, tz) {
+      const d = new Date(); let shift = 0, ab;
+      if (agency) ab = abbr(tz, d);
+      else { shift = wall(null, d) - wall(tz, d); if (shift > 43200) shift -= 86400; if (shift <= -43200) shift += 86400; ab = abbr(null, d); }
+      const s = (((Math.floor(tSec + shift)) % 86400) + 86400) % 86400, h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60);
+      return { t: (h % 12 || 12) + ':' + String(m).padStart(2, '0'), ap: h >= 12 ? 'PM' : 'AM', tz: ab };
+    },
+    html(tSec, tz) { const p = C.parts(tSec, tz); return p.t + '<small>' + p.ap + '</small><em>' + p.tz + '</em>'; },
+    toggle() { agency = !agency; try { localStorage.setItem('clkAgency', agency ? '1' : '0'); } catch (e) {} window.dispatchEvent(new Event('clkmode')); }
+  };
+  const st = document.createElement('style');
+  st.textContent = '#clock,#clkBtn{cursor:pointer}#clock em{display:inline!important}';
+  document.head.appendChild(st);
+  function bind() {
+    const el = document.getElementById('clock') || document.getElementById('clkBtn'); if (!el) return;
+    el.addEventListener('click', C.toggle); el.title = 'Click to switch between your time and the agency’s time';
+    window.addEventListener('clkmode', () => { try { if (typeof drawClock === 'function') drawClock(); } catch (e) {} });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind); else bind();
+})();

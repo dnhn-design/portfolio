@@ -261,7 +261,7 @@ let W = 0, H = 0, dpr = 1;
 const view = { cx: 0.2, cy: 0.3, s: 1e5 };
 let s0 = 1e5, baseDirty = true, userMoved = false;
 let day = 'wkd', t = __nowSec('America/New_York'), playing = true, speedIdx = 0;
-const SPEEDS = [100, 200, 400, 600];
+const SPEEDS = [1, 10, 100, 300, 600];
 let emph = 'all', lineSel = null, selected = -1, hover = -1;
 let vehicles = [], trips = [];
 try { const w = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', weekday: 'short' }).format(new Date()); day = w === 'Sat' ? 'sat' : w === 'Sun' ? 'sun' : 'wkd'; } catch (e) {}
@@ -497,7 +497,7 @@ function seekFrom(e) { const r = hist.getBoundingClientRect(); t = Math.max(0, M
 hist.addEventListener('pointerdown', (e) => { seeking = true; hist.setPointerCapture(e.pointerId); seekFrom(e); });
 hist.addEventListener('pointermove', (e) => { if (seeking) seekFrom(e); });
 hist.addEventListener('pointerup', () => { seeking = false; }); hist.addEventListener('pointercancel', () => { seeking = false; });
-function drawClock() { const m = clk(t).match(/^(\d+:\d\d) (AM|PM)$/); $('clock').innerHTML = m[1] + '<small>' + m[2] + '</small><em>ET</em>'; }
+function drawClock() { $('clock').innerHTML = __clk.html(t, 'America/New_York'); } window.addEventListener('clkmode', () => { lastClock = ''; drawClock(); });
 
 /* ---------- key ---------- */
 const KEY_NOTE = { all: 'Local routes run all day. Express routes (X) make limited stops and mostly run at rush hour. Click a line on the map, or one below, to follow it.', exp: 'Express routes (X) make limited stops along the same corridors as the local routes.', local: 'Local buses on every NICE route. Pick a line below the map, or click one on the map.' };

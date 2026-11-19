@@ -314,7 +314,7 @@ let W = 0, H = 0, dpr = 1;
 const view = { cx: 0.2, cy: 0.3, s: 1e5 };
 let s0 = 1e5, baseDirty = true;
 let day = 'wkd', t = __nowSec('America/Denver'), playing = true, speedIdx = 0;
-const SPEEDS = [100, 200, 400, 600];
+const SPEEDS = [1, 10, 100, 300, 600];
 let emph = 'all', lineSel = null, zonesOn = false, selected = -1, hover = -1, hoverStation = null;
 let vehicles = [], trips = [], lastSig = '';
 try { const w = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Denver', weekday: 'short' }).format(new Date()); day = w === 'Sat' ? 'sat' : w === 'Sun' ? 'sun' : 'wkd'; } catch (e) { day = 'wkd'; }
@@ -593,7 +593,7 @@ hist.addEventListener('pointerdown', (e) => { seeking = true; hist.setPointerCap
 hist.addEventListener('pointermove', (e) => { if (seeking) seekFrom(e); });
 hist.addEventListener('pointerup', () => { seeking = false; });
 hist.addEventListener('pointercancel', () => { seeking = false; });
-function drawClock() { const m = clk(t).match(/^(\d+:\d\d) (AM|PM)$/); $('clock').innerHTML = m[1] + '<small>' + m[2] + '</small><em>MT</em>'; }
+function drawClock() { $('clock').innerHTML = __clk.html(t, 'America/Denver'); } window.addEventListener('clkmode', () => { lastClock = ''; drawClock(); });
 
 /* ---------- key ---------- */
 const MULTI = () => routes.filter((r) => r.g === 1 && r.ext === undefined).map((r) => rcol(routes.indexOf(r))).map((c, i, a) => c + ' ' + (i / a.length * 360) + 'deg ' + ((i + 1) / a.length * 360) + 'deg').join(',');

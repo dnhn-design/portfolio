@@ -111,7 +111,7 @@ canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block
   <div id="bar">
     <button id="play" aria-label="Pause"></button>
     <div id="clock">8:15<small>AM</small><em>AKT</em></div>
-    <button id="speed" title="Change speed">100&times;</button>
+    <button id="speed" title="Change speed">1&times;</button>
     <div id="hist" aria-label="Trains running over the day. Drag to change time."><canvas></canvas></div>
     <div id="segs"><div class="seg" id="seasons" role="group" aria-label="Season"><button data-s="summer">Summer</button><button data-s="winter">Winter</button></div>
     <div class="seg" id="days" role="group" aria-label="Day type"><button data-d="wkd">Wkd</button><button data-d="sat">Sat</button><button data-d="sun">Sun</button></div></div>
@@ -165,7 +165,7 @@ function subpath(sh, d0, d1) {
 }
 
 /* ---------- state ---------- */
-const SPEEDS = [100, 200, 400, 600];
+const SPEEDS = [1, 10, 100, 300, 600];
 const st = { season: 'summer', day: 'wkd', t: __nowSec('America/Anchorage'), playing: true, speed: 0, hl: -1, sub: null, sel: null, legendMin: window.innerWidth < 821 };
 (function initNow() {
   try {
@@ -362,10 +362,10 @@ function syncControls() {
   document.querySelectorAll('#days button').forEach(b => b.classList.toggle('on', b.dataset.d === st.day));
   document.querySelectorAll('#seasons button').forEach(b => b.classList.toggle('on', b.dataset.s === st.season));
 }
-let clockKey = '';
+let clockKey = ''; window.addEventListener('clkmode', () => { clockKey = ''; });
 function updateClock() {
   const s = Math.floor(st.t), h = Math.floor(s / 3600) % 24, m = Math.floor(s % 3600 / 60), k = h * 60 + m; if (k === clockKey) return; clockKey = k;
-  $('clock').innerHTML = `${h % 12 || 12}:${String(m).padStart(2, '0')}<small>${h >= 12 ? 'PM' : 'AM'}</small><em>${D.tz}</em>`; drawHist();
+  $('clock').innerHTML = __clk.html(s, 'America/Anchorage'); drawHist();
 }
 const hc = $('hist').querySelector('canvas'), hx = hc.getContext('2d');
 function drawHist() {

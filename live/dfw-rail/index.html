@@ -239,7 +239,7 @@ let W = 0, H = 0, dpr = 1;
 const view = { cx: 0.2, cy: 0.3, s: 1e5 };
 let s0 = 1e5, baseDirty = true;
 let day = 'wkd', t = __nowSec('America/Chicago'), playing = true, speedIdx = 0;
-const SPEEDS = [100, 200, 400, 600];
+const SPEEDS = [1, 10, 100, 300, 600];
 let emph = 'all', lineSel = null, selected = -1, hover = -1;
 let vehicles = [], userMoved = false;
 function pickDay() {
@@ -516,7 +516,7 @@ hist.addEventListener('pointerdown', (e) => { seeking = true; hist.setPointerCap
 hist.addEventListener('pointermove', (e) => { if (seeking) seekFrom(e); });
 hist.addEventListener('pointerup', () => { seeking = false; });
 hist.addEventListener('pointercancel', () => { seeking = false; });
-function drawClock() { const m = clk(t).match(/^(\d+:\d\d) (AM|PM)$/); $('clock').innerHTML = m[1] + '<small>' + m[2] + '</small><em>CT</em>'; }
+function drawClock() { $('clock').innerHTML = __clk.html(t, 'America/Chicago'); } window.addEventListener('clkmode', () => { lastClock = ''; drawClock(); });
 
 /* ---------- key ---------- */
 const dotStyle = (g) => g === 1 ? 'background:conic-gradient(' + routes.filter((r) => r.g === 1).map((r, i, a) => r.col + ' ' + (i * 100 / a.length) + '% ' + ((i + 1) * 100 / a.length) + '%').join(',') + ')' : '';

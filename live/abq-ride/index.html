@@ -308,8 +308,8 @@ function drawLive(){
     const a=v.fade*(inF?1:FADE)*(inH?1:.2);if(a<.01)continue;
     const x=sx(v.x),y=sy(v.y);if(x<-20||y<-20||x>W+20||y>H+20)continue;
     const brt=R[r].m==='brt',col=brt?R[r].col:(TH.dk?'#ffffff':R[r].col),rad=brt?4:3.2,sc=Math.min(1.5,Math.max(.8,view.z/fitZ*.6+.5));
-    if(TH.dk){ctx.globalAlpha=a*.7;ctx.beginPath();ctx.arc(x,y,rad*sc*1.6,0,7);ctx.lineWidth=1.2;ctx.strokeStyle=R[r].col;ctx.stroke();ctx.globalAlpha=a;ctx.beginPath();ctx.arc(x,y,rad*sc,0,7);ctx.fillStyle='#fff';ctx.fill();}
-    else{ctx.globalAlpha=a;ctx.beginPath();ctx.arc(x,y,rad*sc,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=1.6;ctx.strokeStyle=R[r].col;ctx.stroke();}
+    ctx.globalAlpha=a;ctx.beginPath();ctx.arc(x,y,rad*sc+2,0,7);ctx.fillStyle=TH.bg;ctx.fill();   /* a gap around the dot, then the line colour */
+    ctx.beginPath();ctx.arc(x,y,rad*sc,0,7);ctx.fillStyle=R[r].col;ctx.fill();
     if(v.vis)live.push({x,y,ti});
     if(ti===state.selT||ti===state.hovT){ctx.globalAlpha=1;ctx.beginPath();ctx.arc(x,y,rad*sc+4.5,0,7);ctx.lineWidth=1.6;ctx.strokeStyle=TH.dk?'#fff':R[r].col;ctx.stroke();}
     ctx.globalAlpha=1;}

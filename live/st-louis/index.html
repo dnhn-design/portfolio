@@ -539,11 +539,8 @@ function drawLive() {
     v.sx = x; v.sy = y;
     const c = rcol(v.p.r), rr = v.g === 0 ? rb * 1.2 : rb * 0.82, on = vis(v);
     g.globalAlpha = on ? v.a : v.a * 0.2;
-    if (on) {
-      g.beginPath(); g.arc(x, y, rr * 1.6, 0, 7); g.strokeStyle = hexA(c, 0.7); g.lineWidth = 1.2; g.stroke();
-    }
-    g.beginPath(); g.arc(x, y, rr, 0, 7); g.fillStyle = on ? TH.core : c; g.fill();
-    if (on && TH.coreRing) { g.strokeStyle = c; g.lineWidth = 1.5; g.stroke(); }
+    if (on) { g.beginPath(); g.arc(x, y, rr + 2, 0, 7); g.fillStyle = TH.bg; g.fill(); }   // a gap around the dot
+    g.beginPath(); g.arc(x, y, rr, 0, 7); g.fillStyle = c; g.fill();
     g.globalAlpha = 1;
     if (v.k === selected || v.k === hover) { g.beginPath(); g.arc(x, y, rr + 6, 0, 7); g.strokeStyle = TH.coreRing ? '#141c2a' : '#fff'; g.lineWidth = 1.4; g.stroke(); }
   }

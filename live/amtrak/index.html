@@ -415,7 +415,7 @@ function render(){
     const x=sx(a.x),y=sy(a.y);if(x<-10||y<-10||x>W+10||y>H+10)continue;
     const isSel=sel&&sel.key===a.key;
     ctx.globalAlpha=sel&&!isSel?.5:1;
-    ctx.strokeStyle=a.tr.bl?'rgba(242,226,5,.6)':'rgba(232,236,242,.35)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(x,y,tr*1.7,0,6.2832);ctx.stroke();
+    ctx.fillStyle='#0a0d13';ctx.beginPath();ctx.arc(x,y,(isSel?tr+1.5:tr)+2,0,6.2832);ctx.fill();   /* a gap around the dot */
     ctx.fillStyle=isSel?ac(a.tr.bl):a.tr.bl?'#f2e205':'#f1f4f8';ctx.beginPath();ctx.arc(x,y,isSel?tr+1.5:tr,0,6.2832);ctx.fill();
     ctx.globalAlpha=1;
   }

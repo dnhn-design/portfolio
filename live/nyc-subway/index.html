@@ -357,7 +357,7 @@ function draw(now){
         const p=pos(sg.g,(tt-a[i])/dur),X=sx(p[0]),Y=sy(p[1]);
         if(X<-6||Y<-6||X>W+6||Y>H+6)continue;
         ctx.fillStyle=col(sg.r).bg;ctx.beginPath();ctx.arc(X,Y,tr,0,6.2832);ctx.fill();
-        ctx.strokeStyle=dark?'rgba(255,255,255,.55)':'rgba(255,255,255,.9)';ctx.lineWidth=.8;ctx.stroke();
+        ctx.strokeStyle=bg;ctx.lineWidth=2;ctx.stroke();
       }
     }
   });

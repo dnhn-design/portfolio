@@ -297,9 +297,8 @@ function draw(ts){
     const col=gi===0&&q.z?zcol(q.z):GROUPS[gi].c;
     if(!q.f){g.globalAlpha=.3;g.fillStyle=col;g.beginPath();g.arc(x,y,r0*.6,0,7);g.fill();g.globalAlpha=1;continue}
     const r=gi===0?r0*1.25:r0,isSel=st.sel&&st.sel.tr===q.tr||st.hover&&st.hover.tr===q.tr;
-    const rw=r*(.65+.35*q.w);g.globalAlpha=.7*q.w;g.strokeStyle=col;g.lineWidth=1.2;g.beginPath();g.arc(x,y,rw*1.55,0,7);g.stroke();g.globalAlpha=q.w;
-    g.fillStyle='#f4f6fa';g.beginPath();g.arc(x,y,rw,0,7);g.fill();
-    g.fillStyle=col;g.beginPath();g.arc(x,y,rw*.58,0,7);g.fill();g.globalAlpha=1;
+    const rw=r*(.65+.35*q.w);g.globalAlpha=q.w;g.fillStyle='#0a0d13';g.beginPath();g.arc(x,y,rw+2,0,7);g.fill();   /* a gap around the dot, then the line colour */
+    g.fillStyle=col;g.beginPath();g.arc(x,y,rw,0,7);g.fill();g.globalAlpha=1;
     if(isSel){g.strokeStyle='#fff';g.lineWidth=1.6;g.beginPath();g.arc(x,y,r*2.6,0,7);g.stroke()}
     q.sx=x;q.sy=y;hits.push(q)}
 }

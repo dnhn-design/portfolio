@@ -472,11 +472,8 @@ function drawLive() {
     v.sx = x; v.sy = y;
     const c = gcol(v.g), on = vis(v), big = !G[v.g].dense, rad = big ? rr : rr * 0.85;
     g.globalAlpha = on ? v.a : v.a * 0.2;
-    if (on) {
-      g.beginPath(); g.arc(x, y, rad * 1.6, 0, 7); g.strokeStyle = hexA(c, 0.7); g.lineWidth = 1.2; g.stroke();
-    }
-    g.beginPath(); g.arc(x, y, rad, 0, 7); g.fillStyle = on ? TH.core : c; g.fill();
-    if (on && TH.ringW) { g.lineWidth = TH.ringW; g.strokeStyle = c; g.stroke(); }
+    if (on) { g.beginPath(); g.arc(x, y, rad + 2, 0, 7); g.fillStyle = TH.bg; g.fill(); }   // a gap around the dot
+    g.beginPath(); g.arc(x, y, rad, 0, 7); g.fillStyle = c; g.fill();
     g.globalAlpha = 1;
     if (v.k === selected || v.k === hover) { g.beginPath(); g.arc(x, y, rad + 6, 0, 7); g.strokeStyle = TH.selRing; g.lineWidth = 1.4; g.stroke(); }
   }

@@ -306,9 +306,8 @@ function drawLive(vs) {
   for (const v of vs) {
     const x = sx(v.x), y = sy(v.y), dim = dimmed(v.tr), a = v.a * (dim ? 0.25 : 1), col = v.tr.c;
     vis.push({ v, x, y });
-    c.globalAlpha = a * 0.7; c.strokeStyle = col; c.lineWidth = 1.2; c.beginPath(); c.arc(x, y, 5.6, 0, 7); c.stroke();
-    c.fillStyle = T.core; c.beginPath(); c.arc(x, y, 3.4, 0, 7); c.fill();
-    c.strokeStyle = col; c.lineWidth = 1; c.globalAlpha = a * 0.8; c.beginPath(); c.arc(x, y, 3.4, 0, 7); c.stroke();
+    c.globalAlpha = a; c.fillStyle = T.bg; c.beginPath(); c.arc(x, y, 5.6, 0, 7); c.fill();   // a gap around the dot, then the line colour
+    c.fillStyle = col; c.beginPath(); c.arc(x, y, 3.4, 0, 7); c.fill();
     if (st.sel === v.tr.id) { c.globalAlpha = 1; c.strokeStyle = T.ink; c.lineWidth = 1.5; c.beginPath(); c.arc(x, y, 8, 0, 7); c.stroke(); }
   }
   c.globalAlpha = 1;

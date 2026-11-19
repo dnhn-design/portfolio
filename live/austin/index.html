@@ -494,11 +494,8 @@ function drawLive() {
     const x = SX(v.x), y = SY(v.y); v.sx = x; v.sy = y; if (x < -20 || x > W + 20 || y < -20 || y > H + 20) continue;
     const c = gc(v.g), on = vis(v), halo = (!light && v.g === 0) ? '#ffffff' : c;
     g.globalAlpha = on ? v.a : v.a * 0.2;
-    if (on) {
-      g.beginPath(); g.arc(x, y, rr * 1.6, 0, 7); g.strokeStyle = hexA(halo, 0.7); g.lineWidth = 1.2; g.stroke();
-    }
-    g.beginPath(); g.arc(x, y, rr, 0, 7); g.fillStyle = on ? '#ffffff' : c; g.fill();
-    if (on && light) { g.lineWidth = 1.1; g.strokeStyle = '#1b2431'; g.stroke(); }
+    if (on) { g.beginPath(); g.arc(x, y, rr + 2, 0, 7); g.fillStyle = P.bg; g.fill(); }   // a gap around the dot
+    g.beginPath(); g.arc(x, y, rr, 0, 7); g.fillStyle = c; g.fill();
     g.globalAlpha = 1;
     if (v.k === selected || v.k === hover) { g.beginPath(); g.arc(x, y, rr + 6, 0, 7); g.strokeStyle = light ? '#141c27' : '#fff'; g.lineWidth = 1.4; g.stroke(); }
   }

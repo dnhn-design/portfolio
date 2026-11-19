@@ -598,10 +598,8 @@ function drawLive() {
     const rl = isRail(v.g), c = rl ? '#e9eef6' : r_(v).c;
     const on = vis(v);
     g.globalAlpha = on ? v.a : v.a * 0.2;
-    if (on) {
-      g.beginPath(); g.arc(x, y, rr * 1.6, 0, 7); g.strokeStyle = hexA(c, 0.7); g.lineWidth = 1.2; g.stroke();
-    }
-    g.beginPath(); g.arc(x, y, rr, 0, 7); g.fillStyle = on ? '#ffffff' : c; g.fill();
+    if (on) { g.beginPath(); g.arc(x, y, rr + 2, 0, 7); g.fillStyle = BG; g.fill(); }   // a gap around the dot
+    g.beginPath(); g.arc(x, y, rr, 0, 7); g.fillStyle = c; g.fill();
     g.globalAlpha = 1;
     if (v.k === selected || v.k === hover) { g.beginPath(); g.arc(x, y, rr + 6, 0, 7); g.strokeStyle = '#fff'; g.lineWidth = 1.4; g.stroke(); }
   }

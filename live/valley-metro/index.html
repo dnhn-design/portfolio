@@ -535,11 +535,8 @@ function drawLive() {
     v.sx = x; v.sy = y;
     const c = tc(r_(v).col), on = vis(v), bus = v.g === BUSG, rad = bus ? rr * 0.85 : rr;
     g.globalAlpha = on ? v.a : v.a * 0.2;
-    if (on) {
-      g.beginPath(); g.arc(x, y, rad * 1.6, 0, 7); g.strokeStyle = hexA(c, 0.7); g.lineWidth = 1.2; g.stroke();
-    }
-    g.beginPath(); g.arc(x, y, rad, 0, 7); g.fillStyle = on ? '#ffffff' : c; g.fill();
-    if (PAL.lift && on) { g.lineWidth = 1.2; g.strokeStyle = c; g.stroke(); }
+    if (on) { g.beginPath(); g.arc(x, y, rad + 2, 0, 7); g.fillStyle = PAL.bg; g.fill(); }   // a gap around the dot
+    g.beginPath(); g.arc(x, y, rad, 0, 7); g.fillStyle = c; g.fill();
     g.globalAlpha = 1;
     if (v.k === selected || v.k === hover) { g.beginPath(); g.arc(x, y, rad + 6, 0, 7); g.strokeStyle = PAL.lift ? '#18202e' : '#fff'; g.lineWidth = 1.4; g.stroke(); }
   }

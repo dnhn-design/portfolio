@@ -555,8 +555,7 @@ function drawLive(now) {
     const c = gc(v.g), on = vis(v), rail = isRailG(v.g);
     g.globalAlpha = on ? v.a : v.a * 0.2;
     if (on) {
-      g.beginPath(); g.arc(x, y, rr * (rail ? 3.4 : 3.1), 0, 7); g.fillStyle = hexA(c, 0.16); g.fill();
-      g.beginPath(); g.arc(x, y, rr * 1.9, 0, 7); g.fillStyle = hexA(c, 0.38); g.fill();
+      g.beginPath(); g.arc(x, y, rr * 1.6, 0, 7); g.strokeStyle = hexA(c, 0.7); g.lineWidth = 1.2; g.stroke();
     }
     g.beginPath(); g.arc(x, y, rr * (rail ? 1.15 : 1), 0, 7); g.fillStyle = on ? pal.core : c; g.fill();
     g.globalAlpha = 1;

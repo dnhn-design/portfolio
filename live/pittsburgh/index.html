@@ -536,8 +536,7 @@ function drawLive() {
     const c = C(r_(v).c), on = vis(v), rail = GROUPS[v.g].rail;
     g.globalAlpha = on ? v.a : v.a * 0.2;
     if (on) {
-      g.beginPath(); g.arc(x, y, rr * 3.1, 0, 7); g.fillStyle = hexA(c, rail ? 0.2 : 0.16); g.fill();
-      g.beginPath(); g.arc(x, y, rr * 1.9, 0, 7); g.fillStyle = hexA(c, rail ? 0.4 : 0.34); g.fill();
+      g.beginPath(); g.arc(x, y, rr * 1.6, 0, 7); g.strokeStyle = hexA(c, 0.7); g.lineWidth = 1.2; g.stroke();
     }
     g.beginPath(); g.arc(x, y, rr, 0, 7); g.fillStyle = on ? TH.core : c; g.fill();
     if (on && TH.coreRing) { g.lineWidth = 1; g.strokeStyle = TH.coreRing; g.stroke(); }

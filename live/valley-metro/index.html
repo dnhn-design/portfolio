@@ -536,8 +536,7 @@ function drawLive() {
     const c = tc(r_(v).col), on = vis(v), bus = v.g === BUSG, rad = bus ? rr * 0.85 : rr;
     g.globalAlpha = on ? v.a : v.a * 0.2;
     if (on) {
-      g.beginPath(); g.arc(x, y, rad * 3.1, 0, 7); g.fillStyle = hexA(c, bus ? 0.14 : 0.2); g.fill();
-      g.beginPath(); g.arc(x, y, rad * 1.9, 0, 7); g.fillStyle = hexA(c, bus ? 0.32 : 0.4); g.fill();
+      g.beginPath(); g.arc(x, y, rad * 1.6, 0, 7); g.strokeStyle = hexA(c, 0.7); g.lineWidth = 1.2; g.stroke();
     }
     g.beginPath(); g.arc(x, y, rad, 0, 7); g.fillStyle = on ? '#ffffff' : c; g.fill();
     if (PAL.lift && on) { g.lineWidth = 1.2; g.strokeStyle = c; g.stroke(); }

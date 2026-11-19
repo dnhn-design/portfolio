@@ -561,8 +561,7 @@ function drawLive() {
     const c = rcol(v.p.r), on = vis(v), big = routes[v.p.r].k === 'rail' ? 1.25 : 1, r = rr * big;
     g.globalAlpha = on ? v.a : v.a * 0.2;
     if (on) {
-      g.beginPath(); g.arc(x, y, r * 3.1, 0, 7); g.fillStyle = hexA(c, T.light ? 0.22 : 0.17); g.fill();
-      g.beginPath(); g.arc(x, y, r * 1.9, 0, 7); g.fillStyle = hexA(c, T.light ? 0.42 : 0.36); g.fill();
+      g.beginPath(); g.arc(x, y, r * 1.6, 0, 7); g.strokeStyle = hexA(c, 0.7); g.lineWidth = 1.2; g.stroke();
     }
     g.beginPath(); g.arc(x, y, r, 0, 7); g.fillStyle = on ? T.core : c; g.fill();
     if (on && T.coreRing) { g.lineWidth = 1; g.strokeStyle = T.coreRing; g.stroke(); }

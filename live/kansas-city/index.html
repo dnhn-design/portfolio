@@ -409,8 +409,8 @@ function drawLive() {
   const order = vehicles.slice().sort((a, b) => (vVis(a) ? 1 : 0) - (vVis(b) ? 1 : 0));
   for (const v of order) {
     v.px = sx(v.x); v.py = sy(v.y); if (v.px < -20 || v.py < -20 || v.px > W + 20 || v.py > H + 20) continue;
-    const vis = vVis(v), al = v.a * (vis ? 1 : 0.13), sp = sprite(RT[v.r].col, halo), isSel = v.id === selVeh;
-    c.globalAlpha = al; c.drawImage(sp.cv, v.px - sp.sz / 2, v.py - sp.sz / 2, sp.sz, sp.sz);
+    const vis = vVis(v), al = v.a * (vis ? 1 : 0.13), isSel = v.id === selVeh;
+    c.globalAlpha = al * 0.7; c.beginPath(); c.arc(v.px, v.py, core * 1.6, 0, 6.2832); c.lineWidth = 1.2; c.strokeStyle = RT[v.r].col; c.stroke(); c.globalAlpha = al;
     c.beginPath(); c.arc(v.px, v.py, core, 0, 6.2832); c.fillStyle = T.core; c.fill();
     if (T.coreEdge !== 'rgba(0,0,0,0)') { c.lineWidth = 1; c.strokeStyle = T.coreEdge; c.stroke(); }
     if (isSel) { c.globalAlpha = 1; c.beginPath(); c.arc(v.px, v.py, core + 4, 0, 6.2832); c.lineWidth = 1.6; c.strokeStyle = RT[v.r].col; c.stroke(); }

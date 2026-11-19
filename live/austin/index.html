@@ -495,8 +495,7 @@ function drawLive() {
     const c = gc(v.g), on = vis(v), halo = (!light && v.g === 0) ? '#ffffff' : c;
     g.globalAlpha = on ? v.a : v.a * 0.2;
     if (on) {
-      g.beginPath(); g.arc(x, y, rr * 3.1, 0, 7); g.fillStyle = hexA(halo, light ? 0.2 : 0.16); g.fill();
-      g.beginPath(); g.arc(x, y, rr * 1.9, 0, 7); g.fillStyle = hexA(halo, light ? 0.4 : 0.34); g.fill();
+      g.beginPath(); g.arc(x, y, rr * 1.6, 0, 7); g.strokeStyle = hexA(halo, 0.7); g.lineWidth = 1.2; g.stroke();
     }
     g.beginPath(); g.arc(x, y, rr, 0, 7); g.fillStyle = on ? '#ffffff' : c; g.fill();
     if (on && light) { g.lineWidth = 1.1; g.strokeStyle = '#1b2431'; g.stroke(); }

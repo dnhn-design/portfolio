@@ -555,8 +555,7 @@ function drawLive() {
     const on = vis(v), sc = isBus ? 0.82 : 1;
     g.globalAlpha = on ? v.a : v.a * 0.2;
     if (on) {
-      g.beginPath(); g.arc(x, y, rr * 3.1 * sc, 0, 7); g.fillStyle = hexA(c, v.g === G_WCE ? 0.18 : 0.17); g.fill();
-      g.beginPath(); g.arc(x, y, rr * 1.9 * sc, 0, 7); g.fillStyle = hexA(c, v.g === G_WCE ? 0.3 : 0.38); g.fill();
+      g.beginPath(); g.arc(x, y, rr * 1.6 * sc, 0, 7); g.strokeStyle = hexA(c, 0.7); g.lineWidth = 1.2; g.stroke();
     }
     g.beginPath(); g.arc(x, y, rr * sc, 0, 7); g.fillStyle = on ? TH.core : c; g.fill();
     g.globalAlpha = 1;

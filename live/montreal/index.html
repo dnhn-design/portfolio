@@ -527,8 +527,7 @@ function drawLive() {
     const c = gc(v.g), on = vis(v);
     g.globalAlpha = on ? v.a : v.a * 0.2;
     if (on) {
-      g.beginPath(); g.arc(x, y, rr * 3.1, 0, 7); g.fillStyle = hexA(c, theme === 'dark' ? 0.16 : 0.2); g.fill();
-      g.beginPath(); g.arc(x, y, rr * 1.9, 0, 7); g.fillStyle = hexA(c, theme === 'dark' ? (v.g ? 0.38 : 0.3) : 0.4); g.fill();
+      g.beginPath(); g.arc(x, y, rr * 1.6, 0, 7); g.strokeStyle = hexA(c, 0.7); g.lineWidth = 1.2; g.stroke();
     }
     g.beginPath(); g.arc(x, y, rr, 0, 7); g.fillStyle = on ? T.core : c; g.fill();
     g.globalAlpha = 1;

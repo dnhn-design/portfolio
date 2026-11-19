@@ -540,8 +540,7 @@ function drawLive() {
     const c = COL[v.g], on = vis(v);
     g.globalAlpha = on ? v.a : v.a * 0.2;
     if (on) {
-      g.beginPath(); g.arc(x, y, rr * 3.1, 0, 7); g.fillStyle = hexA(c, view_ === 'light' ? 0.2 : 0.18); g.fill();
-      g.beginPath(); g.arc(x, y, rr * 1.9, 0, 7); g.fillStyle = hexA(c, view_ === 'light' ? 0.42 : 0.34); g.fill();
+      g.beginPath(); g.arc(x, y, rr * 1.6, 0, 7); g.strokeStyle = hexA(c, 0.7); g.lineWidth = 1.2; g.stroke();
     }
     g.beginPath(); g.arc(x, y, rr, 0, 7); g.fillStyle = on ? P.core : c; g.fill();
     if (on && P.coreRing) { g.lineWidth = 1; g.strokeStyle = P.coreRing; g.stroke(); }

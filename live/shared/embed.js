@@ -60,6 +60,7 @@
   }
   function setup() {
     const list = document.getElementById('list'); if (!list) return;
+    if (list.hasAttribute('data-nogroup')) return;
     list.addEventListener('click', (e) => {
       const h = e.target.closest && e.target.closest('.lgh'); if (!h) return;
       const g = h.parentNode, k = g.dataset.lk, shut = h.getAttribute('aria-expanded') === 'true';

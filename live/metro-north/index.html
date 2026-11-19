@@ -196,6 +196,10 @@ const rel=m=>m<=0.5?'now':m<60?Math.ceil(m)+'m':Math.floor(m/60)+'h '+Math.round
 const gTracks=$('#tracks'),gSt=$('#stations'),gTr=$('#trains'),gBase=$('#base');
 if(window.Basemap)Basemap.svg(gBase,(lo,la)=>lo*KX,(lo,la)=>-la*1000,el);   // county / coast / highway base layer
 for(const k in G){G[k].path=el('path',{class:'seg off'},gTracks);G[k].path.setAttribute('d','M'+G[k].pts.map(p=>p[0].toFixed(2)+' '+p[1].toFixed(2)).join('L'))}
+/* Harriman-Secaucus is one through segment: the part north of Suffern is Metro-North (orange), only the rest is NJ Transit trackage */
+{const g=G['114-122'],su=S.find(x=>x.name==='Suffern');
+ if(g&&su){let bi=0,bd=1e18;g.pts.forEach((p,i)=>{const d=(p[0]-su.x)**2+(p[1]-su.y)**2;if(d<bd){bd=d;bi=i}});
+  g.over=el('path',{class:'seg off'},gTracks);g.over.setAttribute('d','M'+g.pts.slice(0,bi+1).map(p=>p[0].toFixed(2)+' '+p[1].toFixed(2)).join('L'))}}
 const LAB={'Grand Central':[10,17,'start'],'Poughkeepsie':[10,4,'start'],'Wassaic':[10,4,'start'],'New Haven':[12,16,'start'],'New Canaan':[-10,4,'end'],'Danbury':[-10,4,'end'],'Waterbury':[10,4,'start'],'Hoboken':[10,16,'start'],'Port Jervis':[-10,4,'end'],'Spring Valley':[10,4,'start']};
 S.forEach(s=>{
   const g=el('g',{class:'st'},gSt); s.g=g;
@@ -240,7 +244,7 @@ function applySel(){
   for(const k in G){const g=G[k],m=g.mask&vis;let c;
     if(!m)c='off';else{const f=fam(m);
       if(f===1)c='c1';else if(f===2)c='c2';else if(f===4){c=(m&8)?'c3':(m&16)?'c4':(m&32)?'c5':(m&64)?'c6':'c3'}else if(f===8){c=(m&0x100)?'c8':NJSEG.has(k)?'c7n':'c7'}else c='cn'}
-    g.path.setAttribute('class','seg '+c)}
+    g.path.setAttribute('class','seg '+c);if(g.over)g.over.setAttribute('class','seg '+(c==='c7n'?'c7':c))}
   S.forEach(s=>{s.vis=!!(s.mask&vis);s.g.classList.toggle('off',!s.vis)});
   document.querySelectorAll('.ln').forEach(b=>b.classList.toggle('sel',+b.dataset.l===sel));$('#fall').classList.toggle('on',sel===null);
   $('#bar').classList.toggle('has',sel!==null);$('#app').classList.toggle('nhsel',sel===3);

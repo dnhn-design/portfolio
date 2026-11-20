@@ -43,7 +43,7 @@
 /* sidebar */
 #side{position:relative;overflow:hidden}
 #bpm{flex-basis:100%;font-size:12px;color:var(--accent);margin-top:2px;font-variant-numeric:tabular-nums}
-#ctl{display:flex;gap:4px;padding:2px 16px 10px}
+#ctl{display:flex;flex-wrap:wrap;gap:4px;padding:2px 16px 10px}
 .tg{flex:1;display:flex;align-items:center;gap:6px;min-width:0;padding:7px 7px;border:1px solid var(--line-2);border-radius:8px;background:none;color:var(--mute);font:500 11.5px var(--sans);cursor:pointer;text-align:left;white-space:nowrap}
 .tg>span{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .tg:hover{color:var(--fg);background:var(--hov)}
@@ -53,6 +53,7 @@
 .tg[aria-pressed="true"] .sw{background:#2fbf71}
 .tg[aria-pressed="true"] .sw::after{transform:translateX(9px)}
 .tg.ins{flex:none;gap:5px}
+#circ{flex:1 1 auto;min-width:max-content}
 .tg svg{width:10px;height:10px}
 .row.idle .no,.row.idle .to{opacity:.45}
 .row .ln .bul{margin-right:3px}
@@ -213,7 +214,7 @@ function stationPass(c,r){let n=0;SEG.forEach(q=>{if(q.r===r&&c.g.indexOf(q.g)>-
 function computeHeart(){
   let best=null,bv=-1;
   if(!foc){CX.forEach(c=>{if(c.p[day]>bv){bv=c.p[day];best=c}})}
-  else CX.forEach(c=>{if(lineSel&&lineSel.stn&&!lineSel.stn.has(c.i))return;let v=0;foc.forEach(r=>{if(c.lines.indexOf(r)>-1)v+=stationPass(c,r)});if(v>bv){bv=v;best=c}});
+  else CX.forEach(c=>{if(lineSel&&!svc&&lineSel.stn&&!lineSel.stn.has(c.i))return;let v=0;foc.forEach(r=>{if(c.lines.indexOf(r)>-1)v+=stationPass(c,r)});if(v>bv){bv=v;best=c}});
   if(!best){CX.forEach(c=>{if(c.p[day]>bv){bv=c.p[day];best=c}})}
   heart=best;heart._hv=bv;
   const r=focName();
@@ -358,7 +359,7 @@ function draw(now){
   // services
   ctx.lineCap='round';ctx.lineJoin='round';
   const faded=!!foc;
-  const CS=(lineSel&&lineSel.spans.length)?lineSel.spans.filter(sp=>!svc||sp.r===svc):null;
+  const CS=(lineSel&&lineSel.spans.length&&!svc)?lineSel.spans:null;   // a picked service shows its whole route, wherever it runs
   const SPG={};if(CS)CS.forEach(sp=>(SPG[sp.gi]||(SPG[sp.gi]=[])).push(sp));
   drawSet.forEach(([r,g],k)=>{
     const on=CS?false:(!foc||foc.has(r));const G_=G[g];

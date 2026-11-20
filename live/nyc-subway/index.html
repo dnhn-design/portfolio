@@ -219,7 +219,7 @@ function computeHeart(){
   $('k4').textContent=best.name;$('k4n').textContent=fmt(bv)+' trains, '+r;
 }
 
-function bullet(id,cls){const r=col(id);const e=document.createElement('span');e.className='bul'+(cls?' '+cls:'');e.style.background=r.bg;e.style.color=r.fg;e.textContent=r.short;if(SHL[id])e.textContent=SHL[id];e.title=r.name;if(e.textContent.length>1)e.style.fontSize='9px';return e}
+function bullet(id,cls){const r=col(id);const e=document.createElement('span');e.className='bul'+(cls?' '+cls:'');e.style.background=r.bg;e.style.color=r.fg;e.textContent=r.short;if(SHL[id])e.textContent=SHL[id];e.title=r.name;if(r.short.length>1)e.style.fontSize='7px';else if(SHL[id])e.style.letterSpacing='-.04em';return e}
 const SHL={FS:'SF',H:'SR'};   // Franklin Av and Rockaway Park shuttle bullets read SF and SR
 
 // ---- pulse series

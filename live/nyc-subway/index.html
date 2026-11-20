@@ -43,8 +43,9 @@
 /* sidebar */
 #side{position:relative;overflow:hidden}
 #bpm{flex-basis:100%;font-size:12px;color:var(--accent);margin-top:2px;font-variant-numeric:tabular-nums}
-#ctl{display:flex;gap:6px;padding:2px 18px 10px}
-.tg{flex:1;display:flex;align-items:center;gap:8px;min-width:0;padding:7px 10px;border:1px solid var(--line-2);border-radius:8px;background:none;color:var(--mute);font:500 12px var(--sans);cursor:pointer;text-align:left;white-space:nowrap}
+#ctl{display:flex;gap:4px;padding:2px 16px 10px}
+.tg{flex:1;display:flex;align-items:center;gap:6px;min-width:0;padding:7px 7px;border:1px solid var(--line-2);border-radius:8px;background:none;color:var(--mute);font:500 11.5px var(--sans);cursor:pointer;text-align:left;white-space:nowrap}
+.tg>span{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .tg:hover{color:var(--fg);background:var(--hov)}
 .tg .sw{width:22px;height:13px;border-radius:7px;background:var(--line-2);position:relative;flex:none;transition:background .15s}
 .tg .sw::after{content:"";position:absolute;top:2px;left:2px;width:9px;height:9px;border-radius:50%;background:var(--bg);transition:transform .15s}
@@ -63,7 +64,7 @@
 .pills.has-on .pill:not(.on),.kchips.has-on .pill:not(.on){opacity:.4}
 #legend .pill{padding:2px;border-radius:50%}
 #legend .pill:hover{background:none}
-.pill .bul{width:22px;height:22px;font-size:11px}
+.pill .bul{width:22px;height:22px;font-size:11px;padding-top:2px}
 .bul{width:15px;height:15px;border-radius:50%;font:700 9px/1 var(--f-display);display:inline-grid;place-items:center;flex:none}
 /* slide-over: stats unique to this map */
 #slide{position:absolute;inset:0;z-index:5;background:var(--panel);display:flex;flex-direction:column;min-height:0;transform:translateX(100%);visibility:hidden;transition:transform .26s ease,visibility 0s .26s}
@@ -86,12 +87,12 @@ h2{font:700 16px var(--f-display);margin:0}
 .hub .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hub .v{font:500 13px var(--f-mono);font-variant-numeric:tabular-nums}
 .hub .bl{grid-column:1/3;display:flex;flex-wrap:wrap;gap:2px}
-.sel h3{font:700 22px/1.1 var(--f-display);margin:0 0 6px}
-.sel .bl{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:10px}
-.sel .bul{width:20px;height:20px;font-size:11px}
-.sel .stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
-.sel .stats div{font-size:12px;color:var(--ink2)}
-.sel .stats b{display:block;font:700 20px var(--f-display);color:var(--ink);font-variant-numeric:tabular-nums}
+#sel h3{font:700 22px/1.1 var(--f-display);margin:0 0 6px}
+#sel .bl{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:10px}
+#sel .bul{width:20px;height:20px;font-size:11px}
+#sel .stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+#sel .stats div{font-size:12px;color:var(--ink2)}
+#sel .stats b{display:block;font:700 20px var(--f-display);color:var(--ink);font-variant-numeric:tabular-nums}
 svg text{font-family:var(--f-body);font-size:10px;fill:var(--ink3)}
 details{font-size:11px;color:var(--ink3)}
 summary{cursor:pointer}
@@ -219,7 +220,7 @@ function computeHeart(){
   $('k4').textContent=best.name;$('k4n').textContent=fmt(bv)+' trains, '+r;
 }
 
-function bullet(id,cls){const r=col(id);const e=document.createElement('span');e.className='bul'+(cls?' '+cls:'');e.style.background=r.bg;e.style.color=r.fg;e.textContent=r.short;if(SHL[id])e.textContent=SHL[id];e.title=r.name;if(r.short.length>1)e.style.fontSize='7px';else if(SHL[id])e.style.letterSpacing='-.04em';return e}
+function bullet(id,cls){const r=col(id);const e=document.createElement('span');e.className='bul'+(cls?' '+cls:'');e.style.background=r.bg;e.style.color=r.fg;e.textContent=r.short;if(SHL[id])e.textContent=SHL[id];e.title=r.name;if(r.short.length>1)e.style.fontSize='7px';else if(SHL[id]){e.style.letterSpacing='-.04em';e.style.paddingRight='1px'}return e}
 const SHL={FS:'SF',H:'SR'};   // Franklin Av and Rockaway Park shuttle bullets read SF and SR
 
 // ---- pulse series

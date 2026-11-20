@@ -64,6 +64,7 @@
 #legend .pill{padding:2px;border-radius:50%}
 #legend .pill:hover{background:none}
 .pill .bul{width:22px;height:22px;font-size:11px}
+.bul sup{font-size:.72em;line-height:0;position:relative;top:-.45em;margin-left:.04em;font-weight:700}
 .bul{width:15px;height:15px;border-radius:50%;font:700 9px/1 var(--f-display);display:inline-grid;place-items:center;flex:none}
 /* slide-over: stats unique to this map */
 #slide{position:absolute;inset:0;z-index:5;background:var(--panel);display:flex;flex-direction:column;min-height:0;transform:translateX(100%);visibility:hidden;transition:transform .26s ease,visibility 0s .26s}
@@ -219,7 +220,8 @@ function computeHeart(){
   $('k4').textContent=best.name;$('k4n').textContent=fmt(bv)+' trains, '+r;
 }
 
-function bullet(id,cls){const r=col(id);const e=document.createElement('span');e.className='bul'+(cls?' '+cls:'');e.style.background=r.bg;e.style.color=r.fg;e.textContent=r.short;e.title=r.name;if(r.short.length>1)e.style.fontSize='7px';return e}
+function bullet(id,cls){const r=col(id);const e=document.createElement('span');e.className='bul'+(cls?' '+cls:'');e.style.background=r.bg;e.style.color=r.fg;e.textContent=r.short;const sp=SUPS[id];if(sp){const w=document.createElement('span'),q=document.createElement('sup');w.textContent=r.short;q.textContent=sp;w.appendChild(q);e.textContent='';e.appendChild(w)}e.title=r.name;if(r.short.length>1)e.style.fontSize='7px';return e}
+const SUPS={FS:'F',H:'R'};   // the Franklin Av and Rockaway Park shuttles are an S with a small F or R
 
 // ---- pulse series
 function series(d){

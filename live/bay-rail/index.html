@@ -487,7 +487,7 @@ function drawBase() {
     g.textAlign = 'left'; g.textBaseline = 'middle'; g.lineJoin = 'round';
     const boxes = []; const zz = Labels.lvl(zf(), !!lineSel); Labels.begin(stations);
     stations.forEach((s) => {
-      if (!s.vis || !s.on) return; if (!Labels.keep(s, stations, zz)) return;
+      if (!s.vis || !s.on) return; if (!(Labels.keep(s, stations, zz) && !(!lineSel && Labels.faded(s, fd)))) return;
       if (s.trol && !s.keep) return; // eBART transfer platform: a separate stop just east of Pittsburg/Bay Point
 if (D.xplat) { const yel = routes.findIndex((r) => r.id === 'B:YEL'); stations.push({ n: 'eBART Transfer', X: mx(D.xplat[0]), Y: my(D.xplat[1]), z: 0, f: 'B', e: 1, p: 1, routes: [yel], g: routes[yel].g, sub: true, rail: false, trol: false, rank: 14, ci: -1, col: routes[yel].c }); }
 // street-running stops: only terminals and transfers are named for a line; a selected vehicle names its own stops

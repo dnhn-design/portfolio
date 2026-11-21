@@ -422,7 +422,7 @@ function drawLabels(g) {
   g.textAlign = 'left'; g.textBaseline = 'middle'; g.lineJoin = 'round';
   const boxes = []; const zz = Labels.lvl(zf(), !!lineSel); Labels.begin(stations);
   stations.forEach((s) => {
-    if (!s.vis || !s.on) return; if (!Labels.keep(s, stations, zz)) return;
+    if (!s.vis || !s.on) return; if (!(Labels.keep(s, stations, zz) && !(!lineSel && Labels.faded(s, fd)))) return;
     if (s.street && (!s.keep || selected >= 0)) return;
     const name = shortName(s.n); g.font = (s.blue ? '500 ' : '400 ') + Labels.px(zz) + 'px Inter, sans-serif';
     const w = g.measureText(name).width, h = 14;

@@ -21,6 +21,12 @@
   }
   L.keep = (s, list, zz) => { const f = L.frac(zz); if (f <= 0) return false; const i = order(list).get(s); return i == null ? true : i < Math.ceil(list.length * f); };
   /* directions to try, as unit-ish vectors away from the dot. nx,ny is the normal of the nearest track */
+  /* a station whose mode / group is dimmed by the Focus menu gets no name (fd = the map's own "is this group dimmed" test) */
+  L.faded = (s, fd, byRoute) => {
+    if (byRoute) return !!(s.routes && s.routes.length && [...s.routes].every(fd));
+    if (s.gs && s.gs.length) return s.gs.every(fd);
+    return s.g != null ? !!fd(s.g) : false;
+  };
   L.cands = (nx, ny) => {
     const sgn = nx >= 0 ? 1 : -1;
     return [[nx * sgn, ny * sgn], [-nx * sgn, -ny * sgn], [1, 0], [-1, 0], [0.8, -0.8], [0.8, 0.8], [-0.8, -0.8], [-0.8, 0.8], [0, -1], [0, 1]];

@@ -397,7 +397,7 @@ function drawBase() {
     g.textAlign = 'left'; g.textBaseline = 'middle'; g.lineJoin = 'round';
     const boxes = []; const zz = Labels.lvl(zf(), !!lineSel); Labels.begin(stations);
     stations.forEach((s) => {
-      if (!s.vis || !s.on) return; if (!Labels.keep(s, stations, zz)) return;
+      if (!s.vis || !s.on) return; if (!(Labels.keep(s, stations, zz) && !(!lineSel && Labels.faded(s, fd)))) return;
       if (s.m === 'bus' && !(s.term || z > 0.8)) return;
       const name = clip(g, s.n); g.font = (s.m === 'train' ? '500 ' : '400 ') + Labels.px(zz) + 'px Inter, sans-serif';
       const w = g.measureText(name).width, h = 14;

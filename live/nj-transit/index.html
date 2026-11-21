@@ -412,7 +412,7 @@ function drawLabels(g) {
   const boxes = [], wr = wrap.getBoundingClientRect();
   document.querySelectorAll('#keybody,#keytog,#zoomc,#sublegend:not([hidden]) button,#theme').forEach((el) => { if (el.offsetParent === null) return; const r = el.getBoundingClientRect(); boxes.push([r.left - wr.left - 3, r.top - wr.top - 3, r.right - wr.left + 3, r.bottom - wr.top + 3]); });
   [...stations].sort((a, b) => ((b.term ? 6 : 0) + b.rank) - ((a.term ? 6 : 0) + a.rank)).forEach((s) => {
-    if (!s.vis || !s.on) return; if (!Labels.keep(s, stations, zz)) return;
+    if (!s.vis || !s.on) return; if (!(Labels.keep(s, stations, zz) && !(!lineSel && Labels.faded(s, fd)))) return;
     if (s.dense && !s.keep) return;
     const name = s.n; g.font = (s.g === 0 ? '500 ' : '400 ') + Labels.px(zz) + 'px Inter, sans-serif';
     const w = g.measureText(name).width, h = 14;

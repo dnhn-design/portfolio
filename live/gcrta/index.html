@@ -394,7 +394,7 @@ function drawBase() {
     g.textAlign = 'left'; g.textBaseline = 'middle'; g.lineJoin = 'round';
     const boxes = []; const zz = Labels.lvl(zf(), !!lineSel); Labels.begin(stations);
     stations.forEach((s) => {
-      if (!s.vis || !s.on) return; if (!Labels.keep(s, stations, zz)) return;
+      if (!s.vis || !s.on) return; if (!(Labels.keep(s, stations, zz) && !(!lineSel && Labels.faded(s, fd)))) return;
       if (s.trol && !s.keep) return; // HealthLine stops: only terminals and transfers are named for a line; a selected bus names its own stops
       const name = shortName(s.n); g.font = ((s.rail || s.sub) ? '500 ' : '400 ') + Labels.px(zz) + 'px Inter, sans-serif';
       const nw = g.measureText(name).width, w = nw, h = 14;

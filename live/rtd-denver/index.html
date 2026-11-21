@@ -436,7 +436,7 @@ function drawBase() {
     g.textAlign = 'left'; g.textBaseline = 'middle'; g.lineJoin = 'round';
     const boxes = []; const zz = Labels.lvl(zf(), !!lineSel); Labels.begin(stations);
     stations.forEach((s) => {
-      if (!s.vis || !s.on) return; if (!Labels.keep(s, stations, zz)) return;
+      if (!s.vis || !s.on) return; if (!(Labels.keep(s, stations, zz) && !(!lineSel && Labels.faded(s, fd)))) return;
       if (s.st && !s.keep) return;
       const name = shortName(s.n); g.font = ((s.rail || s.lrt) ? '500 ' : '400 ') + Labels.px(zz) + 'px Inter, sans-serif';
       const nw = g.measureText(name).width, showZ = zonesOn, w = nw + (showZ ? 17 : 0), h = 14;

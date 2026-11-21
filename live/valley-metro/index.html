@@ -445,7 +445,7 @@ function drawBase() {
     const zz = Labels.lvl(zf(), !!lineSel); Labels.begin(stations);
     const boxes = [], names = [];
     stOrder.forEach((s) => {
-      if (!s.vis || !s.on) return; if (!Labels.keep(s, stations, zz)) return;
+      if (!s.vis || !s.on) return; if (!(Labels.keep(s, stations, zz) && !(!lineSel && Labels.faded(s, fd)))) return;
       if (!s.sparse && !s.keep) return;
       if (s.g === BUSG && !s.term && z < 1.0) return; // buses: only terminals until zoomed in
       if (names.some((o) => o[0] === s.n && Math.abs(o[1] - s.sx) + Math.abs(o[2] - s.sy) < 160)) return;

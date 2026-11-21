@@ -455,7 +455,7 @@ function drawBase() {
     g.textAlign = 'left'; g.textBaseline = 'middle'; g.lineJoin = 'round';
     const boxes = []; const zz = Labels.lvl(zf(), !!lineSel); Labels.begin(stations);
     stations.forEach((s) => {
-      if (!s.vis || !s.on) return; if (!Labels.keep(s, stations, zz)) return;
+      if (!s.vis || !s.on) return; if (!(Labels.keep(s, stations, zz) && !(!lineSel && Labels.faded(s, fd)))) return;
       if (s.trol && !s.keep) return; // trolley stops: only terminals and transfers are named for a line; a selected train names its own stops
       const name = shortName(s.n); g.font = (s.rail ? '500 ' : '400 ') + Labels.px(zz) + 'px Inter, sans-serif';
       const nw = g.measureText(name).width, showZ = s.ci >= 0 && zonesOn, w = nw + (showZ ? 34 : 0), h = 14;

@@ -44,8 +44,8 @@
 #ph{position:absolute;top:-2px;bottom:-4px;width:2px;margin-left:-1px;border-radius:2px;background:var(--fg)}
 #legend .k-lines button.sel{background:#ffffff14;color:var(--fg)}
 #legend #bus{padding:6px 0 0;border-top:1px solid var(--line)}
-#legend #br{display:none;padding:6px 0 0;border-top:1px solid var(--line)}
-#legend #br.on{display:grid}
+#legend #br,#legend #hlr{display:none;padding:6px 0 0;border-top:1px solid var(--line)}
+#legend #br.on,#legend #hlr.on{display:grid}
 .k-sub{color:var(--dim);font-size:10px;letter-spacing:.07em;text-transform:uppercase;grid-column:1/-1;padding:0 6px 2px}
 /* map */
 .seg{fill:none;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;stroke-width:3;transition:stroke .35s,opacity .35s}
@@ -152,6 +152,9 @@
           <button class="ln" data-l="9" style="--c:var(--c9)"><i></i>Hudson Link</button>
           <button class="ln" data-l="10" style="--c:var(--c10)"><i></i>Hudson Rail Link</button>
         </div>
+        <div class="k-lines" id="hlr"><span class="k-sub">Hudson Link routes</span>
+          <button class="hp" data-h="H01" title="Suffern – Palisades Center" style="--c:var(--c9)"><i></i>H1 Suffern</button><button class="hp" data-h="H03" title="Monsey – White Plains" style="--c:var(--c9)"><i></i>H3 Monsey</button><button class="hp" data-h="H05" title="Palisades Center – White Plains" style="--c:var(--c9)"><i></i>H5 Palisades Ctr</button><button class="hp" data-h="H07" title="Tarrytown – Palisades Center / Spring Valley" style="--c:var(--c9)"><i></i>H7 Tarrytown</button>
+        </div>
         <div class="k-lines" id="br"><span class="k-sub">New Haven branches</span>
           <button class="bp" data-l="4" style="--c:var(--c4)"><i></i>New Canaan</button><button class="bp" data-l="5" style="--c:var(--c5)"><i></i>Danbury</button><button class="bp" data-l="6" style="--c:var(--c6)"><i></i>Waterbury</button>
         </div>
@@ -193,7 +196,7 @@ const GCT=S.find(s=>s.name==='Grand Central'), H125=S.find(s=>s.name==='Harlem-1
 
 /* ---------- state ---------- */
 const SPD=[1, 10, 100, 300, 600];
-let spdI=0,fitS=1,manual=false,sel=null,br=null,menuShown=false,vis=0x7FE,t=__nowSec('America/New_York')/60,T0=0,T1=1560,day='wkd',TR=[],selTr=null,
+let spdI=0,fitS=1,manual=false,sel=null,br=null,hr=null,menuShown=false,vis=0x7FE,t=__nowSec('America/New_York')/60,T0=0,T1=1560,day='wkd',TR=[],selTr=null,
     playing=!matchMedia('(prefers-reduced-motion:reduce)').matches,drag=false,viewDirty=true,hover=null,lastMin=-1,lastPn=-1;
 const SP=m=>m; 
 const V={s:1,x:0,y:0}, Vt={s:1,x:0,y:0};
@@ -223,28 +226,33 @@ S.forEach(s=>{
 /* ---------- day data ---------- */
 function loadDay(k){
   day=k;selTr=null;
-  S.forEach(s=>{s.mask=0;s.cnt=0;s.deps=[]});for(const q in G)G[q].mask=0;
+  S.forEach(s=>{s.mask=0;s.cnt=0;s.deps=[];s.hr=null});for(const q in G){G[q].mask=0;G[q].hr=null}
   gTr.innerHTML='';
   TR=D.d[k].map(([r,d,n,h,st],i)=>{
     const legs=[];
     st.forEach((s,j)=>{const a0=S[s[0]];a0.mask|=1<<r;a0.cnt++;
       if(j<st.length-1){a0.deps.push({t:s[2],ti:i,track:s[3]});
-        const a=s[0],b=st[j+1][0],g=G[Math.min(a,b)+'-'+Math.max(a,b)];g.mask|=1<<r;legs.push({g,rev:a>b})}});
-    const tr={i,r,d,n,h,st,legs,t0:st[0][2],t1:st[st.length-1][1],ci:0,e:null,vis:false,sx:0,sy:0,_p:null};
+        const a=s[0],b=st[j+1][0],g=G[Math.min(a,b)+'-'+Math.max(a,b)];g.mask|=1<<r;legs.push({g,rev:a>b});if(r===9)(g.hr||(g.hr={}))[String(n).replace(/X$/,'')]=1}
+      if(r===9)(a0.hr||(a0.hr={}))[String(n).replace(/X$/,'')]=1});
+    const tr={i,r,d,n,b:r===9?String(n).replace(/X$/,''):'',h,st,legs,t0:st[0][2],t1:st[st.length-1][1],ci:0,e:null,vis:false,sx:0,sy:0,_p:null};
     tr.e=el('circle',{class:'tr r'+r+(d?' i':' o'),r:4.2,display:'none'},gTr);return tr});
   /* a bus route with no service on this day type (the Hudson Rail Link runs weekdays only) still shows its route, so selecting it is not an empty map */
   [9,10].forEach(r=>{if(D.d[k].some(x=>x[0]===r))return;
     D.d.wkd.forEach(x=>{if(x[0]!==r)return;const st=x[4];st.forEach((q,j)=>{S[q[0]].mask|=1<<r;if(j<st.length-1){const a=q[0],b=st[j+1][0];G[Math.min(a,b)+'-'+Math.max(a,b)].mask|=1<<r}})})});
+  document.querySelectorAll('.hp').forEach(b=>{b.style.display=D.d[k].some(x=>x[0]===9&&String(x[2]).replace(/X$/,'')===b.dataset.h)?'':'none'});
   S.forEach(s=>{s.term=false});TR.forEach(tr=>{S[tr.st[0][0]].term=true;S[tr.st[tr.st.length-1][0]].term=true});
   S.forEach(s=>{let n=0,m=s.mask;while(m){n+=m&1;m>>=1}s.rank=(s===GCT?60:0)+(s.term?14:0)+n*3+Math.min(6,s.cnt/40)});
   S.forEach(s=>s.deps.sort((a,b)=>a.t-b.t));
   T0=Math.floor(Math.min(...TR.map(x=>x.t0))/60)*60;T1=Math.ceil(Math.max(...TR.map(x=>x.t1))/60)*60;
   document.querySelectorAll('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.d===k));
   t=Math.min(T1,Math.max(T0,t));
+  for(const q in G)G[q].cu=null;viewDirty=true;
   applySel();
 }
 
 /* ---------- view / selection ---------- */
+const tOn=tr=>!!((1<<tr.r)&vis)&&(tr.r!==9||sel!==9||hr===null||tr.b===hr);
+const hOn=o=>sel!==9||hr===null||!!(o.hr&&o.hr[hr]);
 function visMask(){return sel===null?0x7FE:sel===1?2:sel===2?4:sel===7?0x80:sel===8?0x100:sel===9?0x200:sel===10?0x400:(br?1<<br:0x78)}
 function computeFit(){
   const vs=S.filter(s=>s.vis);if(!vs.length)return;
@@ -256,17 +264,18 @@ function computeFit(){
   fitS=s;manual=false;$('#fit').classList.remove('show');
   Vt.s=s;Vt.x=px+(aw-bw*s)/2-bb.a*s;Vt.y=pt+(ah-bh*s)/2-bb.c*s;viewDirty=true}
 function applySel(){
-  vis=visMask();
-  for(const k in G){const g=G[k],m=g.mask&vis;let c;
+  vis=visMask();if(sel!==9)hr=null;
+  for(const k in G){const g=G[k],m=hOn(g)?g.mask&vis:0;let c;
     if(!m)c='off';else{const f=fam(m);
       if(f===1)c='c1';else if(f===2)c='c2';else if(f===4){c=(m&8)?'c3':(m&16)?'c4':(m&32)?'c5':(m&64)?'c6':'c3'}else if(f===8){c=(m&0x100)?'c8':NJSEG.has(k)?'c7n':'c7'}else if(f===16){c=(m&0x400)?'c10':'c9'}else c='cn'}
     g.path.setAttribute('class','seg '+c);if(g.over)g.over.setAttribute('class','seg '+(c==='c7n'?'c7':c))}
-  S.forEach(s=>{s.vis=!!(s.mask&vis);s.g.classList.toggle('off',!s.vis)});
+  S.forEach(s=>{s.vis=!!(s.mask&vis)&&hOn(s);s.g.classList.toggle('off',!s.vis)});
   document.querySelectorAll('.ln').forEach(b=>{const on=+b.dataset.l===sel;b.classList.toggle('sel',on);b.classList.toggle('act',on);b.classList.toggle('off',sel!==null&&!on)});$('#fall').classList.toggle('on',sel===null);
   $('#bar').classList.toggle('has',sel!==null);$('#app').classList.toggle('nhsel',sel===3);
   document.querySelectorAll('.bp').forEach(b=>{const on=+b.dataset.l===br;b.classList.toggle('sel',on);b.classList.toggle('act',on);b.classList.toggle('off',br!==null&&!on)});
   $('#br').classList.toggle('has',br!==null);$('#br').classList.toggle('on',sel===3);
-  if(selTr&&!(vis&(1<<selTr.r)))selTr=null;
+  if(selTr&&!tOn(selTr))selTr=null;
+  document.querySelectorAll('.hp').forEach(b=>{const on=b.dataset.h===hr;b.classList.toggle('sel',on);b.classList.toggle('act',on);b.classList.toggle('off',hr!==null&&!on)});$('#hlr').classList.toggle('on',sel===9);
   
   computeFit();clampBr();drawBars();setHover(null);lastPn=-1}
 function clampBr(){const b=$('#br');b.style.setProperty('--sx','0px');
@@ -274,6 +283,7 @@ function clampBr(){const b=$('#br');b.style.setProperty('--sx','0px');
   if(r.left<m)sx=m-r.left;else if(r.right>innerWidth-m)sx=innerWidth-m-r.right;
   b.style.setProperty('--sx',sx+'px')}
 document.querySelectorAll('.ln').forEach(b=>b.onclick=()=>{const l=+b.dataset.l;sel=sel===l?null:l;br=null;menuShown=false;applySel()});
+document.querySelectorAll('.hp').forEach(b=>b.onclick=()=>{const l=b.dataset.h;hr=hr===l?null:l;applySel()});
 document.querySelectorAll('.bp').forEach(b=>b.onclick=()=>{const l=+b.dataset.l;br=br===l?null:l;applySel()});
 document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{if(b.dataset.d!==day)loadDay(b.dataset.d)});
 
@@ -281,7 +291,7 @@ document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{if(b.dataset.
 const trk=$('#trk'),B=5;
 const pct=m=>(m-T0)/(T1-T0)*100;
 function drawBars(){const n=Math.ceil((T1-T0)/B),c=new Array(n).fill(0);
-  TR.forEach(tr=>{if(!((1<<tr.r)&vis))return;for(let b=Math.floor((tr.t0-T0)/B);b<=Math.floor((tr.t1-T0)/B);b++)if(b>=0&&b<n)c[b]++});
+  TR.forEach(tr=>{if(!tOn(tr))return;for(let b=Math.floor((tr.t0-T0)/B);b<=Math.floor((tr.t1-T0)/B);b++)if(b>=0&&b<n)c[b]++});
   const mx=Math.max(1,...c);let d='';
   c.forEach((v,i)=>{const h=Math.max(2,v/mx*36);d+=`M${i+.18} 40h.64v${-h.toFixed(1)}h-.64z`});
   const bs=$('#bars');bs.setAttribute('viewBox',`0 0 ${n} 40`);bs.querySelector('path').setAttribute('d',d)}
@@ -315,7 +325,7 @@ const tip=$('#tip');
 function nextDeps(s,n,dir){const out=[];const L=s.deps;let lo=0,hi=L.length;
   while(lo<hi){const m=(lo+hi)>>1;if(L[m].t<t)lo=m+1;else hi=m}
   for(let i=lo;i<L.length&&out.length<n;i++){const tr=TR[L[i].ti];
-    if(!((1<<tr.r)&vis))continue;if(dir!=null&&tr.d!==dir)continue;out.push({...L[i],tr})}
+    if(!tOn(tr))continue;if(dir!=null&&tr.d!==dir)continue;out.push({...L[i],tr})}
   return out}
 const dotc=r=>`<span class="dot" style="background:var(--c${r})"></span>`;
 function stationHTML(s){
@@ -326,7 +336,7 @@ function stationHTML(s){
   if(!rows)rows='<div class="rw"><span class="m">–</span></div>';
   return`<div class="th"><b>${esc(s.name)}</b><span class="dots">${rs.map(dotc).join('')}</span></div>${rows}<div class="ft"><b>${s.cnt}</b> ${s.bus?'bus trips':'trains'} / day</div>`}
 function gctHTML(){
-  const L=nextDeps(GCT,6),all=GCT.deps.filter(d=>(1<<TR[d.ti].r)&vis);
+  const L=nextDeps(GCT,6),all=GCT.deps.filter(d=>tOn(TR[d.ti]));
   const rows=L.map(d=>`<div class="rw"><span class="trk" style="background:var(--b${d.tr.r})">${esc(d.track||'')}</span><b>${fmt(d.t)}</b><span class="n">${esc(d.tr.h)}</span><span class="m">${rel(d.t-t)}</span></div>`).join('')||'<div class="rw"><span></span><span class="m">–</span></div>';
   const h0=Math.floor(T0/60),h1=Math.floor(T1/60),hc=new Array(h1-h0+1).fill(0);
   const mix={1:0,2:0,4:0,8:0};
@@ -363,7 +373,8 @@ function selectTrain(tr){
       pr=60;let dx=0,dy=0;
       if(sx<60)dx=60-sx;else if(sx>W-pr)dx=W-pr-sx;if(sy<tl)dy=tl-sy;else if(sy>H-60)dy=H-60-sy;
       if(dx||dy){Vt.x+=dx;Vt.y+=dy;manual=true;$('#fit').classList.add('show')}}}
-  lastPn=-1;renderPanel(true)}
+  if(tr&&!tr.ss)tr.ss=new Set(tr.st.map(q=>q[0]));
+  viewDirty=true;lastPn=-1;renderPanel(true)}
 function rowHTML(tr){
   const p=tr._p,k=p?Math.min(p.i+(p.f>0?1:0),tr.st.length-1):0,nx=S[tr.st[k][0]].name,open=selTr===tr;
   let h=`<button class="row${open?' sel':''}" data-i="${tr.i}" aria-expanded="${open}"><span class="dot" style="background:var(--c${tr.r})"></span><span class="n"><b>${esc(tr.n)}</b>&nbsp; ${esc(tr.h)}</span><span class="m">${esc(nx)}</span></button>`;
@@ -394,7 +405,7 @@ function hitStation(e){const r=map.getBoundingClientRect(),x=e.clientX-r.left,y=
   for(const s of S)if(s.vis){const d=Math.hypot(s.sx-x,s.sy-y);if(d<(s===GCT?20:15)&&d<bd){bd=d;best=s}}
   return best}
 function hitTrack(e){const r=map.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top;let best=null,bd=9;
-  for(const k in G){const g=G[k];if(!(g.mask&vis))continue;const p=g.pts;
+  for(const k in G){const g=G[k];if(!(g.mask&vis)||!hOn(g))continue;const p=g.pts;
     for(let i=1;i<p.length;i++){const ax=p[i-1][0]*V.s+V.x,ay=p[i-1][1]*V.s+V.y,bx=p[i][0]*V.s+V.x,by=p[i][1]*V.s+V.y,dx=bx-ax,dy=by-ay,L=dx*dx+dy*dy;
       let u=L?((px-ax)*dx+(py-ay)*dy)/L:0;u=Math.max(0,Math.min(1,u));const d=Math.hypot(px-ax-u*dx,py-ay-u*dy);if(d<bd){bd=d;best=g}}}
   return best}
@@ -441,9 +452,9 @@ function updateLabels(){
   const mr=$('#map').getBoundingClientRect(),W=mr.width,H=mr.height,zz=Labels.lvl(Math.log2(V.s/fitS),sel!==null),px=Labels.px(zz),gp=Labels.gap(zz);
   $('#stations').style.setProperty('--lf',px+'px');lcv.font=px+'px Inter, system-ui, sans-serif';
   Labels.begin(S.map(s=>({vis:s.vis&&s.sx>-10&&s.sx<W+10&&s.sy>-10&&s.sy<H+10,sx:s.sx,sy:s.sy})));
-  const boxes=[],dots=S.filter(s=>s.vis);
+  const boxes=[],dots=S.filter(s=>s.vis),bt=selTr&&selTr.r>=9?selTr:null,busSel=sel===9||sel===10;
   S.forEach(s=>s.tx.classList.remove('show'));
-  S.filter(s=>s.vis&&s.sx>-10&&s.sx<W+10&&s.sy>-10&&s.sy<H+10&&Labels.keep(s,S,zz)).sort((a,b)=>b.rank-a.rank).forEach(s=>{
+  S.filter(s=>s.vis&&s.sx>-10&&s.sx<W+10&&s.sy>-10&&s.sy<H+10&&(bt?bt.ss.has(s.i):(busSel||s.bus)?false:Labels.keep(s,S,zz))).sort((a,b)=>b.rank-a.rank).forEach(s=>{
     const w=lcv.measureText(s.name).width,h=px+3;let pick=null;
     for(const [ux,uy] of [[1,0],[-1,0],[0.8,-0.8],[0.8,0.8],[-0.8,-0.8],[-0.8,0.8],[0,-1],[0,1]]){
       const bx=ux>0.3?s.sx+ux*gp:ux<-0.3?s.sx+ux*gp-w:s.sx-w/2,by=uy>0.3?s.sy+uy*gp:uy<-0.3?s.sy+uy*gp-h:s.sy-h/2,b=[bx,by,bx+w,by+h];
@@ -454,6 +465,11 @@ function updateLabels(){
     if(!pick)return;boxes.push(pick);
     s.tx.setAttribute('x',(pick[0]-s.sx).toFixed(1));s.tx.setAttribute('y',(pick[1]+h/2-s.sy+px*0.35).toFixed(1));s.tx.setAttribute('text-anchor','start');s.tx.classList.add('show')});
 }
+let cullW=0,cullH=0;
+function cullSegs(){const mr=map.getBoundingClientRect(),W=mr.width,H=mr.height;
+  for(const k in G){const g=G[k];if(!g.bb){let a=1e9,b=-1e9,c=1e9,d=-1e9;g.pts.forEach(p=>{a=Math.min(a,p[0]);b=Math.max(b,p[0]);c=Math.min(c,p[1]);d=Math.max(d,p[1])});g.bb=[a,b,c,d]}
+    const q=g.bb,out=!g.mask||q[1]*V.s+V.x<-20||q[0]*V.s+V.x>W+20||q[3]*V.s+V.y<-20||q[2]*V.s+V.y>H+20;
+    if(out!==g.cu){g.cu=out;g.path.style.display=out?'none':'';if(g.over)g.over.style.display=out?'none':''}}}
 function frame(now){
   const dt=Math.min(0.1,(now-last)/1000);last=now;
   if(playing&&!drag){t+=dt*SPD[spdI]/60;if(t>T1)t=T0}
@@ -462,9 +478,9 @@ function frame(now){
   if(viewDirty){
     gTracks.setAttribute('transform',`translate(${V.x} ${V.y}) scale(${V.s})`);gBase.setAttribute('transform',`translate(${V.x} ${V.y}) scale(${V.s})`);
     S.forEach(s=>{s.sx=s.x*V.s+V.x;s.sy=s.y*V.s+V.y;s.g.setAttribute('transform',`translate(${s.sx.toFixed(1)} ${s.sy.toFixed(1)})`)});
-    updateLabels();viewDirty=false}
+    cullSegs();updateLabels();viewDirty=false}
   for(const tr of TR){
-    const on=!!((1<<tr.r)&vis),p=on?place(tr,t):null;
+    const on=tOn(tr),p=on?place(tr,t):null;
     if(!p){if(tr.vis){tr.e.setAttribute('display','none');tr.vis=false}tr._p=null;continue}
     tr._p=p;tr.sx=p.x*V.s+V.x;tr.sy=p.y*V.s+V.y;
     if(!tr.vis){tr.e.removeAttribute('display');tr.vis=true}

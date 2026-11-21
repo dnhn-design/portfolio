@@ -246,6 +246,7 @@ function loadDay(k){
   T0=Math.floor(Math.min(...TR.map(x=>x.t0))/60)*60;T1=Math.ceil(Math.max(...TR.map(x=>x.t1))/60)*60;
   document.querySelectorAll('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.d===k));
   t=Math.min(T1,Math.max(T0,t));
+  for(const q in G)G[q].cu=null;viewDirty=true;
   applySel();
 }
 
@@ -467,7 +468,7 @@ function updateLabels(){
 let cullW=0,cullH=0;
 function cullSegs(){const mr=map.getBoundingClientRect(),W=mr.width,H=mr.height;
   for(const k in G){const g=G[k];if(!g.bb){let a=1e9,b=-1e9,c=1e9,d=-1e9;g.pts.forEach(p=>{a=Math.min(a,p[0]);b=Math.max(b,p[0]);c=Math.min(c,p[1]);d=Math.max(d,p[1])});g.bb=[a,b,c,d]}
-    const q=g.bb,out=q[1]*V.s+V.x<-20||q[0]*V.s+V.x>W+20||q[3]*V.s+V.y<-20||q[2]*V.s+V.y>H+20;
+    const q=g.bb,out=!g.mask||q[1]*V.s+V.x<-20||q[0]*V.s+V.x>W+20||q[3]*V.s+V.y<-20||q[2]*V.s+V.y>H+20;
     if(out!==g.cu){g.cu=out;g.path.style.display=out?'none':'';if(g.over)g.over.style.display=out?'none':''}}}
 function frame(now){
   const dt=Math.min(0.1,(now-last)/1000);last=now;

@@ -417,9 +417,9 @@ function drawBase() {
   stations.forEach((s) => {
     const x = SX(s.X), y = SY(s.Y); s.sx = x; s.sy = y; s.vis = false; s.on = !dim || inSel(s.routes);
     if (x < -10 || x > W + 10 || y < -10 || y > H + 10) return;
-    if (!dim) return; // no station names or dots unless a line is highlighted; the line itself carries the geometry
+    if (!dim && (Labels.faded(s, fd) || !Labels.keep(s, stations, Labels.lvl(zf(), false)))) return;   // nothing selected: dots and names come in progressively as you zoom
     if (!s.on || (s.trol && !s.keep)) return;
-    const hot = !!(s.e & 2), col = s.rail ? lineSel.color : (hot ? '#f2f5fa' : routes[s.routes[0]].col);
+    const hot = !!(s.e & 2), col = s.rail ? (lineSel ? lineSel.color : '#c9d3e2') : (hot ? '#f2f5fa' : routes[s.routes[0]].col);
     const zc = s.z && (zonesOn || ((lineSel ? lineSel.set.size : 0) === 1 && routes[[...lineSel.set][0]].s === 'COASTER')) ? ZCOL[+s.z - 1] : null;
     const r = (hot ? 3.8 : 2.8) + Math.max(0, z) * 0.45;
     g.beginPath(); g.arc(x, y, r, 0, 7); g.fillStyle = BG; g.fill(); g.lineWidth = hot ? 1.8 : 1.4; g.strokeStyle = zc || hexA(s.rail && (lineSel ? lineSel.set.size : 0) > 1 ? '#c9d3e2' : col, 1); g.stroke(); s.vis = true;

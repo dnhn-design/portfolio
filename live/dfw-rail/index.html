@@ -336,7 +336,7 @@ function drawBase() {
     } else if (s.sub) {
       const r = (dim ? 2.8 : 1.8) + Math.max(0, z) * 0.4;
       g.beginPath(); g.arc(x, y, r, 0, 7); g.fillStyle = BG; g.fill(); g.lineWidth = 1.1; g.strokeStyle = hexA(s.col, 0.85 * a); g.stroke(); s.vis = true;
-    } else if (dim && s.keep) {
+    } else if ((dim || Labels.keep(s, stations, Labels.lvl(zf(), false))) && s.keep) {
       g.beginPath(); g.arc(x, y, 2.2, 0, 7); g.fillStyle = hexA(s.col, 0.85); g.fill(); s.vis = true;
     }
   });
@@ -347,7 +347,7 @@ function drawBase() {
     g.textAlign = 'left'; g.textBaseline = 'middle';
     const boxes = []; const zz = Labels.lvl(zf(), !!lineSel); Labels.begin(stations);
     stationList.forEach((s) => {
-      if (!s.vis || !s.on) return; if (!Labels.keep(s, stations, zz)) return;
+      if (!s.vis || !s.on) return; if (!(Labels.keep(s, stations, zz) && !(!lineSel && Labels.faded(s, fd)))) return;
       if (s.trol && !s.keep) return;
       const name = shortName(s.n); g.font = (s.rail ? '500 ' : '400 ') + Labels.px(zz) + 'px Inter, sans-serif';
       const w = g.measureText(name).width, h = 14;

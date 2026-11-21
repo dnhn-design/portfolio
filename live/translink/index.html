@@ -436,7 +436,7 @@ function drawBase() {
     const faded = s.gset.every(fd), a = !s.on ? 0.22 : (!dim && faded) ? 0.16 : 1, col = gcol(s.g), hot = s.on && dim;
     if (s.bus) {
       if (!dim && faded) return;
-      if (dim ? (s.on && s.keep) : z > 0.9) {
+      if (dim ? (s.on && s.keep) : (z > 0.9 || (s.keep && Labels.keep(s, stations, Labels.lvl(zf(), false))))) {
         g.beginPath(); g.arc(x, y, hot ? 2.2 : 1.4, 0, 7); g.fillStyle = hexA(col, 0.75 * a); g.fill(); s.vis = true;
       }
       return;
@@ -454,7 +454,7 @@ function drawBase() {
     g.textAlign = 'left'; g.textBaseline = 'middle'; g.lineJoin = 'round';
     const boxes = []; const zz = Labels.lvl(zf(), !!lineSel); Labels.begin(stations);
     stations.forEach((s) => {
-      if (!s.vis || !s.on) return; if (!Labels.keep(s, stations, zz)) return;
+      if (!s.vis || !s.on) return; if (!(Labels.keep(s, stations, zz) && !(!lineSel && Labels.faded(s, fd)))) return;
       if (s.bus && !s.keep) return;
       const name = shortName(s.n); g.font = (s.bus ? '400 ' : '500 ') + Labels.px(zz) + 'px Inter, sans-serif';
       const w = g.measureText(name).width, h = 14;

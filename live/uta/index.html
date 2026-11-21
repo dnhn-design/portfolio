@@ -149,6 +149,7 @@ canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
 </style>
 <script src="../shared/embed.js"></script>
+<script src="../shared/labels.js"></script>
 <script src="../shared/native-theme.js" data-key="uta-theme"></script>
 
 <div id="app">
@@ -365,22 +366,25 @@ function drawBase() {
   hl.forEach((f) => f());
   // station dots and labels exist only for the highlighted line
   stations.forEach((s) => { s.vis = false; s.sx = SX(s.X); s.sy = SY(s.Y); });
-  if (dim) {
+  {
     const segs = [];
     shapes.forEach((s, si) => {
       if (!inSel(shapeRoutes.get(si))) return;
       for (let i = 1; i < s.n; i++) { const ax = SX(s.X[i - 1]), ay = SY(s.Y[i - 1]), bx = SX(s.X[i]), by = SY(s.Y[i]); if (Math.max(ax, bx) < -30 || Math.min(ax, bx) > W + 30 || Math.max(ay, by) < -30 || Math.min(ay, by) > H + 30) continue; segs.push(ax, ay, bx, by); }
     });
-    const gi = lineSel.g, col = gcol(gi), dense = GROUPS[gi].dense, boxes = [];
-    const cand = stations.filter((s) => s.routes.some((r) => lineSel.set.has(r)) && s.keep && s.sx > -10 && s.sx < W + 10 && s.sy > -10 && s.sy < H + 10);
+    const boxes = [], zz = Labels.lvl(zf(), dim);
+    const gOf = (s) => dim ? lineSel.g : [...s.gs][0];
+    const cand = stations.filter((s) => (!dim || s.routes.some((r) => lineSel.set.has(r))) && s.keep && (dim || (Labels.keep(s, stations, zz) && !Labels.faded(s, fd))) && s.sx > -10 && s.sx < W + 10 && s.sy > -10 && s.sy < H + 10);
     g.textAlign = 'left'; g.textBaseline = 'middle';
     cand.forEach((s) => {
-      s.vis = true;
+      s.vis = true; const gi = gOf(s), col = gcol(gi), dense = GROUPS[gi].dense;
       const r = (dense ? 2.4 : 3.2) + Math.max(0, z) * 0.5;
       g.beginPath(); g.arc(s.sx, s.sy, r, 0, 7); g.fillStyle = P.bg; g.fill(); g.lineWidth = 1.6; g.strokeStyle = col; g.stroke();
     });
-    cand.forEach((s) => {
-      const name = shortName(s.n); g.font = (dense ? '400 ' : '500 ') + '11.5px Inter, sans-serif';
+    Labels.begin(stations);
+    cand.filter((s) => !dim || Labels.keep(s, stations, zz)).forEach((s) => {
+      const dense = GROUPS[gOf(s)].dense;
+      const name = shortName(s.n); g.font = (dense ? '400 ' : '500 ') + Labels.px(zz) + 'px Inter, sans-serif';
       const w = g.measureText(name).width, h = 14;
       let bd = 1e9, ang = 0;
       for (let i = 0; i < segs.length; i += 4) {
@@ -388,7 +392,7 @@ function drawBase() {
         const f = Math.max(0, Math.min(1, ((s.sx - ax) * dx + (s.sy - ay) * dy) / l2)), d = (ax + dx * f - s.sx) ** 2 + (ay + dy * f - s.sy) ** 2;
         if (d < bd) { bd = d; ang = Math.atan2(dy, dx); }
       }
-      const nx = -Math.sin(ang), ny = Math.cos(ang), G = 9;
+      const nx = -Math.sin(ang), ny = Math.cos(ang), G = Labels.gap(zz);
       const place = (ux, uy) => {
         let bx, by;
         if (ux > 0.5) bx = s.sx + ux * G; else if (ux < -0.5) bx = s.sx + ux * G - w; else bx = s.sx - w / 2;
@@ -396,11 +400,12 @@ function drawBase() {
         return [bx, by, bx + w, by + h];
       };
       const sgn = nx >= 0 ? 1 : -1;
-      const cs = [[nx * sgn, ny * sgn], [-nx * sgn, -ny * sgn], [1, 0], [-1, 0], [0, -1], [0, 1]];
+      const cs = Labels.cands(nx, ny);
       for (const c of cs) {
         const b = place(c[0], c[1]);
         if (b[0] < 4 || b[2] > W - 4 || b[1] < 4 || b[3] > H - 4) continue;
         if (boxes.some((o) => b[0] < o[2] + 2 && b[2] > o[0] - 2 && b[1] < o[3] && b[3] > o[1])) continue;
+        if (Labels.dotHit(b, s)) continue;
         boxes.push(b); const ty = b[1] + h / 2;
         g.lineWidth = 3.6; g.strokeStyle = P.halo; g.strokeText(name, b[0], ty); g.fillStyle = P.txt; g.fillText(name, b[0], ty); break;
       }

@@ -475,7 +475,7 @@ function drawBase() {
       const r = (s.on && dim ? 2.8 : 1.8) + Math.max(0, z) * 0.4;
       if (s.p && a > 0.5) { g.beginPath(); g.arc(x, y, r + 3.2, 0, 7); g.setLineDash([2, 2]); g.strokeStyle = hexA('#ffe45c', 0.9 * a); g.lineWidth = 1; g.stroke(); g.setLineDash([]); }
       g.beginPath(); g.arc(x, y, r, 0, 7); g.fillStyle = BG; g.fill(); g.lineWidth = 1.1; g.strokeStyle = hexA(col, 0.85 * a); g.stroke(); s.vis = true;
-    } else if (dim ? (s.on && s.keep) : z > 0.9) {
+    } else if (dim ? (s.on && s.keep) : (z > 0.9 || (s.keep && Labels.keep(s, stations, Labels.lvl(zf(), false))))) {
       g.beginPath(); g.arc(x, y, dim && s.on ? 2 : 1.3, 0, 7); g.fillStyle = hexA(col, 0.75 * a); g.fill(); s.vis = true;
     }
   });
@@ -487,7 +487,7 @@ function drawBase() {
     g.textAlign = 'left'; g.textBaseline = 'middle'; g.lineJoin = 'round';
     const boxes = []; const zz = Labels.lvl(zf(), !!lineSel); Labels.begin(stations);
     stations.forEach((s) => {
-      if (!s.vis || !s.on) return; if (!Labels.keep(s, stations, zz)) return;
+      if (!s.vis || !s.on) return; if (!(Labels.keep(s, stations, zz) && !(!lineSel && Labels.faded(s, fd)))) return;
       if (s.trol && !s.keep) return; // eBART transfer platform: a separate stop just east of Pittsburg/Bay Point
 if (D.xplat) { const yel = routes.findIndex((r) => r.id === 'B:YEL'); stations.push({ n: 'eBART Transfer', X: mx(D.xplat[0]), Y: my(D.xplat[1]), z: 0, f: 'B', e: 1, p: 1, routes: [yel], g: routes[yel].g, sub: true, rail: false, trol: false, rank: 14, ci: -1, col: routes[yel].c }); }
 // street-running stops: only terminals and transfers are named for a line; a selected vehicle names its own stops

@@ -253,10 +253,10 @@ function drawStatic(){
     if(s.rt){g.fillStyle='rgba(235,240,248,.6)';g.beginPath();g.arc(x,y,sr*.8,0,7);g.fill()}
     if(cr){g.lineWidth=1.4;g.strokeStyle=zcol(s.z,.95);g.fillStyle='#090c11';g.beginPath();g.arc(x,y,sr*(s.rt?1.5:1.05),0,7);if(!s.rt)g.fill();g.stroke()}
     g.globalAlpha=1;
-    if(st.focus)lab.push({s,x,y,cr,pr:(s.g.size>1?2:0)+(cr?1:0)})}
-  // labels only for the highlighted line
+    if(st.focus||w>0.5)lab.push({s,x,y,cr,pr:(s.g.size>1?2:0)+(cr?1:0)+(s.rt?1:0)})}
+  // labels: the highlighted line only, or - nothing selected - every visible mode, named progressively
   g.textBaseline='middle';const boxes=[];lab.sort((a,b)=>b.pr-a.pr);
-  const kf=Math.min(W/(bbSys[2]-bbSys[0]),H/(bbSys[3]-bbSys[1]))*.9,zz=Labels.lvl(Math.log2(view.k/kf),true),fs=Labels.px(zz)-.5;   // progressive: terminals/transfers first, all stops when zoomed in
+  const kf=Math.min(W/(bbSys[2]-bbSys[0]),H/(bbSys[3]-bbSys[1]))*.9,zz=Labels.lvl(Math.log2(view.k/kf),!!st.focus),fs=Labels.px(zz)-.5;   // progressive: terminals/transfers first, all stops when zoomed in
   const dots=lab.map(L=>[L.x,L.y]);
   for(const L of lab.slice(0,Math.ceil(lab.length*Labels.frac(zz)))){g.font='500 '+fs+'px '+FONT;const text=L.s.n,tw=g.measureText(text).width,zt=L.cr&&L.s.z&&[...L.s.r].some(r=>r.startsWith('CR')||r==='CapeFlyer'?inF(r):false)?'Z'+L.s.z:'';
     g.font='600 9.5px '+FONT;const zw=zt?g.measureText(zt).width+5:0;

@@ -357,18 +357,18 @@ function drawBase() {
 function stopSet(sv) {
   const out = new Map(); // idx -> {label}
   if (sv) { P[sv.pi].st.forEach(s => out.set(s, true)); return out; }
-  const sel = selRoutes(); if (!sel) return out;
+  const sel = selRoutes() || RT.map((_, i) => i); if (!sel) return out;   // nothing selected: every route, named progressively as you zoom
   sel.forEach(r => { if (!focusOk(r)) return; const rail = RT[r].m === 'rail';
     routeStops[r].forEach(s => { if (rail) out.set(s, true); else if (!out.has(s)) out.set(s, TERM.has(s) || XFER.has(s)); else if (TERM.has(s) || XFER.has(s)) out.set(s, true); }); });
   return out;
 }
 function drawStops(sv) {
   shownStops = []; const set = stopSet(sv); if (!set.size) return;
-  const c = bx, col = sv ? RT[P[sv.pi].r].col : RT[selRoutes()[0]].col, rad = clampn(2.4 + view.s * 1400, 3, 5.2);
+  const c = bx, col = sv ? RT[P[sv.pi].r].col : (selRoutes() ? RT[selRoutes()[0]].col : '#9aa4b2'), rad = clampn(2.4 + view.s * 1400, 3, 5.2);
   const items = [];
   set.forEach((lab, i) => { const s = ST[i], x = sx(s.x), y = sy(s.y); if (x < -20 || y < -20 || x > W + 20 || y > H + 20) return;
     const rc = RT[s.r[0]].col; items.push({ i, x, y, lab, col: sv ? col : rc }); });
-  const zz = Labels.lvl(Math.log2(view.s / fitS()), true);
+  const def = !sv && !selRoutes(), zz = Labels.lvl(Math.log2(view.s / fitS()), !def);
   c.font = '500 ' + Labels.px(zz) + 'px ' + FONT; c.textBaseline = 'middle';
   const rects = items.map(it => [it.x - rad - 1, it.y - rad - 1, it.x + rad + 1, it.y + rad + 1]);
   const hit = (b) => rects.some(r => b[0] < r[2] && b[2] > r[0] && b[1] < r[3] && b[3] > r[1]);
@@ -392,7 +392,9 @@ function drawStops(sv) {
   }
   c.lineJoin = 'round'; c.lineWidth = 3.2; c.strokeStyle = T.halo; c.fillStyle = T.label;
   for (const p of placed) { c.strokeText(p.n, p.x, p.y); c.fillText(p.n, p.x, p.y); }
+  const showSet = def ? new Set(labs) : null;
   for (const it of items) {
+    if (showSet && !showSet.has(it)) continue;
     c.beginPath(); c.arc(it.x, it.y, rad, 0, 6.2832); c.fillStyle = T.dot; c.fill(); c.lineWidth = 2; c.strokeStyle = it.col; c.stroke();
     shownStops.push(it);
   }

@@ -53,7 +53,7 @@ html[data-theme="light"][data-map="lirr"]{--bar:#c3cad6;--bar-on:#10151c}
 html[data-theme="light"][data-map="lirr"] #tip{box-shadow:0 8px 28px rgba(16,21,28,.2)}
 /* Metro-North */
 html[data-theme="light"][data-map="metro-north"]{--c7:#d97706;--c8:#7c3aed;--c7n:#8d8438;--dim:#5b6676;--trunk:#5f6b7c;--seg:#e3e7ee;--bar:#c3cad6;--baron:#4a5260;--onink:#ffffff;--shadow:0 10px 30px rgba(16,21,28,.18);
-  --c1:#009B3A;--c2:#0039A6;--c3:#EE0034;--c4:#E0457B;--c5:#F26B3A;--c6:#A8102B}
+  --c1:#009B3A;--c2:#0039A6;--c3:#EE0034;--c4:#E0457B;--c5:#F26B3A;--c6:#A8102B;--c9:#0E9488;--c10:#5B4BD6}
 html[data-theme="light"][data-map="metro-north"] .seg.off{stroke:#c3cad6}
 html[data-theme="light"][data-map="metro-north"] .pg{background:#d5dae3}
 html[data-theme="light"][data-map="metro-north"] .hist i{background:#c3cad6}

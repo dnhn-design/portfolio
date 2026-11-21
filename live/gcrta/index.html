@@ -382,7 +382,7 @@ function drawBase() {
     } else if (s.sub) {
       const r = (s.on && dim ? 2.9 : 2.0) + Math.max(0, z) * 0.4, col = s.routes.length > 1 ? '#dbe3ee' : GROUPS[s.g].c;
       g.beginPath(); g.arc(x, y, s.routes.length > 1 ? r + 0.6 : r, 0, 7); g.fillStyle = BG; g.fill(); g.lineWidth = s.routes.length > 1 ? 1.4 : 1.1; g.strokeStyle = hexA(col, 0.85 * a); g.stroke(); s.vis = true;
-    } else if (dim ? (s.on && s.keep) : z > 0.9) {
+    } else if (dim ? (s.on && s.keep) : (z > 0.9 || (s.keep && Labels.keep(s, stations, Labels.lvl(zf(), false))))) {
       g.beginPath(); g.arc(x, y, dim && s.on ? 2.2 : 1.4, 0, 7); g.fillStyle = hexA(GROUPS[s.g].c, 0.75 * a); g.fill(); s.vis = true;
     }
   });
@@ -394,7 +394,7 @@ function drawBase() {
     g.textAlign = 'left'; g.textBaseline = 'middle'; g.lineJoin = 'round';
     const boxes = []; const zz = Labels.lvl(zf(), !!lineSel); Labels.begin(stations);
     stations.forEach((s) => {
-      if (!s.vis || !s.on) return; if (!Labels.keep(s, stations, zz)) return;
+      if (!s.vis || !s.on) return; if (!(Labels.keep(s, stations, zz) && !(!lineSel && Labels.faded(s, fd)))) return;
       if (s.trol && !s.keep) return; // HealthLine stops: only terminals and transfers are named for a line; a selected bus names its own stops
       const name = shortName(s.n); g.font = ((s.rail || s.sub) ? '500 ' : '400 ') + Labels.px(zz) + 'px Inter, sans-serif';
       const nw = g.measureText(name).width, w = nw, h = 14;

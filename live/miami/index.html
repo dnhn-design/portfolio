@@ -431,7 +431,7 @@ function drawBase() {
     if (x < -10 || x > W + 10 || y < -10 || y > H + 10) return;
     const a = !s.on ? 0.22 : (!dim && fd(s.g)) ? 0.16 : 1, strong = s.on && dim;
     if (s.bus) {
-      if (!(dim && s.on && s.keep)) return;
+      if (!((dim || Labels.keep(s, stations, Labels.lvl(zf(), false))) && s.on && s.keep)) return;
       g.beginPath(); g.arc(x, y, 2.1, 0, 7); g.fillStyle = hexA(COL[BUSG], 0.9 * a); g.fill(); s.vis = true; return;
     }
     const col = s.mixed ? P.neutral : COL[s.g], r = (strong ? 3.2 : s.rail ? 2.4 : 1.9) + Math.max(0, z) * 0.45;
@@ -446,7 +446,7 @@ function drawBase() {
     g.textAlign = 'left'; g.textBaseline = 'middle'; g.lineJoin = 'round';
     const boxes = []; const zz = Labels.lvl(zf(), !!lineSel); Labels.begin(stations);
     stations.forEach((s) => {
-      if (!s.vis || !s.on) return; if (!Labels.keep(s, stations, zz)) return;
+      if (!s.vis || !s.on) return; if (!(Labels.keep(s, stations, zz) && !(!lineSel && Labels.faded(s, fd)))) return;
       if (s.bus && !s.keep) return;
       const name = shortName(s.n); g.font = (s.rail ? '500 ' : '400 ') + Labels.px(zz) + 'px Inter, sans-serif';
       const w = g.measureText(name).width, h = 14;

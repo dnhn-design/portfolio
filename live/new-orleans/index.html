@@ -409,7 +409,7 @@ function drawLabels(g) {
   g.textAlign = 'left'; g.textBaseline = 'middle'; g.lineJoin = 'round'; g.font = '500 11.5px Inter, sans-serif';
   const boxes = []; const zz = Labels.lvl(zf(), !!lineSel); Labels.begin(stations);
   stations.forEach((s) => {
-    if (!s.vis || !Labels.keep(s, stations, zz)) return; g.font = '500 ' + Labels.px(zz) + 'px Inter, sans-serif';
+    if (!s.vis || !(Labels.keep(s, stations, zz) && !(!lineSel && Labels.faded(s, fd, true)))) return; g.font = '500 ' + Labels.px(zz) + 'px Inter, sans-serif';
     const name = shortName(s.n), w = g.measureText(name).width, h = 14;
     let bd = 1e9, ang = 0;   // tangent of the nearest stretch of highlighted track
     for (let i = 0; i < segs.length; i += 4) {

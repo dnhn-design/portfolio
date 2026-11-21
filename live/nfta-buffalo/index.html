@@ -451,8 +451,9 @@ function drawBase() {
   }
   // station dots: only for the highlighted line (bus: terminals and transfer points only)
   stations.forEach((s) => {
-    const x = SX(s.X), y = SY(s.Y); s.sx = x; s.sy = y; s.vis = false; s.on = dim && inSel(s.routes);
+    const x = SX(s.X), y = SY(s.Y); s.sx = x; s.sy = y; s.vis = false; s.on = inSel(s.routes);
     if (!s.on || x < -10 || x > W + 10 || y < -10 || y > H + 10) return;
+    if (!dim && !Labels.keep(s, stations, Labels.lvl(zf(), false))) return;
     const col = gcol(s.g);
     if (s.rail) {
       const r = 3.3 + Math.max(0, z) * 0.5;

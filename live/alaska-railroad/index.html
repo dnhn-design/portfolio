@@ -250,6 +250,9 @@ function drawBase() {
     }
   } else if (st.hl >= 0) {
     D.groups[st.hl].st.forEach(si => { const p = P.find(p => p.g === st.hl && p.s.includes(si)); const i = p.s.indexOf(si); items.push({ si, sh: p.sh, d: p.d[i], c: D.groups[st.hl].c }); });
+  } else {   // nothing selected: every station, named progressively as you zoom
+    const seen = new Set();
+    D.groups.forEach((g, gi) => g.st.forEach(si => { if (seen.has(si)) return; seen.add(si); const p = P.find(p => p.g === gi && p.s.includes(si)); if (!p) return; const i = p.s.indexOf(si); items.push({ si, sh: p.sh, d: p.d[i], c: g.c }); }));
   }
   if (items.length) drawStations(c, items);
 }

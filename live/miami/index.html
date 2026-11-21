@@ -431,7 +431,7 @@ function drawBase() {
     if (x < -10 || x > W + 10 || y < -10 || y > H + 10) return;
     const a = !s.on ? 0.22 : (!dim && fd(s.g)) ? 0.16 : 1, strong = s.on && dim;
     if (s.bus) {
-      if (!(dim && s.on && s.keep)) return;
+      if (!((dim || Labels.keep(s, stations, Labels.lvl(zf(), false))) && s.on && s.keep)) return;
       g.beginPath(); g.arc(x, y, 2.1, 0, 7); g.fillStyle = hexA(COL[BUSG], 0.9 * a); g.fill(); s.vis = true; return;
     }
     const col = s.mixed ? P.neutral : COL[s.g], r = (strong ? 3.2 : s.rail ? 2.4 : 1.9) + Math.max(0, z) * 0.45;

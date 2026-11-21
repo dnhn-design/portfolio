@@ -235,9 +235,9 @@ let stLabels=[]; // station render list for hit testing: {x,y,c}
 function labelBox(ax,ay,ux,uy,w,h,gap){const cx=ax+ux*gap+ux*w/2,cy=ay+uy*gap+uy*h/2;return [cx-w/2,cy-h/2,w,h];}
 function hit(a,b,pad){return !(a[0]+a[2]+pad<=b[0]||b[0]+b[2]+pad<=a[0]||a[1]+a[3]+pad<=b[1]||b[1]+b[3]+pad<=a[1]);}
 let LABPX=11;
-function placeLabels(ctx,items,placed,zz){ // items: {x,y,text,tx,ty,prio}; zz given = progressive disclosure by zoom
+function placeLabels(ctx,items,placed,zz,presliced){ // items: {x,y,text,tx,ty,prio}; zz given = progressive disclosure by zoom
   const out=[];items.sort((a,b)=>b.prio-a.prio);
-  if(zz!=null){items=items.slice(0,Math.ceil(items.length*Labels.frac(zz)));LABPX=Labels.px(zz)}else LABPX=11;
+  if(zz!=null){if(!presliced)items=items.slice(0,Math.ceil(items.length*Labels.frac(zz)));LABPX=Labels.px(zz)}else LABPX=11;
   ctx.font=bf(LABPX);
   for(const it of items){if(it.x<-20||it.y<-20||it.x>W+20||it.y>H+20)continue;const w=ctx.measureText(it.text).width+2,h=13;let n=[-(it.ty||0),(it.tx||0)];const nl=Math.hypot(n[0],n[1]);
     const cands=[];if(nl>.01){n=[n[0]/nl,n[1]/nl];cands.push(n,[-n[0],-n[1]]);}
@@ -262,17 +262,20 @@ function drawBase(){
     ctx.globalAlpha=1;});
   // stations only for highlighted line
   const items=[],placed=[];baseLabelRects=[];stLabels=[];
-  if(hl){
-    ST.forEach(c=>{let ri=-1;hl.forEach(r=>{if(c.routes.has(r)&&ri<0)ri=r;});if(ri<0)return;
-      const dense=R[ri].m==='bus';let anyTerm=false;hl.forEach(r=>{if(c.term.has(r))anyTerm=true;});
+  { const hlx=hl||new Set(R.keys());   // nothing selected: every route, revealed progressively as you zoom
+    const zz0=Labels.lvl(Math.log2(view.z/fitZ),!!hl);
+    ST.forEach(c=>{let ri=-1;hlx.forEach(r=>{if(c.routes.has(r)&&ri<0)ri=r;});if(ri<0)return;
+      const dense=R[ri].m==='bus';let anyTerm=false;hlx.forEach(r=>{if(c.term.has(r))anyTerm=true;});
       if(dense&&!(anyTerm||c.xfer))return;
       const x=sx(c.x),y=sy(c.y);if(x<-10||y<-10||x>W+10||y>H+10)return;
-      stLabels.push({x,y,c});
+      const prio=(anyTerm?3:0)+(c.xfer?1:0)+(R[ri].m==='brt'?.5:0)+(c.routes.size>1?.5:0);
       const tr=tangentAt(ri,x,y);
-      const skipLabel=trT&&hl.has(trT.r)&&c.routes.has(trT.r);
-      items.push({x,y,text:c.name,tx:tr[0],ty:tr[1],prio:(anyTerm?3:0)+(c.xfer?1:0)+(R[ri].m==='brt'?.5:0),col:null,skip:skipLabel});});
-    stLabels.forEach(s=>{const c=s.c,r0=c.term.size?5:3.6;ctx.beginPath();ctx.arc(s.x,s.y,r0+1.6,0,7);ctx.fillStyle=TH.halo;ctx.fill();ctx.beginPath();ctx.arc(s.x,s.y,r0,0,7);ctx.fillStyle=TH.dk?'#fff':'#fff';ctx.fill();ctx.lineWidth=1.8;ctx.strokeStyle=R[[...c.routes].find(r=>hl.has(r))].col;ctx.stroke();});
-    const lab=placeLabels(ctx,items.filter(i=>!i.skip),placed,Labels.lvl(Math.log2(view.z/fitZ),true));drawLabels(ctx,lab);
+      const skipLabel=trT&&hlx.has(trT.r)&&c.routes.has(trT.r);
+      const it={x,y,text:c.name,tx:tr[0],ty:tr[1],prio,col:null,skip:skipLabel};items.push(it);stLabels.push({x,y,c,it});});
+    if(!hl){const ord=items.slice().sort((a,b)=>b.prio-a.prio),keepN=Math.ceil(ord.length*Labels.frac(zz0)),ks=new Set(ord.slice(0,keepN));
+      for(let i=items.length-1;i>=0;i--)if(!ks.has(items[i])){items.splice(i,1);stLabels.splice(i,1)}}
+    stLabels.forEach(s=>{const c=s.c,r0=c.term.size?5:3.6;ctx.beginPath();ctx.arc(s.x,s.y,r0+1.6,0,7);ctx.fillStyle=TH.halo;ctx.fill();ctx.beginPath();ctx.arc(s.x,s.y,r0,0,7);ctx.fillStyle=TH.dk?'#fff':'#fff';ctx.fill();ctx.lineWidth=1.8;ctx.strokeStyle=R[[...c.routes].find(r=>hlx.has(r))].col;ctx.stroke();});
+    const lab=placeLabels(ctx,items.filter(i=>!i.skip),placed,hl?Labels.lvl(Math.log2(view.z/fitZ),true):zz0,!hl);drawLabels(ctx,lab);
   }
   dirty=false;
 }

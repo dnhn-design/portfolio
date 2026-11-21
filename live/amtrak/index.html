@@ -47,6 +47,7 @@
 #legend .k-lines button.on{background:#ffffff14;color:var(--fg)}
 </style>
 <script src="../shared/embed.js"></script>
+<script src="../shared/labels.js"></script>
 <script src="../shared/theme.js" data-canvas="1"></script>
 <link rel="stylesheet" href="../shared/map-theme.css">
 
@@ -137,6 +138,9 @@ for(const tr of trips){
   if(!routeShapes.has(tr.route)){routeShapes.set(tr.route,new Set());routeStops.set(tr.route,new Set());}
   routeShapes.get(tr.route).add(tr.shape);const ss=routeStops.get(tr.route);for(let i=0;i<tr.m;i++)ss.add(tr.st[i]);
 }
+const stopRoutes=stops.map(()=>new Set()),stopTerm=new Set();
+for(const tr of trips){for(let i=0;i<tr.m;i++)stopRoutes[tr.st[i]].add(tr.route);stopTerm.add(tr.st[0]);stopTerm.add(tr.st[tr.m-1]);}
+stops.forEach((s,i)=>{s.rank=stopRoutes[i].size*4+(stopTerm.has(i)?14:0);});   // terminals and busy junctions are named first
 const shapeCand=new Map();shapeRoutes.forEach((m,si)=>shapeCand.set(si,[...m.entries()].sort((a,b)=>b[1]-a[1]).map(e=>e[0])));
 const shapeBB=shapes.map(s=>{let a=1e9,b=-1e9,c=1e9,d=-1e9;for(let i=0;i<s.m;i++){a=Math.min(a,s.wx[i]);b=Math.max(b,s.wx[i]);c=Math.min(c,s.wy[i]);d=Math.max(d,s.wy[i]);}return [a,b,c,d];});
 const lineShapes=[...shapeRoutes.keys()].filter(si=>segOK[si].some(Boolean));
@@ -409,6 +413,21 @@ function render(){
     ctx.fillStyle=on?ac(sel.tr.bl):s.bl?'#a39b10':'#4a5565';
     ctx.beginPath();ctx.arc(x,y,on?zr+.8:zr,0,6.2832);ctx.fill();
   }
+  /* station names: progressive by zoom (terminals and junctions first, every station when zoomed in); only the selected route's / mode's stations; type size grows with zoom */
+  {const zz=Labels.lvl(Math.log2(cam.k/k0),!!S.route),rs=S.route?routeStops.get(S.route):null,cand=[];
+   for(let i=0;i<stops.length;i++){const s=stops[i];s.vis=false;if(rs&&!rs.has(i))continue;if(S.focus!=='all'&&(S.focus==='bl')!==s.bl)continue;
+     s.sx=sx(s.x);s.sy=sy(s.y);if(s.sx<-8||s.sy<-8||s.sx>W+8||s.sy>H+8)continue;s.vis=true;cand.push(s);}
+   Labels.begin(cand);const boxes=[],px=Labels.px(zz),gp=Labels.gap(zz);
+   ctx.font='500 '+px+'px Inter, system-ui, sans-serif';ctx.textBaseline='middle';ctx.textAlign='left';ctx.lineJoin='round';
+   cand.filter(s=>Labels.keep(s,stops,zz)).sort((a,b)=>b.rank-a.rank).forEach(s=>{
+     const w=ctx.measureText(s.name).width,h=px+3;let pick=null;
+     for(const [ux,uy] of Labels.cands(0,1)){
+       const bx=ux>0.5?s.sx+ux*gp:ux<-0.5?s.sx+ux*gp-w:s.sx-w/2,by=uy>0.5?s.sy+uy*gp:uy<-0.5?s.sy+uy*gp-h:s.sy-h/2,b=[bx,by,bx+w,by+h];
+       if(b[0]<4||b[2]>W-4||b[1]<4||b[3]>H-4)continue;
+       if(boxes.some(o=>b[0]<o[2]+2&&b[2]>o[0]-2&&b[1]<o[3]&&b[3]>o[1]))continue;
+       if(Labels.dotHit(b,s))continue;pick=b;break}
+     if(!pick)return;boxes.push(pick);
+     ctx.lineWidth=3;ctx.strokeStyle='#0a0d13';ctx.strokeText(s.name,pick[0],pick[1]+h/2);ctx.fillStyle='#cdd5e0';ctx.fillText(s.name,pick[0],pick[1]+h/2);});}
   // trains
   const tr=Math.min(3+Math.max(0,Math.log2(cam.k/k0))*.4,5);
   for(const a of actives){

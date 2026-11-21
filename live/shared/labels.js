@@ -24,7 +24,7 @@
   /* a station whose mode / group is dimmed by the Focus menu gets no name (fd = the map's own "is this group dimmed" test) */
   L.faded = (s, fd, byRoute) => {
     if (byRoute) return !!(s.routes && s.routes.length && [...s.routes].every(fd));
-    if (s.gs && s.gs.length) return s.gs.every(fd);
+    if (s.gs) { const a = [...s.gs]; if (a.length) return a.every(fd); }
     return s.g != null ? !!fd(s.g) : false;
   };
   L.cands = (nx, ny) => {

@@ -353,7 +353,7 @@ function drawBase() {
   });
   hl.forEach((f) => f());
   // station dots appear only for the highlighted line
-  stations.forEach((s) => { s.vis = false; s.lab = false; s.on = dim && inSel(s.routes); });
+  stations.forEach((s) => { s.vis = false; s.lab = false; s.on = inSel(s.routes); });
   {
     const segs = [];
     shapeInfo.forEach((rs, si) => { if (!inSel(rs)) return; const P = shapes[si]; for (let i = 1; i < P.n; i++) { const ax = SX(P.X[i - 1]), ay = SY(P.Y[i - 1]), bx = SX(P.X[i]), by = SY(P.Y[i]); if (Math.max(ax, bx) < -30 || Math.min(ax, bx) > W + 30 || Math.max(ay, by) < -30 || Math.min(ay, by) > H + 30) continue; segs.push(ax, ay, bx, by); } });
@@ -361,9 +361,10 @@ function drawBase() {
     stations.forEach((s) => {
       s.sx = SX(s.X); s.sy = SY(s.Y);
       if (!s.on || s.sx < -10 || s.sx > W + 10 || s.sy < -10 || s.sy > H + 10) return;
-      const isB = s.brt && lineSel.set.has(0);
+      if (!dim && !Labels.keep(s, stations, Labels.lvl(zf(), false))) return;
+      const isB = s.brt && (!lineSel || lineSel.set.has(0));
       if (!isB && !s.keep) return; // dense street running: only terminals and transfers
-      const col = RC[isB ? 0 : s.routes.find((r) => lineSel.set.has(r))];
+      const col = RC[isB ? 0 : lineSel ? s.routes.find((r) => lineSel.set.has(r)) : s.routes[0]];
       g.beginPath(); g.arc(s.sx, s.sy, (isB ? 3.2 : 2.6) + Math.max(0, z) * 0.4, 0, 7); g.fillStyle = T.dot; g.fill(); g.lineWidth = 1.5; g.strokeStyle = col; g.stroke(); s.vis = true;
     });
     // labels beside the track, greedy collision avoidance; terminals/transfers and BRT stops first

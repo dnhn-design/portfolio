@@ -436,7 +436,7 @@ function drawBase() {
     const faded = s.gset.every(fd), a = !s.on ? 0.22 : (!dim && faded) ? 0.16 : 1, col = gcol(s.g), hot = s.on && dim;
     if (s.bus) {
       if (!dim && faded) return;
-      if (dim ? (s.on && s.keep) : z > 0.9) {
+      if (dim ? (s.on && s.keep) : (z > 0.9 || (s.keep && Labels.keep(s, stations, Labels.lvl(zf(), false))))) {
         g.beginPath(); g.arc(x, y, hot ? 2.2 : 1.4, 0, 7); g.fillStyle = hexA(col, 0.75 * a); g.fill(); s.vis = true;
       }
       return;

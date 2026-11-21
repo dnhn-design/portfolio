@@ -112,8 +112,8 @@ const days=D.trips.map(list=>{
   const dep=stops.map(()=>[]);
   trips.forEach(tr=>tr.st.forEach((p,i)=>dep[p.s].push([p.d,tr.r,tr.h,i===tr.st.length-1])));
   dep.forEach(a=>a.sort((x,y)=>x[0]-y[0]));
-  const hist=new Array(Math.ceil(TMAX/5)).fill(0);
-  trips.forEach(tr=>{for(let m=tr.t0;m<=tr.t1&&m<TMAX;m+=5)hist[Math.floor(m/5)]++;});
+  const hist=new Array(TMAX).fill(0);   // trains running at every minute (same rule as the running count)
+  trips.forEach(tr=>{for(let m=Math.max(0,Math.ceil(tr.t0-.5));m+.5<=tr.t1&&m<TMAX;m++)hist[m]++;});
   return {trips,dep,hist,max:Math.max(...hist)};
 });
 function stops_mark(stp,r){stp.forEach(p=>stops[p.s].rs.add(r));}
@@ -153,25 +153,11 @@ $('speed').onclick=()=>{spd=(spd+1)%SPEEDS.length;syncSpeed();};
 function syncDays(){document.querySelectorAll('#days button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.d===day)));}
 document.querySelectorAll('#days button').forEach(b=>b.onclick=()=>{day=+b.dataset.d;syncDays();sel=-1;hideTip();selTrain=-1;clearRows();panelDirty=true;drawTrack();dirty=true;frame();});
 function fmt(m){m=Math.floor(m);const h=Math.floor(m/60)%24,mm=m%60,ap=h<12?'AM':'PM',h12=h%12||12;return [h12+':'+String(mm).padStart(2,'0'),ap];}
-function setClock(){const _p=__clk.parts(t*60,'America/New_York'),a=_p.t,b=_p.ap;$('clock').innerHTML=a+'<small>'+b+'</small><em>'+_p.tz+'</em>';trk.setAttribute('aria-valuenow',Math.round(t));trk.setAttribute('aria-valuemin','0');trk.setAttribute('aria-valuemax',TMAX);trk.setAttribute('aria-valuetext',a+' '+b);}
+function setClock(){const _p=__clk.parts(t*60,'America/New_York'),a=_p.t,b=_p.ap;$('clock').innerHTML=__clk.cells(a)+'<small>'+b+'</small><em>'+_p.tz+'</em>';trk.setAttribute('aria-valuenow',Math.round(t));trk.setAttribute('aria-valuemin','0');trk.setAttribute('aria-valuemax',TMAX);trk.setAttribute('aria-valuetext',a+' '+b);}
 
 /* ---------- timeline ---------- */
 let tw=0,th=36;
-function drawTrack(){
-  const d=days[day], n=d.hist.length, bw=tw/n, pad=3;
-  tctx.clearRect(0,0,tw,th);
-  const x0=t/TMAX*tw;
-  for(let i=0;i<n;i++){
-    const h=Math.max(2,(d.hist[i]/d.max)*(th-12));
-    const x=i*bw;
-    tctx.fillStyle=x+bw<=x0?C.barOn:C.bar;
-    tctx.globalAlpha=x+bw<=x0?.55:1;
-    const w=Math.max(1,bw-1.2), r=Math.min(1.5,w/2);
-    rr(tctx,x,th-4-h,w,h,r);tctx.fill();
-  }
-  tctx.globalAlpha=1;
-  tctx.fillStyle=C.fg;tctx.fillRect(Math.round(x0)-1,2,2,th-4);
-}
+function drawTrack(){ if(!trk.width)return; __hist.draw(tctx,days[day].hist,t/TMAX,{past:'color-mix(in srgb,'+C.barOn+' 80%,transparent)',fut:C.bar,cur:C.fg}); }
 function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,0);c.arcTo(x,y+h,x,y,0);c.arcTo(x,y,x+w,y,r);c.closePath();}
 function sizeTrack(){
   const r=trk.getBoundingClientRect();tw=Math.max(40,r.width);dpr=window.devicePixelRatio||1;
@@ -179,7 +165,7 @@ function sizeTrack(){
 }
 function scrub(e){
   const r=trk.getBoundingClientRect();
-  t=Math.max(0,Math.min(TMAX,(e.clientX-r.left)/r.width*TMAX));dirty=true;frame();
+  t=__hist.frac(trk,e.clientX)*TMAX;dirty=true;frame();
 }
 let scrubbing=false;
 trk.addEventListener('pointerdown',e=>{scrubbing=true;trk.setPointerCapture(e.pointerId);scrub(e);});

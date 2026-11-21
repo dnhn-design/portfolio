@@ -564,18 +564,20 @@ playBtn.onclick = () => setPlay(!playing);
 $('speed').onclick = () => { speedIdx = (speedIdx + 1) % SPEEDS.length; $('speed').innerHTML = SPEEDS[speedIdx] + '&times;'; };
 document.querySelectorAll('#days button').forEach((b) => b.onclick = () => { day = b.dataset.d; markDay(); loadDay(); });
 function markDay() { document.querySelectorAll('#days button').forEach((b) => b.classList.toggle('on', b.dataset.d === day)); }
-function drawHist() {
-  const g = hctx, w = hc.width, h = hc.height; g.clearRect(0, 0, w, h); if (!w) return;
-  const hs = D.hist[day], N = 480, mxv = Math.max.apply(null, hs) || 1, bw = w / N, ph = t / 86400, lt = theme === 'light';
-  for (let i = 0; i < N; i++) {
-    let v = 0; for (let j = 0; j < 3; j++) v = Math.max(v, hs[i * 3 + j]);
-    const bh = Math.max(2 * dpr, (v / mxv) * (h - 6 * dpr));
-    g.fillStyle = (i + 0.5) / N <= ph ? (lt ? 'rgba(30,42,60,0.70)' : 'rgba(214,222,234,0.62)') : (lt ? 'rgba(80,96,120,0.26)' : 'rgba(150,164,186,0.26)');
-    g.fillRect(i * bw + bw * 0.12, h - bh, Math.max(1, bw * 0.62), bh);
-  }
-  g.fillStyle = lt ? '#161b24' : '#f4f7fb'; g.fillRect(Math.round(ph * w) - dpr, 0, 2 * dpr, h);
+let histC = { trips: null, a: null };
+function histSeries() {   // vehicles running at every minute of the day, counted by the same code that places the vehicles and the running count
+  if (histC.trips === trips && histC.a) return histC.a;
+  const keep = t, a = new Int32Array(1440);
+  for (let m = 0; m < 1440; m++) { t = m * 60 + 30; computeVehicles(); a[m] = vehicles.length; }
+  t = keep; computeVehicles(); histC = { trips, a }; return a;
 }
-function seekFrom(e) { const r = hist.getBoundingClientRect(); t = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * 86399; }
+function drawHist() {
+  if (!hc.width) return;
+  const ph = t / 86400, lt = theme === 'light';
+  const col = (on) => { const i = 0, N = 1, ph = on ? 1 : 0; return (i + 0.5) / N <= ph ? (lt ? 'rgba(30,42,60,0.70)' : 'rgba(214,222,234,0.62)') : (lt ? 'rgba(80,96,120,0.26)' : 'rgba(150,164,186,0.26)'); };
+  __hist.draw(hctx, histSeries(), ph, { past: col(true), fut: col(false), cur: lt ? '#161b24' : '#f4f7fb' });
+}
+function seekFrom(e) { const r = hist.getBoundingClientRect(); t = __hist.frac(hc, e.clientX) * 86399; }
 let seeking = false;
 hist.addEventListener('pointerdown', (e) => { seeking = true; hist.setPointerCapture(e.pointerId); seekFrom(e); });
 hist.addEventListener('pointermove', (e) => { if (seeking) seekFrom(e); });

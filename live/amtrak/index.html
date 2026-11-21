@@ -39,7 +39,7 @@
 #pop li span{color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #pop .op{color:var(--bl)}
 #clock b{font-weight:500}
-#clock span{font-size:14px;color:var(--mute);font-weight:500;margin-left:4px}
+#clock span{font-size:14px;color:var(--mute);font-weight:500;margin-left:4px;display:inline-block;min-width:1.7em}
 #clock small{font:400 11px var(--sans);color:var(--dim);margin-left:8px}
 #hist{position:relative;display:block}
 #seg button[aria-pressed="true"]{background:var(--chip);color:var(--chip-fg)}
@@ -463,18 +463,10 @@ function drawHist(){
   const r=hc.getBoundingClientRect(),d=Math.min(window.devicePixelRatio||1,2.5);
   HW=r.width;HH=r.height;if(!HW)return;
   if(hc.width!==Math.round(HW*d)||hc.height!==Math.round(HH*d)){hc.width=Math.round(HW*d);hc.height=Math.round(HH*d);}
-  hx.setTransform(d,0,0,d,0,0);hx.clearRect(0,0,HW,HH);
-  const pitch=3,bins=Math.max(40,Math.floor(HW/pitch)),bw=HW/bins,{h,max}=histFor(S.day,bins);
-  const px=S.t/1440*HW,base=HH-4,top=HH-10;
-  for(let i=0;i<bins;i++){
-    const bh=Math.max(1.5,h[i]/max*(base-6));
-    hx.fillStyle=(i+.5)*bw<px?'#a3acb9':'#2a3340';
-    hx.fillRect(i*bw+.25,base-bh,Math.max(bw-1,1.2),bh);
-  }
-  hx.fillStyle='#f1f4f8';hx.fillRect(Math.round(px)-1,2,2,HH-4);
+  __hist.draw(hx,histFor(S.day,1440).h,S.t/1440,{past:'#a3acb9',fut:'#2a3340',cur:'#f1f4f8'});
 }
 let scrub=false;
-function scrubTo(e){const r=hc.getBoundingClientRect();S.t=Math.min(Math.max((e.clientX-r.left)/r.width,0),.9999)*1440;S.dirty=true;}
+function scrubTo(e){const r=hc.getBoundingClientRect();S.t=__hist.frac(hc,e.clientX)*1440;S.dirty=true;}
 hc.addEventListener('pointerdown',e=>{scrub=true;hc.setPointerCapture(e.pointerId);scrubTo(e);});
 hc.addEventListener('pointermove',e=>{if(scrub)scrubTo(e);});
 hc.addEventListener('pointerup',()=>scrub=false);hc.addEventListener('pointercancel',()=>scrub=false);
@@ -572,7 +564,7 @@ function frame(now){
     const ns=actives.map(a=>a.key).sort((a,b)=>a-b).join(',')+'|'+(S.sel?S.sel.trip+'.'+S.sel.k:'')+'|'+(S.route||'');
     if(ns!==sig){sig=ns;rebuildList();}
     if(now-lastSlow>250){lastSlow=now;fillDetail(false);updatePop();}
-    const c=__clk.parts(S.t*60,'America/New_York');clockB.textContent=c.t;clockS.textContent=c.ap;clockT.textContent=c.tz;
+    const c=__clk.parts(S.t*60,'America/New_York');clockB.innerHTML=__clk.cells(c.t);clockS.textContent=c.ap;clockT.textContent=c.tz;
     drawHist();render();positionPop();S.dirty=false;
   }
   requestAnimationFrame(frame);

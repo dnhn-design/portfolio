@@ -27,12 +27,11 @@
 .kchips{display:flex;flex-wrap:wrap;align-items:center;gap:5px;padding:2px 2px 6px;border-bottom:1px solid var(--line)}
 .kchips[hidden]{display:none}
 .kchips .kl{font:600 10px var(--sans);letter-spacing:.07em;text-transform:uppercase;color:var(--dim);margin-right:3px}
-#clock{display:flex;align-items:baseline;gap:6px;flex:none;font-variant-numeric:tabular-nums;white-space:nowrap}
+#clock{display:flex;align-items:baseline;gap:8px;flex:none;font-variant-numeric:tabular-nums;white-space:nowrap}
 #clk{font:500 26px/1 var(--sans);letter-spacing:-.02em}
-#clock em{font:400 11px var(--sans);color:var(--dim);font-style:normal}
+#clk .apw{display:inline-block;min-width:1.75em;margin-left:4px;font-size:14px;font-weight:500;letter-spacing:0;color:var(--mute)}#clock em{font:400 11px var(--sans);color:var(--dim);font-style:normal}
 #play svg{width:14px;height:14px;fill:currentColor}
-#ecg{flex:1;min-width:120px;height:44px;display:block;cursor:ew-resize;touch-action:none}
-#ecg text{display:none}
+#ecg{flex:1;min-width:120px;height:36px;display:block;cursor:ew-resize;touch-action:none}
 #spd{background:none;border:0;font:500 12.5px var(--sans);color:var(--mute);cursor:pointer;padding:6px 4px;flex:none;min-width:42px;text-align:center}
 #spd:hover{color:var(--fg)}
 #days button{border:0;background:none;color:var(--mute);font:500 12.5px var(--sans);padding:6px 13px;border-radius:7px;cursor:pointer}
@@ -149,7 +148,7 @@ details p{margin:6px 0 0}
     <button class="play" id="play" aria-label="Pause"></button>
     <div id="clock"><span id="clk">0:00</span><em>ET</em></div>
     <button id="spd" aria-label="Playback speed">1&times;</button>
-    <svg id="ecg" viewBox="0 0 900 70" preserveAspectRatio="none" role="img" aria-label="Trains in motion over the day. Drag to scrub."></svg>
+    <canvas id="ecg" role="img" aria-label="Trains in motion over the day. Drag to scrub."></canvas>
     <div class="seg" id="days" role="group" aria-label="Service day"><button data-d="0" aria-pressed="true">Weekday</button><button data-d="1" aria-pressed="false">Sat</button><button data-d="2" aria-pressed="false">Sun</button></div>
     <span id="dayl" class="hid">Weekday</span>
   </div>
@@ -297,31 +296,15 @@ function renderKpi(){
 }
 
 // ---- ECG
-const ecg=$('ecg'),EW=900,EH=70,PX=4,PR=4,PT=6,PB=4;
-function ex(m){return PX+(EW-PX-PR)*m/1440}
-function renderEcg(){
-  const s=series(day),mx=Math.ceil(s.pk/100)*100||100;
-  const ey=v=>EH-PB-(EH-PB-PT)*v/mx;
-  let h='';
-  for(let k=0;k<=2;k++){const v=mx*k/2;h+='<line x1="'+PX+'" x2="'+(EW-PR)+'" y1="'+ey(v)+'" y2="'+ey(v)+'" stroke="var(--grid)"/><text x="'+(PX-5)+'" y="'+(ey(v)+3)+'" text-anchor="end">'+fmt(v)+'</text>'}
-  for(let hh=0;hh<=24;hh+=3){h+='<text x="'+ex(hh*60)+'" y="'+(EH-6)+'" text-anchor="'+(hh===0?'start':hh===24?'end':'middle')+'">'+(hh===24?'12A':hlabel(hh).replace(' ','').replace('AM','A').replace('PM','P'))+'</text>'}
-  const line=a=>{let d='';for(let m=0;m<1440;m+=2){d+=(m?'L':'M')+ex(m).toFixed(1)+' '+ey(a[m]).toFixed(1)}return d};
-  const area=line(s.tot)+'L'+ex(1438)+' '+ey(0)+'L'+ex(0)+' '+ey(0)+'Z';
-  h+='<path d="'+area+'" fill="var(--ink)" opacity=".08"/>';
-  h+='<path d="'+line(s.tot)+'" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linejoin="round"/>';
-  if(foc){h+='<path d="'+line(focSeries(s))+'" fill="none" stroke="'+focColor()+'" stroke-width="2.4"/>'}
-  h+='<line id="ph" y1="'+PT+'" y2="'+(EH-PB)+'" stroke="var(--accent)" stroke-width="1.5"/><circle id="pd" r="4" fill="var(--accent)"/>';
-  ecg.innerHTML=h;
-  // pulse peak marker
-  placeHead();
-}
-function placeHead(){
-  const s=series(day),ph=$('ph'),pd=$('pd');if(!ph)return;
-  const mx=Math.ceil(s.pk/100)*100||100,m=Math.floor(t)%1440;
-  const x=ex(t%1440),y=EH-PB-(EH-PB-PT)*s.tot[m]/mx;
-  ph.setAttribute('x1',x);ph.setAttribute('x2',x);pd.setAttribute('cx',x);pd.setAttribute('cy',y);
-}
-function scrub(e){const r=ecg.getBoundingClientRect();const x=(e.clientX-r.left)/r.width*EW;t=Math.max(0,Math.min(1439,(x-PX)/(EW-PX-PR)*1440))}
+const ecg=$('ecg'),ectx=ecg.getContext('2d');let ecgM=-1;
+function drawEcg(){
+  const r=ecg.getBoundingClientRect(),d=Math.min(window.devicePixelRatio||1,2.5),w=Math.round(r.width*d),hh=Math.round(r.height*d);if(!w)return;
+  if(ecg.width!==w||ecg.height!==hh){ecg.width=w;ecg.height=hh}
+  const s=series(day),cs=getComputedStyle(document.documentElement),ink=cs.getPropertyValue('--ink').trim()||'#888',acc=cs.getPropertyValue('--accent').trim()||ink;
+  __hist.draw(ectx,s.tot,Math.min(.9999,t/1440),{past:'color-mix(in srgb,'+ink+' 55%,transparent)',fut:'color-mix(in srgb,'+ink+' 20%,transparent)',cur:acc},foc?{ser:focSeries(s),col:focColor()}:null)}
+function renderEcg(){ecgM=-1;placeHead()}
+function placeHead(){const m=Math.floor(t)%1440;if(m===ecgM&&ecg.width)return;ecgM=m;drawEcg()}
+function scrub(e){t=__hist.frac(ecg,e.clientX)*1440}
 let sdrag=false;
 ecg.addEventListener('pointerdown',e=>{sdrag=true;ecg.setPointerCapture(e.pointerId);scrub(e)});
 ecg.addEventListener('pointermove',e=>{if(sdrag)scrub(e)});
@@ -437,7 +420,7 @@ function draw(now){
     ctx.lineWidth=3;ctx.strokeStyle=bg;ctx.strokeText(c.name,pick[0],pick[1]+h/2);ctx.fillStyle=force?ink:ink2;ctx.fillText(c.name,pick[0],pick[1]+h/2);
   });
   if(sel&&sel._X!=null){ctx.strokeStyle=acc;ctx.lineWidth=2;ctx.beginPath();ctx.arc(sel._X,sel._Y,sel._r+4,0,6.2832);ctx.stroke()}
-  {const _p=__clk.parts(t*60,'America/New_York');$('clk').textContent=_p.t+' '+_p.ap;$('clock').querySelector('em').textContent=_p.tz}
+  {const _p=__clk.parts(t*60,'America/New_York');$('clk').innerHTML=__clk.cells(_p.t)+'<span class="apw">'+_p.ap+'</span>';$('clock').querySelector('em').textContent=_p.tz}
   placeHead();
 }
 
@@ -645,7 +628,7 @@ const mb=(p,q)=>[Math.min(p[0],q[0]),Math.min(p[1],q[1]),Math.max(p[2],q[2]),Mat
 function boxX(ids,xmin){let a=1e9,b=1e9,c=-1e9,d=-1e9;drawSet.forEach(([r,g])=>{if(!ids(r))return;const G_=G[g];for(let i=0;i<G_.n;i++){if(G_.x[i]<xmin)continue;a=Math.min(a,G_.x[i]);c=Math.max(c,G_.x[i]);b=Math.min(b,G_.y[i]);d=Math.max(d,G_.y[i])}});return [a,b,c,d]}
 fitBox=mb(box(r=>r!=='SI'&&r.indexOf('PATH-')!==0&&r.indexOf('AIR-')!==0),boxX(r=>r.indexOf('PATH-')===0,-5500));allBox=box();
 sel=CX.slice().sort((a,b)=>b.p[0]-a.p[0])[0];
-new ResizeObserver(()=>{resize()}).observe($('mapbox'));
+new ResizeObserver(()=>{resize();renderEcg()}).observe($('mapbox'));
 addEventListener('keydown',e=>{if(e.key!=='Escape')return;if($('slide').classList.contains('open')){openSlide(false);e.preventDefault()}else if(svc||lineSel||tab!=='all'){if(svc)pickSvc(null);else if(lineSel)pickLine(null);else setTab('all');e.preventDefault()}});   // handled here, so the page does not also close the map
 setPlay(playing);resize();applyFocus();buildList();renderDetail();renderKey();all();requestAnimationFrame(frame);
 })();

@@ -495,17 +495,10 @@ $('days').onclick = e => { const b = e.target.closest('button'); if (!b) return;
 function drawClock() { $('clock').innerHTML = __clk.html(t, 'America/Chicago'); } window.addEventListener('clkmode', () => { lastClock = ''; drawClock(); });
 __clk.live({tz:'America/Chicago',get:()=>t,set:v=>{t=v;speedIdx=0;$('speed').innerHTML=SPEEDS[0]+'&times;'},on:()=>playing,spd:()=>speedIdx===0});
 function drawHist() {
-  const w = hc.width / dpr, h = hc.height / dpr; if (w < 4) return; hx.setTransform(dpr, 0, 0, dpr, 0, 0); hx.clearRect(0, 0, w, h);
-  const a = HIST[day], mx = Math.max(...a, 1), bw = 3, gap = 1, n = Math.floor(w / (bw + gap)), pos = t / 86400 * w;
-  const cs = getComputedStyle(document.documentElement); const on = cs.getPropertyValue('--fg').trim() || '#e8edf4', off = cs.getPropertyValue('--line-2').trim() || '#212a38';
-  for (let i = 0; i < n; i++) {
-    const m0 = Math.floor(i / n * 1440), m1 = Math.max(m0 + 1, Math.floor((i + 1) / n * 1440)); let v = 0; for (let m = m0; m < m1; m++) v = Math.max(v, a[m]);
-    const bh = Math.max(1.5, v / mx * (h - 4)), x = i * (bw + gap);
-    hx.globalAlpha = x < pos ? 0.85 : 1; hx.fillStyle = x < pos ? on : off; hx.fillRect(x, h - bh, bw, bh);
-  }
-  hx.globalAlpha = 1; hx.fillStyle = on; hx.fillRect(pos - 1, 0, 2, h);
+  if (!hc.width) return; const cs = getComputedStyle(document.documentElement), on = cs.getPropertyValue('--fg').trim() || '#e8edf4', off = cs.getPropertyValue('--line-2').trim() || '#212a38';
+  __hist.draw(hx, HIST[day], t / 86400, { past: 'color-mix(in srgb,' + on + ' 85%,transparent)', fut: off, cur: on });
 }
-function seekFrom(e) { const r = hist.getBoundingClientRect(); t = clampn((e.clientX - r.left) / r.width, 0, 0.9999) * 86400; drawClock(); drawHist(); }
+function seekFrom(e) { const r = hist.getBoundingClientRect(); t = __hist.frac(hc, e.clientX) * 86400; drawClock(); drawHist(); }
 hist.addEventListener('pointerdown', e => { seeking = true; hist.setPointerCapture(e.pointerId); seekFrom(e); });
 hist.addEventListener('pointermove', e => { if (seeking) seekFrom(e); });
 hist.addEventListener('pointerup', () => { seeking = false; });

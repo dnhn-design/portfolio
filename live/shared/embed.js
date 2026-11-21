@@ -120,7 +120,7 @@
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mk); else mk();
   };
   const st = document.createElement('style');
-  st.textContent = '.dg,.co{display:inline-block;text-align:center;font-style:normal}.dg{width:.62em}.co{width:.3em}#clock small{display:inline-block;min-width:1.75em}#clock,#clkBtn{cursor:pointer}#clock em{display:inline!important}#livedot{flex:none;width:18px;height:22px;padding:0;margin-right:2px;background:none;border:0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}#livedot i{width:8px;height:8px;border-radius:50%;background:#7b8696;opacity:.6;transition:background .2s,box-shadow .2s}#livedot.on i{background:#2fbf71;opacity:1;box-shadow:0 0 0 3px rgba(47,191,113,.2)}#clkBtn .dot{display:none}';
+  st.textContent = '#spd,#speed{min-width:44px;text-align:center}@media (min-width:821px){#bar{gap:18px!important;padding:8px max(20px,env(safe-area-inset-right,0px)) 9px max(20px,env(safe-area-inset-left,0px))!important;box-sizing:border-box}}.dg,.co{display:inline-block;text-align:center;font-style:normal}.dg{width:.62em}.co{width:.3em}#clock small{display:inline-block;min-width:1.75em}#clock,#clkBtn{cursor:pointer}#clock em{display:inline!important}#livedot{flex:none;width:18px;height:22px;padding:0;margin-right:2px;background:none;border:0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}#livedot i{width:8px;height:8px;border-radius:50%;background:#7b8696;opacity:.6;transition:background .2s,box-shadow .2s}#livedot.on i{background:#2fbf71;opacity:1;box-shadow:0 0 0 3px rgba(47,191,113,.2)}#clkBtn .dot{display:none}';
   document.head.appendChild(st);
   function bind() {
     const el = document.getElementById('clock') || document.getElementById('clkBtn'); if (!el) return;
@@ -140,7 +140,7 @@
     draw(g, ser, frac, col, ov) {
       const cv = g.canvas, w = cv.width, h = cv.height, r = cv.getBoundingClientRect(), dpr = r.width ? w / r.width : (window.devicePixelRatio || 1);
       g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, w, h); if (!w || !h || !ser || !ser.length) return;
-      const L = H.layout(w, dpr), N = L.N, n = ser.length; cv.__hl = { N, pitch: L.pitch };
+      const L = H.layout(w, dpr), N = L.N, n = ser.length; cv.__hl = { N, pitch: L.pitch }; cv.__ser = ser; cv.__fr = frac;
       let mx = 1; for (let i = 0; i < n; i++) if (ser[i] > mx) mx = ser[i];
       const cb = Math.min(N - 1, Math.max(0, Math.floor(frac * N))), pad = Math.round(2 * dpr), min = Math.max(1, Math.round(dpr));
       for (let i = 0; i < N; i++) {

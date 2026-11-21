@@ -637,11 +637,18 @@ function markDay() {
   tag.textContent = sp ? 'Special service' : 'Scheduled'; tag.classList.toggle('sp', sp);
   if (sp) { dn.hidden = false; dn.textContent = SPECIAL.find((x) => x.d === day).t + ': ' + SPECIAL.find((x) => x.d === day).s; } else { dn.hidden = true; dn.textContent = ''; }
 }
+let histC = { trips: null, a: null };
+function histSeries() {   // vehicles running at every minute of the day, counted by the same code that places the vehicles and the running count
+  if (histC.trips === trips && histC.a) return histC.a;
+  const keep = t, a = new Int32Array(1440);
+  for (let m = 0; m < 1440; m++) { t = m * 60 + 30; computeVehicles(); a[m] = vehicles.length; }
+  t = keep; computeVehicles(); histC = { trips, a }; return a;
+}
 function drawHist() {
   if (!hc.width) return;
   const ph = t / 86400, dk = theme === 'dark';
   const col = (on) => { const i = 0, N = 1, ph = on ? 1 : 0; const past = (i + 0.5) / N <= ph; return dk ? (past ? 'rgba(214,222,234,0.62)' : 'rgba(150,164,186,0.26)') : (past ? 'rgba(23,32,48,0.70)' : 'rgba(80,95,120,0.26)'); };
-  __hist.draw(hctx, D.hist[day], ph, { past: col(true), fut: col(false), cur: dk ? '#f4f7fb' : '#172030' });
+  __hist.draw(hctx, histSeries(), ph, { past: col(true), fut: col(false), cur: dk ? '#f4f7fb' : '#172030' });
 }
 function seekFrom(e) { const r = hist.getBoundingClientRect(); t = __hist.frac(hc, e.clientX) * 86399; }
 let seeking = false;

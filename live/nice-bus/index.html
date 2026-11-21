@@ -483,11 +483,18 @@ playBtn.onclick = () => setPlay(!playing);
 $('speed').onclick = () => { speedIdx = (speedIdx + 1) % SPEEDS.length; $('speed').innerHTML = SPEEDS[speedIdx] + '&times;'; };
 document.querySelectorAll('#days button').forEach((b) => b.onclick = () => { day = b.dataset.d; markDay(); loadDay(); });
 function markDay() { document.querySelectorAll('#days button').forEach((b) => b.classList.toggle('on', b.dataset.d === day)); }
+let histC = { trips: null, a: null };
+function histSeries() {   // vehicles running at every minute of the day, counted by the same code that places the vehicles and the running count
+  if (histC.trips === trips && histC.a) return histC.a;
+  const keep = t, a = new Int32Array(1440);
+  for (let m = 0; m < 1440; m++) { t = m * 60 + 30; computeVehicles(); a[m] = vehicles.length; }
+  t = keep; computeVehicles(); histC = { trips, a }; return a;
+}
 function drawHist() {
   if (!hc.width) return;
   const ph = t / 86400, lt = T === THEMES.light;
   const col = (on) => { const i = 0, N = 1, ph = on ? 1 : 0; const past = (i + 0.5) / N <= ph; return lt ? (past ? 'rgba(30,42,62,.7)' : 'rgba(90,105,130,.28)') : (past ? 'rgba(214,222,234,.62)' : 'rgba(150,164,186,.26)'); };
-  __hist.draw(hctx, D.hist[day], ph, { past: col(true), fut: col(false), cur: lt ? '#161d2a' : '#f4f7fb' });
+  __hist.draw(hctx, histSeries(), ph, { past: col(true), fut: col(false), cur: lt ? '#161d2a' : '#f4f7fb' });
 }
 let seeking = false;
 function seekFrom(e) { const r = hist.getBoundingClientRect(); t = __hist.frac(hc, e.clientX) * 86399; lastSig = ''; }

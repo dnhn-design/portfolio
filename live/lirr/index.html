@@ -112,8 +112,8 @@ const days=D.trips.map(list=>{
   const dep=stops.map(()=>[]);
   trips.forEach(tr=>tr.st.forEach((p,i)=>dep[p.s].push([p.d,tr.r,tr.h,i===tr.st.length-1])));
   dep.forEach(a=>a.sort((x,y)=>x[0]-y[0]));
-  const hist=new Array(Math.ceil(TMAX/5)).fill(0);
-  trips.forEach(tr=>{for(let b=Math.max(0,Math.ceil(tr.t0/5));b*5<=tr.t1&&b<hist.length;b++)hist[b]++;});
+  const hist=new Array(TMAX).fill(0);   // trains running at every minute (same rule as the running count)
+  trips.forEach(tr=>{for(let m=Math.max(0,Math.ceil(tr.t0-.5));m+.5<=tr.t1&&m<TMAX;m++)hist[m]++;});
   return {trips,dep,hist,max:Math.max(...hist)};
 });
 function stops_mark(stp,r){stp.forEach(p=>stops[p.s].rs.add(r));}

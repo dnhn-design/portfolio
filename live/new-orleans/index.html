@@ -546,7 +546,14 @@ playBtn.onclick = () => setPlay(!playing);
 $('speed').onclick = () => { speedIdx = (speedIdx + 1) % SPEEDS.length; $('speed').innerHTML = SPEEDS[speedIdx] + '&times;'; };
 document.querySelectorAll('#days button').forEach((b) => b.onclick = () => { day = b.dataset.d; markDay(); loadDay(); });
 function markDay() { document.querySelectorAll('#days button').forEach((b) => { const on = b.dataset.d === day; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }); }
-function drawHist() { if (!hc.width) return; __hist.draw(hctx, D.hist[day], t / 86400, { past: P.hp, fut: P.hf, cur: P.hh }); }
+let histC = { trips: null, a: null };
+function histSeries() {   // vehicles running at every minute of the day, counted by the same code that places the vehicles and the running count
+  if (histC.trips === trips && histC.a) return histC.a;
+  const keep = t, a = new Int32Array(1440);
+  for (let m = 0; m < 1440; m++) { t = m * 60 + 30; computeVehicles(); a[m] = vehicles.length; }
+  t = keep; computeVehicles(); histC = { trips, a }; return a;
+}
+function drawHist() { if (!hc.width) return; __hist.draw(hctx, histSeries(), t / 86400, { past: P.hp, fut: P.hf, cur: P.hh }); }
 function seekFrom(e) { const r = hist.getBoundingClientRect(); t = __hist.frac(hc, e.clientX) * 86399; }
 let seeking = false;
 hist.addEventListener('pointerdown', (e) => { seeking = true; hist.setPointerCapture(e.pointerId); seekFrom(e); });

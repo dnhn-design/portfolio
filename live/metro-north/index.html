@@ -290,7 +290,7 @@ const trk=$('#trk'),B=5;
 const pct=m=>(m-T0)/(T1-T0)*100;
 let BS=null,barM=-1;const bctx=$('#bars').getContext('2d');
 function drawBars(){const n=Math.max(1,Math.ceil(T1-T0)),c=new Int16Array(n+1);   // vehicles running at each minute of the service day
-  TR.forEach(tr=>{if(!tOn(tr))return;const a=Math.max(0,Math.ceil(tr.t0-T0)),b=Math.min(n-1,Math.floor(tr.t1-T0));if(b>=a){c[a]++;c[b+1]--}});
+  TR.forEach(tr=>{if(!tOn(tr))return;const a=Math.max(0,Math.ceil(tr.t0-T0-.5)),b=Math.min(n-1,Math.floor(tr.t1-T0-.5));if(b>=a){c[a]++;c[b+1]--}});
   for(let i=1;i<n;i++)c[i]+=c[i-1];BS=c.subarray(0,n);barM=-1;paintBars()}
 function paintBars(){const cv=$('#bars'),r=cv.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2.5),w=Math.round(r.width*d),hh=Math.round(r.height*d);if(!w||!BS)return;
   if(cv.width!==w||cv.height!==hh)cv.width=w,cv.height=hh;barM=Math.floor(t);

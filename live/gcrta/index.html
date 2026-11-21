@@ -108,15 +108,15 @@ canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block
 }
 #play { width: 38px; height: 38px; border-radius: 50%; border: 0; background: var(--chip); color: var(--chip-fg); cursor: pointer; display: grid; place-items: center; flex: none; }
 #play:focus-visible, .seg button:focus-visible, #speed:focus-visible { outline: 2px solid #5d7fa6; outline-offset: 2px; }
-#clock { font: 500 24px/1 var(--sans); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; white-space: nowrap; flex: none; }
-#clock small { font-size: 13px; color: var(--mute); font-weight: 500; margin-left: 4px; letter-spacing: 0; }
+#clock { font: 500 26px/1 var(--sans); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; white-space: nowrap; flex: none; }
+#clock small { font-size: 14px; color: var(--mute); font-weight: 500; margin-left: 4px; letter-spacing: 0; }
 #clock em { font: 400 11px var(--sans); color: var(--dim); margin-left: 8px; font-style: normal; }
 #speed { background: none; border: 0; font: 400 12.5px var(--sans); color: var(--mute); cursor: pointer; padding: 6px 4px; flex: none; font-variant-numeric: tabular-nums; }
 #speed:hover { color: var(--fg); }
-#hist { position: relative; flex: 1; height: 34px; min-width: 120px; cursor: ew-resize; touch-action: none; }
+#hist { position: relative; flex: 1; height: 36px; min-width: 120px; cursor: ew-resize; touch-action: none; }
 #hist canvas { position: absolute; inset: 0; }
 .seg { display: flex; gap: 2px; padding: 3px; border: 1px solid var(--line-2); border-radius: 10px; background: #0c1017; flex: none; }
-.seg button { border: 0; background: none; color: var(--mute); font: 500 12px var(--sans); padding: 5px 12px; border-radius: 7px; cursor: pointer; }
+.seg button { border: 0; background: none; color: var(--mute); font: 500 12.5px var(--sans); padding: 6px 13px; border-radius: 7px; cursor: pointer; }
 .seg button.on { background: var(--chip); color: var(--chip-fg); }
 .seg button:not(.on):hover { color: var(--fg); }
 #loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--mute); }
@@ -559,11 +559,18 @@ playBtn.onclick = () => setPlay(!playing);
 $('speed').onclick = () => { speedIdx = (speedIdx + 1) % SPEEDS.length; $('speed').innerHTML = SPEEDS[speedIdx] + '&times;'; };
 document.querySelectorAll('#days button').forEach((b) => b.onclick = () => { day = b.dataset.d; markDay(); loadDay(); });
 function markDay() { document.querySelectorAll('#days button').forEach((b) => { b.classList.toggle('on', b.dataset.d === day); const d = new Date(DATES[b.dataset.d] + 'T12:00:00'); b.title = 'Sample date: ' + d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' }); }); }
+let histC = { trips: null, a: null };
+function histSeries() {   // vehicles running at every minute of the day, counted by the same code that places the vehicles and the running count
+  if (histC.trips === trips && histC.a) return histC.a;
+  const keep = t, a = new Int32Array(1440);
+  for (let m = 0; m < 1440; m++) { t = m * 60 + 30; computeVehicles(); a[m] = vehicles.length; }
+  t = keep; computeVehicles(); histC = { trips, a }; return a;
+}
 function drawHist() {
   if (!hc.width) return;
   const ph = t / 86400;
   const col = (on) => { const i = 0, N = 1, ph = on ? 1 : 0; const past = (i + 0.5) / N <= ph; return past ? 'rgba(214,222,234,0.62)' : 'rgba(150,164,186,0.26)'; };
-  __hist.draw(hctx, D.hist[day], ph, { past: col(true), fut: col(false), cur: '#f4f7fb' });
+  __hist.draw(hctx, histSeries(), ph, { past: col(true), fut: col(false), cur: '#f4f7fb' });
 }
 function seekFrom(e) { const r = hist.getBoundingClientRect(); t = __hist.frac(hc, e.clientX) * 86399; listDirty = true; }
 let seeking = false;

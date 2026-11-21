@@ -19,7 +19,7 @@
   --fg:#e8edf3; --mute:#7d8998; --accent:#5aa2ff; --halo:#080b10; --bar:#2b3643; --bar-on:#c9d3df; color-scheme:dark}
 html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--fg);font:13px/1.35 var(--font);overflow:hidden}
-#app{height:100%;display:grid;grid-template-columns:1fr 300px;grid-template-rows:1fr 76px;grid-template-areas:"map side" "bar bar"}
+#app{height:100%;display:grid;grid-template-columns:1fr 300px;grid-template-rows:1fr 56px;grid-template-areas:"map side" "bar bar"}
 #map{grid-area:map;position:relative;min-width:0;min-height:0;overflow:hidden}
 #cv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab;display:block}
 #cv:active{cursor:grabbing}
@@ -72,23 +72,20 @@ svg{display:block}
 .gh .n{margin-left:auto;font-weight:500;letter-spacing:0}
 .grp[data-c="1"] .gh svg{transform:rotate(-90deg)}
 .grp[data-c="1"] .gl{display:none}
-#bar{grid-area:bar;display:flex;align-items:center;gap:14px;padding:0 max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));border-top:1px solid var(--line);background:var(--bg);min-width:0}
-#play{flex:none;width:44px;height:44px;border-radius:50%;border:0;background:var(--fg);color:var(--bg);display:grid;place-items:center;cursor:pointer}
-#clock{flex:none;font:500 30px/1 var(--disp);font-variant-numeric:tabular-nums;white-space:nowrap;background:none;border:0;color:inherit;padding:0;text-align:left;cursor:pointer}
+#bar{grid-area:bar;display:flex;align-items:center;gap:18px;padding:8px max(20px,env(safe-area-inset-right,0px)) 9px max(20px,env(safe-area-inset-left,0px));border-top:1px solid var(--line);background:var(--bg);min-width:0}
+#play{flex:none;width:38px;height:38px;border-radius:50%;border:0;background:var(--fg);color:var(--bg);display:grid;place-items:center;cursor:pointer}
+#clock{flex:none;font:500 26px/1 var(--disp);letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap;background:none;border:0;color:inherit;padding:0;text-align:left;cursor:pointer}
 #clock.fixed{cursor:default}
-#live{flex:none;width:24px;height:24px;margin-left:-4px;border:0;background:none;padding:0;display:grid;place-items:center;cursor:pointer}
-#live i{width:10px;height:10px;border-radius:50%;background:var(--mute);opacity:.55;transition:background .15s,opacity .15s}
-#live.on i{background:#2fbf71;opacity:1}
-#clock i{font-style:normal;display:inline-block;text-align:center}
-#clock .dg{width:.64em}
-#clock .co{width:.3em}
-#clock .ap{width:1.8em;text-align:left;font-size:inherit}
-#clock small{font-size:14px;color:var(--mute);margin-left:3px}
-#spd{flex:none;background:none;border:0;color:var(--mute);font:500 13px var(--font);cursor:pointer;padding:6px;font-variant-numeric:tabular-nums}
+#live{flex:none;width:18px;height:22px;margin-right:2px;border:0;background:none;padding:0;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+#live i{width:8px;height:8px;border-radius:50%;background:#7b8696;opacity:.6;transition:background .2s,box-shadow .2s}
+#live.on i{background:#2fbf71;opacity:1;box-shadow:0 0 0 3px rgba(47,191,113,.2)}
+#clock small{font-size:14px;font-weight:500;letter-spacing:0;color:var(--mute);margin-left:4px}
+#clock em{font:400 11px var(--font);color:var(--mute);opacity:.8;margin-left:8px;font-style:normal;letter-spacing:0}
+#spd{flex:none;background:none;border:0;color:var(--mute);font:400 12.5px var(--font);cursor:pointer;padding:6px 4px;font-variant-numeric:tabular-nums}
 #spd:hover{color:var(--fg)}
-#hist{flex:1;min-width:0;height:48px;cursor:pointer;touch-action:none}
-#seg{flex:none;display:flex;padding:3px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
-#seg button{border:0;background:none;color:var(--mute);font:500 13px var(--font);padding:7px 14px;border-radius:7px;cursor:pointer}
+#hist{flex:1;min-width:120px;height:36px;cursor:pointer;touch-action:none}
+#seg{flex:none;display:flex;gap:2px;padding:3px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+#seg button{border:0;background:none;color:var(--mute);font:500 12.5px var(--font);padding:6px 13px;border-radius:7px;cursor:pointer}
 #seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
 .tip{position:absolute;z-index:5;pointer-events:none;transform:translate(16px,-50%);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 10px;box-shadow:0 4px 16px rgba(0,0,0,.18);max-width:240px;font-size:12px;line-height:1.4}
 .tip.l{transform:translate(calc(-100% - 16px),-50%)}
@@ -113,7 +110,7 @@ svg{display:block}
   #bar{flex-wrap:wrap;padding-block:10px;gap:8px 12px}
   #hist{order:5;flex:1 0 100%}
   #seg{margin-left:auto}
-  #clock{font-size:24px}
+  #clock{font-size:28px}
 }
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
 </style>
@@ -212,7 +209,7 @@ function pos(tr,t){const a=tr.t,n=a.length;if(t<a[0]||t>a[n-1])return null;
 // running vehicles sampled at each exact minute (same rule as the live count: start <= t <= end)
 let HL={N:1,pitch:1};
 function buildHist(){const R=D.routes.length,br=Array.from({length:R},()=>new Int32Array(1440)),tot=new Int32Array(1440);
-  for(const tr of trips)for(let k=0;k<2;k++){const o=k*86400,lo=Math.max(0,Math.ceil((tr.s-o)/60)),hi=Math.min(1439,Math.floor((tr.e-o)/60));for(let m=lo;m<=hi;m++){br[tr.r][m]++;tot[m]++}}
+  for(const tr of trips)for(let k=0;k<2;k++){const o=k*86400,lo=Math.max(0,Math.ceil((tr.s-o-30)/60)),hi=Math.min(1439,Math.floor((tr.e-o-30)/60));for(let m=lo;m<=hi;m++){br[tr.r][m]++;tot[m]++}}
   D.binsR=br;D.tot=tot;D.maxR=br.map(a=>Math.max(1,...a));D.maxTot=Math.max(1,...tot)}
 // ---- draw
 function line(si,w,col,al){const s=D.shW[si];ctx.beginPath();for(let i=0;i<s.x.length;i++){const x=sx(s.x[i]),y=sy(s.y[i]);i?ctx.lineTo(x,y):ctx.moveTo(x,y)}
@@ -337,8 +334,7 @@ const P0=etParts(Date.now()),DAY0=Date.UTC(P0.year,P0.month-1,P0.day),OFF=Date.U
 const sameTz=OFF===-new Date().getTimezoneOffset()*60000;let lastClock='';
 const fmtET=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour:'numeric',minute:'2-digit',timeZoneName:'short'}),fmtLoc=new Intl.DateTimeFormat(undefined,{hour:'numeric',minute:'2-digit',timeZoneName:'short'});
 function clockText(){const ms=DAY0+Math.floor(simT)*1000-OFF,o={};(sameTz||__clk.agency?fmtET:fmtLoc).formatToParts(ms).forEach(p=>o[p.type]=p.value);
-  const dg=s=>s.split('').map(c=>'<i class="dg">'+c+'</i>').join(''),hh=o.hour.length<2?'<i class="dg" style="visibility:hidden">0</i>'+dg(o.hour):dg(o.hour);
-  const html=hh+'<i class="co">:</i>'+dg(o.minute)+'<small>'+(o.dayPeriod?'<i class="ap">'+o.dayPeriod.toUpperCase()+'</i>':'')+(o.timeZoneName||'')+'</small>';if(html!==lastClock){lastClock=html;$('clock').innerHTML=html}}
+  const html=__clk.cells(o.hour+':'+o.minute)+'<small>'+(o.dayPeriod?o.dayPeriod.toUpperCase():'')+'</small><em>'+(o.timeZoneName||'')+'</em>';if(html!==lastClock){lastClock=html;$('clock').innerHTML=html}}
 
 window.addEventListener('clkmode',()=>{lastClock=''});
 function syncLive(){$('live').classList.toggle('on',speed===1);$('live').title=speed===1?'Live: running at the current time':'Back to live (1×)'}

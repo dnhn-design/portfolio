@@ -305,7 +305,7 @@ const REGIONS = [
     live:[],
     /* items tied to a specific place: they get their own dots when the map zooms in */
     sub:[
-      {t:'Midtown SBS Buses', s:'midtown-bus', pt:PT.nyc},
+      {t:'NYC SBS Buses', s:'midtown-bus', pt:PT.nyc},
       {t:'NYC Subway', s:'nyc-subway', pt:PT.subway},
       {t:'NJ Transit', s:'nj-transit', outline:'nj-transit', pt:PT.nj},
       {t:'Metro-North', s:'metro-north', outline:'metro-north', pt:PT.mnr},
@@ -671,7 +671,7 @@ REGIONS.forEach(r=>{
   head.addEventListener('click',()=>toggle(nyc));
   head.addEventListener('mouseenter',()=>hl('nyc',true)); head.addEventListener('mouseleave',()=>hl('nyc',false));
   rowOf.nyc=head;
-  const NYC_ROWS={'nyc-subway':['New York City','MTA Subway & PATH'],'midtown-bus':['Midtown Manhattan','MTA Bus'],'nj-transit':['New Jersey','NJ Transit'],'metro-north':['Hudson Valley','MTA Metro-North Railroad'],'lirr':['Long Island','MTA Long Island Rail Road'],'nice-bus':['Nassau County','NICE Bus'],'ct-rail':['Connecticut','CTrail & CTtransit']};
+  const NYC_ROWS={'nyc-subway':['New York City','MTA Subway & PATH'],'midtown-bus':['New York City','MTA Select Bus Service'],'nj-transit':['New Jersey','NJ Transit'],'metro-north':['Hudson Valley','MTA Metro-North Railroad'],'lirr':['Long Island','MTA Long Island Rail Road'],'nice-bus':['Nassau County','NICE Bus'],'ct-rail':['Connecticut','CTrail & CTtransit']};
   const sub=el('div',{class:'sbsub',hidden:''});
   Object.keys(NYC_ROWS).forEach(sl=>sub.append(row(sl,NYC_ROWS[sl][0],NYC_ROWS[sl][1],'nyc',true)));
   onSel=()=>{ const o=current==='nyc'; head.setAttribute('aria-expanded',String(o)); sub.hidden=!o; };   // the list opens while the NYC dot is split

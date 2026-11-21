@@ -87,7 +87,7 @@ button:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .play svg{width:18px;height:18px;fill:currentColor}
 .clock{display:flex;align-items:baseline;gap:4px;font-variant-numeric:tabular-nums;white-space:nowrap;min-width:152px}
 .clock b{font-size:30px;font-weight:600;letter-spacing:-.02em}
-.clock em{font-style:normal;font-size:15px;color:var(--mute)}
+.clock em{font-style:normal;font-size:15px;color:var(--mute);display:inline-block;min-width:1.7em}
 .clock small{font-size:10px;color:var(--dim);margin-left:3px}
 .spd{font-variant-numeric:tabular-nums;font-size:13px;color:var(--mute);padding:6px 8px;border-radius:6px;min-width:58px}
 .spd:hover{color:var(--fg);background:var(--hover)}
@@ -367,16 +367,13 @@ function buildLegend(){buildKey()}
 /* ---------- timeline ---------- */
 const tl=$('tl'),tlc=$('tlc'),tg=tlc.getContext('2d');let bins=[],NB=288;
 function buildTL(){bins=new Array(NB).fill(0);const list=DAYS[st.day];
-  for(const tr of list){if(!inF(tr.r.id))continue;const a=Math.max(0,Math.floor((tr.t0-T0)/300)),b=Math.min(NB-1,Math.floor((tr.t1-T0)/300));for(let i=a;i<=b;i++)bins[i]++}
+  for(const tr of list){if(!inF(tr.r.id))continue;const a=Math.max(0,Math.ceil((tr.t0-T0)/300-.5)),b=Math.min(NB-1,Math.floor((tr.t1-T0)/300-.5));for(let i=a;i<=b;i++)bins[i]++}
   drawTL()}
-function drawTL(){const r=tl.getBoundingClientRect(),w=r.width,h=r.height;if(!w)return;const d=Math.min(window.devicePixelRatio||1,2.5);
-  if(tlc.width!==Math.round(w*d)){tlc.width=Math.round(w*d);tlc.height=Math.round(h*d)}
-  tg.setTransform(d,0,0,d,0,0);tg.clearRect(0,0,w,h);const mx=Math.max(1,...bins),bw=w/NB,f=(st.t-T0)/SPAN;
-  for(let i=0;i<NB;i++){const bh=Math.max(2,bins[i]/mx*(h-6));const past=(i+.5)/NB<=f;tg.fillStyle=past?'rgba(255,255,255,.82)':'rgba(255,255,255,.2)';
-    tg.fillRect(i*bw+bw*.12,h-bh,Math.max(1,bw*.62),bh)}
-  tg.fillStyle='#fff';tg.fillRect(Math.round(f*w)-1,0,2,h)}
+function drawTL(){const r=tl.getBoundingClientRect();if(!r.width)return;const d=Math.min(window.devicePixelRatio||1,2.5);
+  if(tlc.width!==Math.round(r.width*d)||tlc.height!==Math.round(r.height*d)){tlc.width=Math.round(r.width*d);tlc.height=Math.round(r.height*d)}
+  __hist.draw(tg,bins,(st.t-T0)/SPAN,{past:'rgba(255,255,255,.82)',fut:'rgba(255,255,255,.2)',cur:'#fff'})}
 let scrub=false;
-function tlSet(e){const r=tl.getBoundingClientRect();const f=Math.min(.9999,Math.max(0,(e.clientX-r.left)/r.width));st.t=T0+f*SPAN;lastKey='';}
+function tlSet(e){const r=tl.getBoundingClientRect();const f=__hist.frac(tlc,e.clientX);st.t=T0+f*SPAN;lastKey='';}
 tl.addEventListener('pointerdown',e=>{scrub=true;tl.setPointerCapture(e.pointerId);tlSet(e)});
 tl.addEventListener('pointermove',e=>{if(scrub)tlSet(e)});
 tl.addEventListener('pointerup',()=>scrub=false);tl.addEventListener('pointercancel',()=>scrub=false);
@@ -424,7 +421,7 @@ function hoverAt(px,py,e){const q=nearest(px,py,11);st.hover=q;
 /* ---------- clock ---------- */
 const clockEl=$('clock');let lastClock='';
 function drawClock(){const p=__clk.parts(((st.t%86400)+86400)%86400,'America/New_York');const k=p.t+p.ap+p.tz;if(k===lastClock)return;lastClock=k;
-  clockEl.innerHTML=`<b>${p.t}</b><em>${p.ap}</em><small>${p.tz}</small>`}
+  clockEl.innerHTML=`<b>${__clk.cells(p.t)}</b><em>${p.ap}</em><small>${p.tz}</small>`}
 window.addEventListener('clkmode',()=>{lastClock='';drawClock()});
 
 /* ---------- loop ---------- */

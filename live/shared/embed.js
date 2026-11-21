@@ -95,7 +95,12 @@
       const s = (((Math.floor(tSec + shift)) % 86400) + 86400) % 86400, h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60);
       return { t: (h % 12 || 12) + ':' + String(m).padStart(2, '0'), ap: h >= 12 ? 'PM' : 'AM', tz: ab };
     },
-    html(tSec, tz) { const p = C.parts(tSec, tz); return p.t + '<small>' + p.ap + '</small><em>' + p.tz + '</em>'; },
+    /* h:mm as fixed-width cells, so the time never changes width as it runs or is scrubbed (a missing tens-of-hours digit keeps its space) */
+    cells(s) {
+      const i = s.indexOf(':'), hh = s.slice(0, i), mm = s.slice(i + 1), dg = (x) => x.split('').map((c) => '<i class="dg">' + c + '</i>').join('');
+      return (hh.length < 2 ? '<i class="dg" style="visibility:hidden">0</i>' : '') + dg(hh) + '<i class="co">:</i>' + dg(mm);
+    },
+    html(tSec, tz) { const p = C.parts(tSec, tz); return C.cells(p.t) + '<small>' + p.ap + '</small><em>' + p.tz + '</em>'; },
     toggle() { agency = !agency; try { localStorage.setItem('clkAgency', agency ? '1' : '0'); } catch (e) {} window.dispatchEvent(new Event('clkmode')); }
   };
   /* Live dot: green when the sim is at the real current time at 1x, grey otherwise; clicking it jumps back to now. */
@@ -115,7 +120,7 @@
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mk); else mk();
   };
   const st = document.createElement('style');
-  st.textContent = '#clock,#clkBtn{cursor:pointer}#clock em{display:inline!important}#livedot{flex:none;width:18px;height:22px;padding:0;margin-right:2px;background:none;border:0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}#livedot i{width:8px;height:8px;border-radius:50%;background:#7b8696;opacity:.6;transition:background .2s,box-shadow .2s}#livedot.on i{background:#2fbf71;opacity:1;box-shadow:0 0 0 3px rgba(47,191,113,.2)}#clkBtn .dot{display:none}';
+  st.textContent = '.dg,.co{display:inline-block;text-align:center;font-style:normal}.dg{width:.62em}.co{width:.3em}#clock small{display:inline-block;min-width:1.75em}#clock,#clkBtn{cursor:pointer}#clock em{display:inline!important}#livedot{flex:none;width:18px;height:22px;padding:0;margin-right:2px;background:none;border:0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}#livedot i{width:8px;height:8px;border-radius:50%;background:#7b8696;opacity:.6;transition:background .2s,box-shadow .2s}#livedot.on i{background:#2fbf71;opacity:1;box-shadow:0 0 0 3px rgba(47,191,113,.2)}#clkBtn .dot{display:none}';
   document.head.appendChild(st);
   function bind() {
     const el = document.getElementById('clock') || document.getElementById('clkBtn'); if (!el) return;
@@ -123,4 +128,27 @@
     window.addEventListener('clkmode', () => { try { if (typeof drawClock === 'function') drawClock(); } catch (e) {} });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind); else bind();
+})();
+
+
+/* Day-load histogram. One look for every map: bars exactly 2 css px wide with a 1 css px gap, on whole device pixels, so the
+   stroke weight is identical on every map and screen. Each bar is the vehicle count at the bar's own time (no max-pooling),
+   the bar under the playhead is full height. ser = counts evenly spaced over the span; frac = playhead position 0..1. */
+(function () {
+  const H = window.__hist = {
+    layout(w, dpr) { const bw = Math.max(1, Math.round(2 * dpr)), gap = Math.max(1, Math.round(dpr)), pitch = bw + gap; return { bw, gap, pitch, N: Math.max(1, Math.floor((w + gap) / pitch)) }; },
+    draw(g, ser, frac, col, ov) {
+      const cv = g.canvas, w = cv.width, h = cv.height, r = cv.getBoundingClientRect(), dpr = r.width ? w / r.width : (window.devicePixelRatio || 1);
+      g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, w, h); if (!w || !h || !ser || !ser.length) return;
+      const L = H.layout(w, dpr), N = L.N, n = ser.length; cv.__hl = { N, pitch: L.pitch };
+      let mx = 1; for (let i = 0; i < n; i++) if (ser[i] > mx) mx = ser[i];
+      const cb = Math.min(N - 1, Math.max(0, Math.floor(frac * N))), pad = Math.round(2 * dpr), min = Math.max(1, Math.round(dpr));
+      for (let i = 0; i < N; i++) {
+        const v = ser[Math.min(n - 1, Math.floor((i + 0.5) * n / N))], bh = i === cb ? h : Math.max(min, Math.round(v / mx * (h - pad)));
+        g.fillStyle = i === cb ? col.cur : i < cb ? col.past : col.fut; g.fillRect(i * L.pitch, h - bh, L.bw, bh);
+        if (ov) { const o = ov.ser[Math.min(ov.ser.length - 1, Math.floor((i + 0.5) * ov.ser.length / N))]; if (o > 0) { g.fillStyle = ov.col; g.fillRect(i * L.pitch, h - Math.max(min, Math.round(o / mx * (h - pad))), L.bw, Math.max(min, Math.round(o / mx * (h - pad)))); } }
+      }
+    },
+    frac(cv, clientX) { const r = cv.getBoundingClientRect(), hl = cv.__hl, x = (clientX - r.left) * (cv.width / (r.width || 1)); return Math.max(0, Math.min(0.9999, x / (hl ? hl.N * hl.pitch : cv.width))); }
+  };
 })();
